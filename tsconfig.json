@@ -1,0 +1,41 @@
+{
+  "compilerOptions": {
+    "outDir": "./dist",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "target": "es2016",
+    "strict": true,
+    "esModuleInterop": true,
+    "noImplicitAny": true,
+    "sourceMap": true,
+    "removeComments": true,
+    "preserveConstEnums": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "experimentalDecorators": true,
+    "strictPropertyInitialization": false,
+    "emitDecoratorMetadata": true,
+    "typeRoots": ["./node_modules/@types"]
+  },
+  "include": ["src/**/*", "global.d.ts"],
+  "exclude": ["node_modules", "**/*.spec.ts"],
+  "ts-node": {
+    "files": true,
+    "transpileOnly": true,
+    "compilerOptions": {
+      "module": "commonjs",
+      "esModuleInterop": true,
+      "target": "es2016",
+      "noImplicitAny": true,
+      "moduleResolution": "node",
+      "sourceMap": true,
+      "preserveConstEnums": true,
+      "skipLibCheck": true,
+      "forceConsistentCasingInFileNames": true,
+      "experimentalDecorators": true,
+      "strict": true,
+      "strictPropertyInitialization": false,
+      "emitDecoratorMetadata": true
+    }
+  } // add this
+}
