@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client"
   output   = "../generated"
@@ -18,6 +12,25 @@ enum Gender {
   female
 }
 
+enum OrderStatus {
+  pending
+  completed
+  cancelled
+}
+
+enum PaymentMethod {
+  cash
+  card
+  transfer
+}
+
+enum PaymentStatus {
+  pending
+  completed
+  failed
+  refunded
+}
+
 // -----------------------------------------------------------------------------
 // USER AND PROFILE MODELS
 // -----------------------------------------------------------------------------
@@ -25,6 +38,7 @@ enum Gender {
 model User {
   id        Int       @id @default(autoincrement())
   username  String    @unique @db.VarChar(255)
+  email     String?   @unique @db.VarChar(255)
   password  String    @db.VarChar(255)
   isActive  Boolean   @default(true)
   roleId    Int?
@@ -32,11 +46,13 @@ model User {
   updatedAt DateTime  @updatedAt @db.Timestamptz
   deletedAt DateTime?
 
-  // Relations
-  profile Profile?
-  role    Role?    @relation(fields: [roleId], references: [id], onDelete: SetNull)
+  profile        Profile?
+  role           Role?    @relation(fields: [roleId], references: [id], onDelete: SetNull)
+  customerOrders Order[]  @relation("OrderCustomer")
+  cashierOrders  Order[]  @relation("OrderCashier")
 
   @@index([username], name: "users_username_index")
+  @@index([email], map: "users_email_index")
   @@map("users")
 }
 
@@ -49,14 +65,14 @@ model Profile {
   gender       Gender
   age          Int
   imagePath    String?  @db.VarChar(255)
+  phone        String?  @db.VarChar(50)
+  address      String?  @db.Text
   createdAt    DateTime @default(now()) @db.Timestamptz
   updatedAt    DateTime @updatedAt @db.Timestamptz
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([fullName], name: "profiles_full_name_index")
-  @@index([fullName], name: "profiles_gender_index")
-  @@index([fullName], name: "profiles_nis_index")
   @@map("profiles")
 }
 
@@ -96,4 +112,110 @@ model RoleHasPermission {
 
   @@id([roleId, permissionId])
   @@map("role_has_permissions")
+}
+
+// -----------------------------------------------------------------------------
+// POS MODELS
+// -----------------------------------------------------------------------------
+
+model ProductCategory {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique @db.VarChar(255)
+  description String?  @db.Text
+  createdAt   DateTime @default(now()) @db.Timestamptz
+  updatedAt   DateTime @updatedAt @db.Timestamptz
+
+  productHasCategories ProductHasCategory[]
+
+  @@map("product_categories")
+}
+
+model Product {
+  id          Int       @id @default(autoincrement())
+  name        String    @db.VarChar(255)
+  description String?   @db.Text
+  price       Float
+  cost        Float?
+  sku         String?   @unique @db.VarChar(100)
+  barcode     String?   @unique @db.VarChar(100)
+  imagePath   String?   @db.VarChar(255)
+  isActive    Boolean   @default(true)
+  stock       Int       @default(0)
+  createdAt   DateTime  @default(now()) @db.Timestamptz
+  updatedAt   DateTime  @updatedAt @db.Timestamptz
+  deletedAt   DateTime?
+
+  productHasCategories ProductHasCategory[]
+  orderItems           OrderItem[]
+
+  @@index([name], name: "products_name_index")
+  @@map("products")
+}
+
+model ProductHasCategory {
+  productId  Int
+  categoryId Int
+
+  product  Product          @relation(fields: [productId], references: [id], onDelete: Cascade)
+  category ProductCategory  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([productId, categoryId])
+  @@map("product_has_categories")
+}
+
+model Order {
+  id            Int           @id @default(autoincrement())
+  customerId    Int?
+  userId        Int?
+  orderNumber   String        @unique @db.VarChar(50)
+  subtotal      Float         @default(0)
+  tax           Float         @default(0)
+  discount      Float         @default(0)
+  total         Float         @default(0)
+  status        OrderStatus   @default(pending)
+  paymentMethod PaymentMethod?
+  notes         String?       @db.Text
+  meta          Json?
+  createdAt     DateTime      @default(now()) @db.Timestamptz
+  updatedAt     DateTime      @updatedAt @db.Timestamptz
+
+  customer   User?       @relation("OrderCustomer", fields: [customerId], references: [id], onDelete: SetNull)
+  user       User?       @relation("OrderCashier", fields: [userId], references: [id], onDelete: SetNull)
+  orderItems OrderItem[]
+  payments   Payment[]
+
+  @@index([orderNumber], name: "orders_order_number_index")
+  @@map("orders")
+}
+
+model OrderItem {
+  id         Int      @id @default(autoincrement())
+  orderId    Int
+  productId  Int?
+  quantity   Int      @default(1)
+  unitPrice  Float
+  totalPrice Float
+  meta       Json?
+  createdAt  DateTime @default(now()) @db.Timestamptz
+  updatedAt  DateTime @updatedAt @db.Timestamptz
+
+  order   Order?   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@map("order_items")
+}
+
+model Payment {
+  id        Int           @id @default(autoincrement())
+  orderId   Int
+  amount    Float
+  method    PaymentMethod
+  reference String?       @db.VarChar(255)
+  status    PaymentStatus @default(pending)
+  createdAt DateTime      @default(now()) @db.Timestamptz
+  updatedAt DateTime      @updatedAt @db.Timestamptz
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("payments")
 }

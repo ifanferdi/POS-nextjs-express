@@ -1,4 +1,12 @@
-export const entities = ['User', 'Role', 'Permission'];
+export const entities = [
+  'User',
+  'Role',
+  'Permission',
+  'Product Category',
+  'Product',
+  'Order',
+  'Payment',
+];
 export const actions = ['Show', 'Manage'];
 
 const data: string[] = [];

@@ -42,8 +42,10 @@ export default class QueryUserRepository {
     if (params.isActive !== undefined) where.isActive = params.isActive;
     if (params.roleId)
       where.roleId = Array.isArray(params.roleId) ? { in: params.roleId } : params.roleId;
-    if (params.username) where.username = params.username;
-    if (params.usernames) where.username = { in: params.usernames };
+    if (params.username)
+      where.username = Array.isArray(params.username) ? { in: params.username } : params.username;
+    if (params.email)
+      where.email = Array.isArray(params.email) ? { in: params.email } : params.email;
     if (params.role)
       where.role = {
         name: Array.isArray(params.role)

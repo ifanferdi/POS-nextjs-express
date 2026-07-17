@@ -11,7 +11,7 @@ export interface IUser extends Omit<User, 'password'> {
   id: number;
   profile?: IProfile;
   role?: IRole;
-  permissions?: IPermission[];
+  permissions?: { permission: IPermission }[];
 }
 
 export interface IUserWithPassword extends IUser {

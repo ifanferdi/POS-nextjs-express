@@ -4,7 +4,6 @@ import { NumberSchema, Password, StringSchema, Username } from './base-validatio
 export const SignInAuthSchema = z.object({
   username: Username,
   password: Password,
-  macAddress: StringSchema.optional(),
 });
 export const TokenSchema = z.object({ token: StringSchema });
 export const ResendOtpSchema = z.object({ userId: NumberSchema });

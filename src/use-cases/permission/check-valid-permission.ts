@@ -36,7 +36,7 @@ export default class CheckValidPermission extends BaseUseCase {
 
   private async getUserPermissions(userId: number) {
     const user = await this.findByIdUser.execute({ id: userId, with: [UserRelation.PERMISSIONS] });
-    const permissions = user.permissions?.map((permission) => permission.name);
+    const permissions = user.permissions?.map(({ permission }) => permission.name);
 
     if (!permissions) return [];
 

@@ -9,19 +9,6 @@ export default class FindAllRole extends BaseUseCase {
     const data = (await this.repositories.roleRepository.findAll(params)) as IRole[];
     const total = await this.repositories.roleRepository.count(params);
 
-    // extract relation data
-    if (params.with?.length) this.extractRelationData(data);
-
     return paginate({ page, limit, total, data });
-  }
-
-  extractRelationData(roles: IRole[]) {
-    roles.map((role) => {
-      role.permissions = role.roleHasPermissions
-        ?.map((rolesHasPermission) => rolesHasPermission.permission)
-        .filter((val) => val !== undefined);
-
-      role.roleHasPermissions = undefined;
-    });
   }
 }

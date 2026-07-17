@@ -3,8 +3,8 @@ import _ from 'lodash';
 import { Seeder } from '../../../domain/infrastructures/database.interface';
 import { calculateAge } from '../../../helpers/common.helper';
 import * as argon2 from '../../../helpers/password.helper';
-import { CreateUserProfileDto } from '../../../validations/user-validation';
-import { Gender, PrismaClient } from '../prisma/generated/client';
+import { Gender } from '../../../domain/entities/enums/user.enum';
+import { PrismaClient } from '../prisma/generated/client';
 
 export default class UserSeeder implements Seeder {
   constructor(private prisma: PrismaClient) {}
@@ -35,19 +35,23 @@ export default class UserSeeder implements Seeder {
     const password = await argon2.hash('password');
     const rolesKeyByName = _.keyBy(await this.prisma.role.findMany(), 'name');
 
-    const factory = (username: string, roleId: number): CreateUserProfileDto => {
+    const factory = (username: string, roleId: number) => {
       const dateOfBirth = faker.date.between({ from: '1990-01-01', to: '2010-12-31' });
+      const gender = _.sample([Gender.MALE, Gender.FEMALE])!;
       return {
         username,
+        email: `${username}@example.com`,
         password,
         isActive: true,
         roleId,
         profile: {
-          fullName: faker.person.fullName(),
+          fullName: faker.person.fullName({ sex: gender === Gender.MALE ? 'male' : 'female' }),
           placeOfBirth: faker.location.city(),
           dateOfBirth,
-          gender: _.sample([Gender.male, Gender.female]),
+          gender,
           age: calculateAge(dateOfBirth),
+          phone: faker.phone.number(),
+          address: faker.location.streetAddress(),
         },
       };
     };

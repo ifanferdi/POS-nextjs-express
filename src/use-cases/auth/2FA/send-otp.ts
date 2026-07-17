@@ -1,8 +1,8 @@
-import { randomInt } from 'crypto';
 import config from '../../../config/config';
 import { IUser } from '../../../domain/entities/models/user';
 import { ttl } from '../../../helpers/common.helper';
 import AppError from '../../../helpers/error.helper';
+import { generateOtp } from '../../../helpers/generate-string';
 import * as password from '../../../helpers/password.helper';
 import BaseUseCase from '../../_base-use-case';
 
@@ -23,7 +23,7 @@ export default class SendOtp extends BaseUseCase {
     // CALLING RATE LIMITER
     await this.rateLimiter(user.id);
 
-    const otp = this.generateOtp();
+    const otp = generateOtp();
     const hashedOtp = await password.hash(otp);
 
     // SENDING TO EMAIL RUN IN BACKGROUND
@@ -41,11 +41,6 @@ export default class SendOtp extends BaseUseCase {
     const isSessionExist = await this.repositories.redisRepository?.findOne(this.key(id));
 
     if (!isSessionExist) throw new AppError('Invalid OTP request. Session does not exist.');
-  }
-
-  private generateOtp(digit = 6): string {
-    const n = randomInt(0, 1_000_000); // 0 .. 999999
-    return String(n).padStart(digit, '0');
   }
 
   private async sendOtpToEmail(otp: string, email = 'ifan.develop@gmail.com') {

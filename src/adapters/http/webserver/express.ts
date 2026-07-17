@@ -1,7 +1,10 @@
 import cors from 'cors';
 import { default as express, Express } from 'express';
 import morgan from 'morgan';
+import { readFileSync } from 'node:fs';
 import path from 'node:path';
+import swaggerUi from 'swagger-ui-express';
+import { parse } from 'yaml';
 import config from '../../../config/config';
 import { HttpStatusCode } from '../../../constants/http-status.constant';
 import { Controllers } from '../../../domain/adapters/controller.interface';
@@ -18,6 +21,21 @@ export default function routes(app: Express, controllers: Controllers, useCases:
   app.use(morgan('dev'));
 
   app.use(cors({ origin: 'http://localhost:3000', credentials: true }));
+
+  // SWAGGER UI
+  const swaggerDocument = parse(
+    readFileSync(path.join(__dirname, '../../../../docs/openapi.yaml'), 'utf8'),
+  );
+  app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
+  // API INDEX
+  app.get('/', (_req, res) => {
+    res.json({
+      name: config.app.name,
+      version: config.app.version,
+      docs: '/docs',
+    });
+  });
 
   // CHECK & EXTRACT JWT TOKEN
   app.use(ExtractJwtToken(useCases));

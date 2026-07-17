@@ -1,12 +1,10 @@
 import { IUser } from '../../domain/entities/models/user';
+import { extractRelationData } from '../../helpers/extract-relationship';
 import paginate from '../../helpers/paginate.helper';
 import { FindAllUserDto } from '../../validations/user-validation';
 import BaseUseCase from '../_base-use-case';
-import FindByIdUser from './find-by-id-user';
 
 export default class FindAllUser extends BaseUseCase {
-  private findBydIdUser = new FindByIdUser(this.repositories);
-
   async execute(params: FindAllUserDto) {
     const { page = 1, limit = 10 } = params;
 
@@ -15,7 +13,7 @@ export default class FindAllUser extends BaseUseCase {
 
     await Promise.all(
       data.map(async (user) => {
-        if (params.with?.length) this.findBydIdUser.extractRelationData(params, user);
+        if (params.with?.length) extractRelationData(params, user);
         await this.handleProfileImageUrl(user);
       }),
     );

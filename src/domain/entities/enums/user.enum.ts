@@ -5,3 +5,8 @@ export enum UserRelation {
   PERMISSIONS = 'permissions',
   SOFT_DELETE = 'soft-delete',
 }
+
+export enum Gender {
+  MALE = 'male',
+  FEMALE = 'female',
+}

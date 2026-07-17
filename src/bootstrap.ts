@@ -2,18 +2,25 @@ import { Express } from 'express';
 import http from 'http';
 import AuthController from './adapters/http/controller/auth-controller';
 import DashboardController from './adapters/http/controller/dashboard-controller';
+import OrderController from './adapters/http/controller/order-controller';
+import PaymentController from './adapters/http/controller/payment-controller';
 import PermissionController from './adapters/http/controller/permission-controller';
+import ProductCategoryController from './adapters/http/controller/product-category-controller';
+import ProductController from './adapters/http/controller/product-controller';
 import RoleController from './adapters/http/controller/role-controller';
 import UserController from './adapters/http/controller/user-controller';
 import express from './adapters/http/webserver/express';
-import SocketIoServer from './adapters/websocket/socket-io-server';
 import config from './config/config';
 import { Controllers } from './domain/adapters/controller.interface';
 import { Repositories } from './domain/repositories/repositories.interface';
 import { UseCases } from './domain/use-cases/use-case.interface';
 import { prisma } from './infrastructure/database/prisma/prisma';
 import RedisConnection from './infrastructure/redis/redis-connection';
+import OrderRepository from './repositories/database/order-repository';
+import PaymentRepository from './repositories/database/payment-repository';
 import PermissionRepository from './repositories/database/permission-repository';
+import ProductCategoryRepository from './repositories/database/product-category-repository';
+import ProductRepository from './repositories/database/product-repository';
 import RoleRepository from './repositories/database/role-repository';
 import UserRepository from './repositories/database/user-repository';
 import LocalStorageRepository from './repositories/filesystem/local-storage-repository';
@@ -27,6 +34,15 @@ import RefreshToken from './use-cases/auth/refresh-token';
 import SignIn from './use-cases/auth/sign-in';
 import SignOut from './use-cases/auth/sign-out';
 import Dashboard from './use-cases/common/dashboard';
+import PosDashboard from './use-cases/common/pos-dashboard';
+import CancelOrder from './use-cases/order/cancel-order';
+import CreateOrder from './use-cases/order/create-order';
+import FindAllOrder from './use-cases/order/find-all-order';
+import FindByIdOrder from './use-cases/order/find-by-id-order';
+import UpdateOrderStatus from './use-cases/order/update-order-status';
+import CreatePayment from './use-cases/payment/create-payment';
+import FindAllPayment from './use-cases/payment/find-all-payment';
+import FindByIdPayment from './use-cases/payment/find-by-id-payment';
 import CheckValidPermission from './use-cases/permission/check-valid-permission';
 import CreatePermission from './use-cases/permission/create-permission';
 import DeletePermission from './use-cases/permission/delete-permission';
@@ -34,6 +50,18 @@ import FindAllPermission from './use-cases/permission/find-all-permission';
 import FindByIdPermission from './use-cases/permission/find-by-id-permission';
 import ResetCachePermission from './use-cases/permission/reset-cache-permission';
 import UpdatePermission from './use-cases/permission/update-permission';
+import CreateProductCategory from './use-cases/product-category/create-product-category';
+import DeleteProductCategory from './use-cases/product-category/delete-product-category';
+import FindAllProductCategory from './use-cases/product-category/find-all-product-category';
+import FindByIdProductCategory from './use-cases/product-category/find-by-id-product-category';
+import UpdateProductCategory from './use-cases/product-category/update-product-category';
+import CreateProduct from './use-cases/product/create-product';
+import DeleteProduct from './use-cases/product/delete-product';
+import FindAllProduct from './use-cases/product/find-all-product';
+import FindByIdProduct from './use-cases/product/find-by-id-product';
+import ProductImage from './use-cases/product/product-image';
+import RestoreProduct from './use-cases/product/restore-product';
+import UpdateProduct from './use-cases/product/update-product';
 import CreateRole from './use-cases/role/create-role';
 import DeleteRole from './use-cases/role/delete-role';
 import FindAllRole from './use-cases/role/find-all-role';
@@ -49,19 +77,11 @@ import RestoreUser from './use-cases/user/restore-user';
 import UpdateUser from './use-cases/user/update-user';
 
 export default async function bootstrap(app: Express, httpServer: http.Server) {
-  // setup repositories
   const repositories = await setupRepositories();
-
-  // setup use_cases
   const useCases = setupUseCases(repositories);
-
-  // setup controllers
   const controllers = setupControllers(useCases);
 
-  // setup routes
   express(app, controllers, useCases);
-
-  new SocketIoServer(httpServer, useCases).execute();
 }
 
 function setupControllers(useCases: UseCases): Controllers {
@@ -71,6 +91,10 @@ function setupControllers(useCases: UseCases): Controllers {
     authController: new AuthController(useCases),
     permissionController: new PermissionController(useCases),
     roleController: new RoleController(useCases),
+    productCategoryController: new ProductCategoryController(useCases),
+    productController: new ProductController(useCases),
+    orderController: new OrderController(useCases),
+    paymentController: new PaymentController(useCases),
   };
 }
 
@@ -81,6 +105,10 @@ async function setupRepositories(): Promise<Repositories> {
     roleRepository: new RoleRepository(prisma),
     permissionRepository: new PermissionRepository(prisma),
     userRepository: new UserRepository(prisma),
+    productCategoryRepository: new ProductCategoryRepository(prisma),
+    productRepository: new ProductRepository(prisma),
+    orderRepository: new OrderRepository(prisma),
+    paymentRepository: new PaymentRepository(prisma),
     redisRepository: new RedisRepository(redisClient),
     storageRepository:
       config.filesystem.toLowerCase() === 'local'
@@ -93,6 +121,7 @@ function setupUseCases(repositories: Repositories): UseCases {
   return {
     commonUseCase: {
       dashboard: new Dashboard(repositories),
+      posDashboard: new PosDashboard(repositories),
     },
     userUseCase: {
       findAllUser: new FindAllUser(repositories),
@@ -128,6 +157,34 @@ function setupUseCases(repositories: Repositories): UseCases {
       updateRole: new UpdateRole(repositories),
       deleteRole: new DeleteRole(repositories),
       roleAssignPermission: new RoleAssignPermission(repositories),
+    },
+    productCategoryUseCase: {
+      findAllProductCategory: new FindAllProductCategory(repositories),
+      findByIdProductCategory: new FindByIdProductCategory(repositories),
+      createProductCategory: new CreateProductCategory(repositories),
+      updateProductCategory: new UpdateProductCategory(repositories),
+      deleteProductCategory: new DeleteProductCategory(repositories),
+    },
+    productUseCase: {
+      findAllProduct: new FindAllProduct(repositories),
+      findByIdProduct: new FindByIdProduct(repositories),
+      createProduct: new CreateProduct(repositories),
+      updateProduct: new UpdateProduct(repositories),
+      deleteProduct: new DeleteProduct(repositories),
+      restoreProduct: new RestoreProduct(repositories),
+      productImage: new ProductImage(repositories),
+    },
+    orderUseCase: {
+      findAllOrder: new FindAllOrder(repositories),
+      findByIdOrder: new FindByIdOrder(repositories),
+      createOrder: new CreateOrder(repositories),
+      updateOrderStatus: new UpdateOrderStatus(repositories),
+      cancelOrder: new CancelOrder(repositories),
+    },
+    paymentUseCase: {
+      findAllPayment: new FindAllPayment(repositories),
+      findByIdPayment: new FindByIdPayment(repositories),
+      createPayment: new CreatePayment(repositories),
     },
   };
 }

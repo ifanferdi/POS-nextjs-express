@@ -1,4 +1,8 @@
+import OrderRepository from '../../repositories/database/order-repository';
+import PaymentRepository from '../../repositories/database/payment-repository';
 import PermissionRepository from '../../repositories/database/permission-repository';
+import ProductCategoryRepository from '../../repositories/database/product-category-repository';
+import ProductRepository from '../../repositories/database/product-repository';
 import RoleRepository from '../../repositories/database/role-repository';
 import UserRepository from '../../repositories/database/user-repository';
 import LocalFilesystem from '../../repositories/filesystem/local-storage-repository';
@@ -11,6 +15,10 @@ export interface Repositories extends ToolsRepository {
   userRepository: UserRepository;
   roleRepository: RoleRepository;
   permissionRepository: PermissionRepository;
+  productCategoryRepository: ProductCategoryRepository;
+  productRepository: ProductRepository;
+  orderRepository: OrderRepository;
+  paymentRepository: PaymentRepository;
 }
 
 interface ToolsRepository {

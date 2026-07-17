@@ -5,7 +5,7 @@ import { JwtData } from '../domain/entities/types/auth.types';
 import { SoftDeleteFields } from '../domain/entities/types/database.types';
 import { calculateAge } from '../helpers/common.helper';
 import AppError from '../helpers/error.helper';
-import { Gender } from '../infrastructure/database/prisma/generated/enums';
+import { Gender } from '../domain/entities/enums/user.enum';
 import {
   BaseFindById,
   BasePagination,
@@ -36,6 +36,7 @@ export const FindAllUserSchema = BasePagination(USER_FIELD)
   .extend({
     isActive: z.boolean().optional(),
     roleId: z.union([NumberSchema, z.array(NumberSchema)]).optional(),
+    email: z.union([StringSchema, z.array(StringSchema)]).optional(),
     username: StringSchema.optional(),
     usernames: z.array(StringSchema).optional(),
     role: z.union([StringSchema, z.array(StringSchema)]).optional(),

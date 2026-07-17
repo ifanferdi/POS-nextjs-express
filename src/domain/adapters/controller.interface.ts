@@ -1,6 +1,10 @@
 import AuthController from '../../adapters/http/controller/auth-controller';
 import DashboardController from '../../adapters/http/controller/dashboard-controller';
+import OrderController from '../../adapters/http/controller/order-controller';
+import PaymentController from '../../adapters/http/controller/payment-controller';
 import PermissionController from '../../adapters/http/controller/permission-controller';
+import ProductCategoryController from '../../adapters/http/controller/product-category-controller';
+import ProductController from '../../adapters/http/controller/product-controller';
 import RoleController from '../../adapters/http/controller/role-controller';
 import UserController from '../../adapters/http/controller/user-controller';
 
@@ -10,4 +14,8 @@ export interface Controllers {
   authController: AuthController;
   roleController: RoleController;
   permissionController: PermissionController;
+  productCategoryController: ProductCategoryController;
+  productController: ProductController;
+  orderController: OrderController;
+  paymentController: PaymentController;
 }

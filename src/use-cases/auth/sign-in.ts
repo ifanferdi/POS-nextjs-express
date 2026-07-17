@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import moment from 'moment';
 import config from '../../config/config';
 import { UserRelation } from '../../domain/entities/enums/user.enum';
 import { IUser, IUserWithPassword, USER_FIELDS } from '../../domain/entities/models/user';
@@ -10,7 +9,6 @@ import * as jwt from '../../helpers/jwt.helper';
 import * as password from '../../helpers/password.helper';
 import { SignInAuthDto } from '../../validations/auth-validation';
 import BaseUseCase from '../_base-use-case';
-import SendOtp from './2FA/send-otp';
 
 const TOKEN_TIMEOUT = config.auth.tokenTimeout;
 const REFRESH_TOKEN_TIMEOUT = config.auth.refreshTokenTimeout;
@@ -37,11 +35,7 @@ export default class SignIn extends BaseUseCase {
 
     const userWithoutPassword = _.omit(user, 'password') as IUser;
 
-    if (AUTH_MODE === 'stateful') {
-      if (IS_USE_2FA) return await this.handle2FA(userWithoutPassword);
-
-      return await this.handleStatefulMode(userWithoutPassword);
-    }
+    if (AUTH_MODE === 'stateful') return await this.handleStatefulMode(userWithoutPassword);
 
     const token = this.getToken(userWithoutPassword);
 
@@ -67,23 +61,5 @@ export default class SignIn extends BaseUseCase {
       expired: ttl(REFRESH_TOKEN_TIMEOUT),
       logging: false,
     });
-  }
-
-  private async handle2FA(user: IUser, newMacAddress?: string) {
-    const previousSession = (await this.repositories.redisRepository?.findOne(
-      jwt.key(user.id),
-    )) as RedisDataAuth;
-
-    const diffInMinutes = moment().diff(moment(previousSession?.createdAt), 'minutes');
-    // check if under 15 minutes & with same device, no need 2FA
-    if (
-      !newMacAddress ||
-      (previousSession.macAddress !== newMacAddress && diffInMinutes > NEED_2FA_AFTER_MINUTES)
-    ) {
-      await new SendOtp(this.repositories).execute(user);
-      return { isNeed2FA: true, userId: user.id };
-    }
-
-    return await this.handleStatefulMode(user);
   }
 }

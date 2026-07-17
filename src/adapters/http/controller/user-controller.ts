@@ -35,12 +35,11 @@ export default class UserController extends BaseController {
       orderBy: handleOrderByRequest(request),
       search: request.q as string,
       columns: request.columns,
-      ids: Array.isArray(request?.ids)
-        ? request.ids.map((val: string) => (val ? Number(val) : undefined))
-        : undefined,
-      usernames: request.usernames as string[],
+      ids: request.ids?.map((val: string) => (val ? Number(val) : undefined)),
+      username: request.username,
       roleId: handleNumberOrArrayRequest(request.roleId),
       isActive: request.isActive ? request.isActive === 'true' : undefined,
+      email: request.email,
       role: request.role,
       with: request.with,
     };

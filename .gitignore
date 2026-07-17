@@ -2,11 +2,11 @@
 .vscode
 /node_modules/
 /dist/
-.env
 /storage/public
 .DS_Store
 /src/infrastructure/database/prisma/generated
 /src/infrastructure/database/migrations/
 .vercel
 .env*
-AGENT.md
+AGENTS.md
+PRD.md
