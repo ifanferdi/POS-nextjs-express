@@ -1,7 +1,11 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  allowedDevOrigins: ['192.168.111.228'],
+  experimental: {
+    workerThreads: false, // matikan worker threads eksperimental
+    cpus: 1, // batasi CPU usage compiler
+  },
 };
 
 export default nextConfig;
