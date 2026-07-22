@@ -1,17 +1,26 @@
+import { AppHeader } from '@/app/(protected)/_components/app-header';
+import { AppSidebar } from '@/app/(protected)/_components/app-sidebar';
 import { auth } from '@/auth';
+import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import { redirect } from 'next/navigation';
 import React from 'react';
 
 export default async function ProtectedLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
 
-  // Secondary check — kalau middleware kelewat, layout ini yang nangkep
   if (!session) redirect('/login');
 
-  // Kalau refresh token error (diset di jwt() callback)
   if ((session as any).error === 'RefreshTokenError') {
     redirect('/login');
   }
 
-  return <>{children}</>;
+  return (
+    <SidebarProvider>
+      <AppSidebar username={session.user?.username} />
+      <SidebarInset>
+        <AppHeader username={session.user?.username} />
+        <main className="flex-1 p-4 md:p-6 lg:p-8">{children}</main>
+      </SidebarInset>
+    </SidebarProvider>
+  );
 }

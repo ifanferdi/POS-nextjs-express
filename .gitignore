@@ -5,6 +5,7 @@
 /.pnp
 .pnp.*
 .yarn/*
+.idea/*
 !.yarn/patches
 !.yarn/plugins
 !.yarn/releases
@@ -40,5 +41,7 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# agents
 AGENTS.md
 PRD.md
+.opencode/*

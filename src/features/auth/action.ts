@@ -1,6 +1,6 @@
 'use server';
 
-import { signIn } from '@/auth';
+import { signIn, signOut } from '@/auth';
 import { LoginSchema } from '@/features/auth/schema';
 import { AuthError } from 'next-auth';
 
@@ -33,4 +33,8 @@ export async function loginAction(value: unknown): Promise<LoginActionResult> {
 
     throw error;
   }
+}
+
+export async function logoutAction() {
+  await signOut({ redirectTo: '/login' });
 }

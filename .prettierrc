@@ -6,5 +6,9 @@
   "printWidth": 100,
   "arrowParens": "always",
   "endOfLine": "lf",
-  "plugins": ["prettier-plugin-tailwindcss","@trivago/prettier-plugin-sort-imports", "prettier-plugin-organize-imports"]
+  "plugins": [
+    "prettier-plugin-tailwindcss",
+    "@trivago/prettier-plugin-sort-imports",
+    "prettier-plugin-organize-imports"
+  ]
 }
