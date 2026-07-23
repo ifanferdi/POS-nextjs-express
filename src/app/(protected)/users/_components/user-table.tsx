@@ -10,8 +10,9 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Role, User } from '@/domain';
-import { UsersIcon } from 'lucide-react';
+import { getInitials } from '@/lib/helper';
 import _ from 'lodash';
+import { UsersIcon } from 'lucide-react';
 import moment from 'moment';
 import Link from 'next/link';
 
@@ -22,15 +23,6 @@ interface UserTableProps {
   roles: RoleOption[];
 }
 
-function getInitials(name: string) {
-  return name
-    .split(' ')
-    .map((n) => n[0])
-    .slice(0, 2)
-    .join('')
-    .toUpperCase();
-}
-
 export function UserTable({ users, roles }: UserTableProps) {
   if (users.length === 0) {
     return (
@@ -39,9 +31,7 @@ export function UserTable({ users, roles }: UserTableProps) {
           <UsersIcon className="size-6 text-muted-foreground" />
         </div>
         <p className="text-sm font-medium">No users found</p>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Try adjusting your search or filters.
-        </p>
+        <p className="mt-1 text-sm text-muted-foreground">Try adjusting your search or filters.</p>
       </div>
     );
   }
@@ -70,9 +60,7 @@ export function UserTable({ users, roles }: UserTableProps) {
                       {getInitials(user.profile.fullName)}
                     </AvatarFallback>
                   </Avatar>
-                  <span className="font-medium group-hover:underline">
-                    {user.profile.fullName}
-                  </span>
+                  <span className="font-medium group-hover:underline">{user.profile.fullName}</span>
                 </Link>
               </TableCell>
               <TableCell className="text-muted-foreground">{user.username}</TableCell>
@@ -83,7 +71,11 @@ export function UserTable({ users, roles }: UserTableProps) {
                 {`${user.profile.placeOfBirth}, ${moment(user.profile.dateOfBirth).format('MMM D YYYY')}`}
               </TableCell>
               <TableCell>
-                <Badge variant="secondary">{user.role.name}</Badge>
+                <span
+                  className={`inline-flex h-5 items-center rounded-full px-2 text-xs font-medium bg-gray-500/10 text-gray-600 dark:text-gray-400`}
+                >
+                  {user.role.name}
+                </span>
               </TableCell>
               <TableCell>
                 {user.isActive ? (

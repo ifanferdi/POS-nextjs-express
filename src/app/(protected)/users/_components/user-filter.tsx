@@ -61,7 +61,7 @@ export function UserFilter({ roles }: UserFilterProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="lg" className={`${hasFilter && 'border-primary'}`}>
+        <Button variant="outline" className={`${hasFilter && 'border-primary'}`}>
           <FilterIcon />
           <span>Filter</span>
           {hasFilter && <span className="ml-1 size-1.5 rounded-full bg-primary" aria-hidden />}
@@ -71,9 +71,7 @@ export function UserFilter({ roles }: UserFilterProps) {
         <DropdownMenuLabel>Filter by</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuSub>
-          <DropdownMenuSubTrigger
-            className={`cursor-pointer ${currentRoleId && 'bg-muted'}`}
-          >
+          <DropdownMenuSubTrigger className={`cursor-pointer ${currentRoleId && 'bg-muted'}`}>
             <ShieldCheckIcon />
             <span>Role</span>
           </DropdownMenuSubTrigger>

@@ -1,9 +1,6 @@
 'use client';
 
-import {
-  Avatar,
-  AvatarFallback,
-} from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   Sidebar,
   SidebarContent,
@@ -72,16 +69,14 @@ export function AppSidebar({ username }: AppSidebarProps) {
                       asChild
                       isActive={isActive}
                       tooltip={item.title}
-                      className={
+                      className={`h-12 px-4 ${
                         isActive
                           ? 'relative bg-primary/10 text-primary font-medium before:absolute before:inset-y-1.5 before:left-0 before:w-1 before:rounded-full before:bg-primary'
                           : ''
-                      }
+                      }`}
                     >
                       <Link href={item.href}>
-                        <item.icon
-                          className={isActive ? 'text-primary' : ''}
-                        />
+                        <item.icon className={isActive ? 'text-primary' : ''} />
                         <span>{item.title}</span>
                       </Link>
                     </SidebarMenuButton>

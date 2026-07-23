@@ -12,7 +12,7 @@ export default async function proxy(req: NextRequest) {
   const isAuthRoute = authRoutes.includes(req.nextUrl.pathname);
 
   // jika sudah login tapi akses /login -> redirect ke /users
-  if (isAuthRoute && isLoggedIn) return NextResponse.redirect(new URL('/users', req.nextUrl)); // ganti route dasbor atau /
+  if (isAuthRoute && isLoggedIn) return NextResponse.redirect(new URL('/users', req.nextUrl)); // todo: ganti route dasbor atau /
 
   if (!isPublicRoute && !isLoggedIn) return NextResponse.redirect(new URL('/login', req.nextUrl));
 

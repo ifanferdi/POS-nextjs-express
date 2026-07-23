@@ -1,6 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import { buildPageItems } from '@/lib/helper';
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useTransition } from 'react';
@@ -9,32 +10,6 @@ interface UserPaginationProps {
   page: number;
   totalPages: number;
   total: number;
-}
-
-type PageItem = number | 'ellipsis';
-
-function buildPageItems(current: number, totalPages: number): PageItem[] {
-  if (totalPages <= 7) {
-    return Array.from({ length: totalPages }, (_, i) => i + 1);
-  }
-
-  if (current <= 4) {
-    return [1, 2, 3, 4, 5, 'ellipsis', totalPages];
-  }
-
-  if (current >= totalPages - 3) {
-    return [
-      1,
-      'ellipsis',
-      totalPages - 4,
-      totalPages - 3,
-      totalPages - 2,
-      totalPages - 1,
-      totalPages,
-    ];
-  }
-
-  return [1, 'ellipsis', current - 1, current, current + 1, 'ellipsis', totalPages];
 }
 
 export function UserPagination({ page, totalPages, total }: UserPaginationProps) {

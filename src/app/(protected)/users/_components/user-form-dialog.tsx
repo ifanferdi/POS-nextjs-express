@@ -27,6 +27,7 @@ import {
   UpdateUserInput,
   UpdateUserSchema,
 } from '@/features/users/schema';
+import { formatDate } from '@/lib/helper';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useState, useTransition } from 'react';
 import { Controller, UseFormReturn, useForm } from 'react-hook-form';
@@ -163,6 +164,7 @@ function UserFormFields({
                 <Input
                   {...field}
                   type="date"
+                  value={field.value ? formatDate(field.value) : ''}
                   aria-invalid={fieldState.invalid}
                   disabled={isPending}
                 />
@@ -328,7 +330,7 @@ function EditUserForm({
       profile: {
         fullName: user.profile.fullName,
         placeOfBirth: user.profile.placeOfBirth,
-        dateOfBirth: user.profile.dateOfBirth,
+        dateOfBirth: formatDate(new Date(user.profile.dateOfBirth)),
         gender: user.profile.gender,
       },
       username: user.username,
@@ -399,8 +401,8 @@ export function UserFormDialog({
     <Dialog open={open} onOpenChange={setOpen}>
       {!isControlled && (
         <DialogTrigger asChild>
-          <Button variant={isEditMode ? 'outline' : 'default'}>
-            {isEditMode ? 'Edit' : 'Add New User'}
+          <Button variant="default" className="h-10 px-3">
+            Add New User
           </Button>
         </DialogTrigger>
       )}

@@ -28,13 +28,12 @@ type UserWithoutPermissions = Omit<User, 'permissions'>;
 
 type RoleOption = Pick<Role, 'id' | 'name'>;
 
-export function UserActions({
-  user,
-  roles,
-}: {
+interface UserActionsProps {
   user: UserWithoutPermissions;
   roles: RoleOption[];
-}) {
+}
+
+export function UserActions({ user, roles }: UserActionsProps) {
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -60,10 +59,7 @@ export function UserActions({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-36">
-          <DropdownMenuItem
-            onClick={() => setEditOpen(true)}
-            className="cursor-pointer"
-          >
+          <DropdownMenuItem onClick={() => setEditOpen(true)} className="cursor-pointer">
             <PencilIcon />
             <span>Edit</span>
           </DropdownMenuItem>
