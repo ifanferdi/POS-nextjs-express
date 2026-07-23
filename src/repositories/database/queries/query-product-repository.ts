@@ -14,10 +14,11 @@ export default class QueryProductRepository {
   }
 
   handleWhere(
-    params: Omit<Partial<FindAllProductDto & FindByIdProductDto>, 'columns' | 'with' | 'orderBy'>,
+    params: Omit<Partial<FindAllProductDto & FindByIdProductDto>, 'columns' | 'orderBy'>,
   ) {
     const where: Prisma.ProductWhereInput = {};
 
+    if (!params.with?.includes(ProductRelation.SOFT_DELETE)) where.deletedAt = null;
     if (params.id) where.id = params.id;
     if (params.ids?.length) where.id = { in: params.ids };
     if (params.notId)
@@ -25,8 +26,7 @@ export default class QueryProductRepository {
     if (params.isActive !== undefined) where.isActive = params.isActive;
     if (params.barcode)
       where.barcode = Array.isArray(params.barcode) ? { in: params.barcode } : params.barcode;
-    if (params.sku)
-      where.sku = Array.isArray(params.sku) ? { in: params.sku } : params.sku;
+    if (params.sku) where.sku = Array.isArray(params.sku) ? { in: params.sku } : params.sku;
     if (params.categoryId)
       where.productHasCategories = {
         some: {

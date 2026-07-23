@@ -30,11 +30,10 @@ export default class QueryUserRepository {
     return Object.keys(include).length ? include : undefined;
   }
 
-  handleWhere(
-    params: Omit<Partial<FindAllUserDto & FindOneUserDto>, 'columns' | 'with' | 'orderBy'>,
-  ) {
+  handleWhere(params: Omit<Partial<FindAllUserDto & FindOneUserDto>, 'columns' | 'orderBy'>) {
     const where: Prisma.UserWhereInput = {};
 
+    if (!params.with?.includes(UserRelation.SOFT_DELETE)) where.deletedAt = null;
     if (params.id) where.id = params.id;
     if (params.ids?.length && params.ids.length > 0) where.id = { in: params.ids };
     if (params.notId)
