@@ -1,0 +1,44 @@
+import { PaginatedResponse, Product } from '@/domain';
+import {
+  CreateProductInput,
+  GetAllProductParams,
+  ProductRelationParams,
+  UpdateProductInput,
+} from '@/features/products/schema';
+import { createServerApiClient } from '@/lib/api-server';
+
+export async function getAllProducts<T = Product>(params: GetAllProductParams) {
+  const api = await createServerApiClient();
+  const response = await api.get<PaginatedResponse<T>>('/v1/products', { params });
+  await new Promise((resolve) => setTimeout(resolve, 5000));
+  return response.data;
+}
+
+export async function getProductById<T = Product>(id: number, relation?: ProductRelationParams) {
+  const api = await createServerApiClient();
+  const response = await api.get<T>(`/v1/products/${id}`, {
+    params: { with: relation },
+  });
+  return response.data;
+}
+
+export async function createProduct(input: CreateProductInput) {
+  const api = await createServerApiClient();
+  const response = await api.post('/v1/products', input);
+
+  return response.data;
+}
+
+export async function updateProduct(id: number, input: UpdateProductInput) {
+  const api = await createServerApiClient();
+  const response = await api.put(`/v1/products/${id}`, input);
+
+  return response.data;
+}
+
+export async function deleteProduct(id: number) {
+  const api = await createServerApiClient();
+  const response = await api.delete(`/v1/products/${id}`);
+
+  return response.data;
+}

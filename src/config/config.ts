@@ -9,21 +9,30 @@
  * 3. Reusable — kalau dipakai project lain, cukup ganti .env, config.ts tetap sama
  */
 
-export const config = {
-  app: {
-    name: process.env.APP_NAME ?? 'Boilerplate Next JS',
-    env: process.env.NODE_ENV ?? 'development',
-    url: process.env.APP_URL ?? 'http://localhost:3000',
-  },
+import { Gender } from '@/domain';
 
-  api: {
-    baseUrl: process.env.API_BASE_URL ?? 'http://localhost:8000/api',
-  },
+export const app = {
+  name: process.env.APP_NAME ?? 'Boilerplate Next JS',
+  env: process.env.NODE_ENV ?? 'development',
+  url: process.env.APP_URL ?? 'http://localhost:3000',
+} as const;
 
-  auth: {
-    secret: process.env.NEXTAUTH_SECRET ?? '',
-    // Berapa lama sebelum expiry access token dianggap "perlu di-refresh" (dalam detik)
-    // Beri buffer biar refresh terjadi SEBELUM token benar-benar expired
-    refreshBufferSeconds: Number(process.env.AUTH_REFRESH_BUFFER_SECONDS ?? 60),
-  },
+export const api = {
+  baseUrl: process.env.API_BASE_URL ?? 'http://localhost:8000/api',
+} as const;
+
+export const auth = {
+  secret: process.env.NEXTAUTH_SECRET ?? '',
+  refreshBufferSeconds: Number(process.env.AUTH_REFRESH_BUFFER_SECONDS ?? 60),
+} as const;
+
+export const options = {
+  genderOptions: [
+    { label: 'Male', value: Gender.MALE },
+    { label: 'Female', value: Gender.FEMALE },
+  ],
+  activeOptions: [
+    { label: 'Active', value: 'true' },
+    { label: 'Inactive', value: 'false' },
+  ],
 } as const;

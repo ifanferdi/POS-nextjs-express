@@ -15,7 +15,8 @@ import {
   SidebarRail,
   SidebarSeparator,
 } from '@/components/ui/sidebar';
-import { KeyRound, ShieldCheck, Users } from 'lucide-react';
+import { getInitials } from '@/lib/helper';
+import { Box, KeyRound, ShieldCheck, Users } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -23,6 +24,7 @@ const navItems = [
   { title: 'Users', href: '/users', icon: Users },
   { title: 'Roles', href: '/roles', icon: ShieldCheck },
   { title: 'Permissions', href: '/permissions', icon: KeyRound },
+  { title: 'Products', href: '/products', icon: Box },
 ];
 
 interface AppSidebarProps {
@@ -31,7 +33,7 @@ interface AppSidebarProps {
 
 export function AppSidebar({ username }: AppSidebarProps) {
   const pathname = usePathname();
-  const initials = username ? username.slice(0, 2).toUpperCase() : 'AD';
+  const initials = username ? getInitials(username) : '';
   const displayName = username ?? 'Admin';
 
   return (
@@ -69,9 +71,9 @@ export function AppSidebar({ username }: AppSidebarProps) {
                       asChild
                       isActive={isActive}
                       tooltip={item.title}
-                      className={`h-12 px-4 ${
+                      className={`h-10 px-4 ${
                         isActive
-                          ? 'relative bg-primary/10 text-primary font-medium before:absolute before:inset-y-1.5 before:left-0 before:w-1 before:rounded-full before:bg-primary'
+                          ? 'relative bg-primary/10 text-primary font-bold! before:absolute before:inset-y-1.5 before:left-0 before:w-1 before:rounded-full before:bg-primary'
                           : ''
                       }`}
                     >
