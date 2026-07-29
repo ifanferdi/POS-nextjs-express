@@ -59,10 +59,7 @@ export function RoleTable({ roles, allPermissions }: RoleTableProps) {
             return (
               <TableRow key={role.id} className="group">
                 <TableCell>
-                  <Link
-                    href={`/roles/${role.id}`}
-                    className="font-medium group-hover:underline"
-                  >
+                  <Link href={`/roles/${role.id}`} className="font-medium group-hover:underline">
                     {role.name}
                   </Link>
                 </TableCell>
@@ -89,7 +86,9 @@ export function RoleTable({ roles, allPermissions }: RoleTableProps) {
                   )}
                 </TableCell>
                 <TableCell>
-                  <Badge variant="secondary">{role.userCount} user{role.userCount !== 1 ? 's' : ''}</Badge>
+                  <Badge variant="secondary">
+                    {role.userCount} user{role.userCount !== 1 ? 's' : ''}
+                  </Badge>
                 </TableCell>
                 <TableCell className="text-muted-foreground">
                   {moment(role.createdAt).format('MMM D YYYY')}

@@ -9,21 +9,35 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Role, User } from '@/domain';
+import { RoleOption, User } from '@/domain';
+import { getAllUser } from '@/features/users/api';
+import { GetAllUserParams } from '@/features/users/schema';
 import { getInitials } from '@/lib/helper';
 import _ from 'lodash';
 import { UsersIcon } from 'lucide-react';
 import moment from 'moment';
 import Link from 'next/link';
+import { UserPagination } from './user-pagination';
 
-type RoleOption = Pick<Role, 'id' | 'name'>;
+interface UsersTableSectionProps {
+  params: GetAllUserParams;
+  roles: RoleOption[];
+}
+export async function UsersTableSection({ params, roles }: UsersTableSectionProps) {
+  const { data: users, ...meta } = await getAllUser(params);
+  return (
+    <>
+      <UserTable users={users} roles={roles} />
+      <UserPagination page={meta.page} totalPages={meta.totalPages} total={meta.total} />
+    </>
+  );
+}
 
 interface UserTableProps {
   users: Omit<User, 'permissions'>[];
   roles: RoleOption[];
 }
-
-export function UserTable({ users, roles }: UserTableProps) {
+function UserTable({ users, roles }: UserTableProps) {
   if (users.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-16">
@@ -39,17 +53,7 @@ export function UserTable({ users, roles }: UserTableProps) {
   return (
     <div className="overflow-hidden rounded-lg border border-border/60">
       <Table>
-        <TableHeader>
-          <TableRow className="bg-muted/40 hover:bg-muted/40">
-            <TableHead className="text-xs text-muted-foreground">Name</TableHead>
-            <TableHead className="text-xs text-muted-foreground">Username</TableHead>
-            <TableHead className="text-xs text-muted-foreground">Gender</TableHead>
-            <TableHead className="text-xs text-muted-foreground">Birth</TableHead>
-            <TableHead className="text-xs text-muted-foreground">Role</TableHead>
-            <TableHead className="text-xs text-muted-foreground">Status</TableHead>
-            <TableHead className="text-right text-xs text-muted-foreground">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
+        {UserTableHeader}
         <TableBody>
           {users.map((user) => (
             <TableRow key={user.id} className="group">
@@ -102,3 +106,19 @@ export function UserTable({ users, roles }: UserTableProps) {
     </div>
   );
 }
+
+export const UserTableHeader = (
+  <>
+    <TableHeader>
+      <TableRow className="bg-muted/40 hover:bg-muted/40">
+        <TableHead className="text-xs text-muted-foreground">Name</TableHead>
+        <TableHead className="text-xs text-muted-foreground">Username</TableHead>
+        <TableHead className="text-xs text-muted-foreground">Gender</TableHead>
+        <TableHead className="text-xs text-muted-foreground">Birth</TableHead>
+        <TableHead className="text-xs text-muted-foreground">Role</TableHead>
+        <TableHead className="text-xs text-muted-foreground">Status</TableHead>
+        <TableHead className="text-right text-xs text-muted-foreground">Actions</TableHead>
+      </TableRow>
+    </TableHeader>
+  </>
+);

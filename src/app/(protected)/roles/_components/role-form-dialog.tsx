@@ -14,21 +14,16 @@ import {
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Permission } from '@/domain';
+import {
+  CreateRoleInput,
+  CreateRoleSchema,
+  UpdateRoleInput,
+  UpdateRoleSchema,
+} from '@/features/roles/schema';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useState } from 'react';
 import { Controller, UseFormReturn, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
-import { z } from 'zod';
-
-const createRoleSchema = z.object({
-  name: z.string().trim().min(1, 'Role name is required').max(255),
-  permissionIds: z.array(z.number()).optional().default([]),
-});
-
-const updateRoleSchema = z.object({
-  name: z.string().trim().min(1, 'Role name is required').max(255),
-  permissionIds: z.array(z.number()).optional().default([]),
-});
 
 interface RoleFormValues {
   name: string;
@@ -40,7 +35,7 @@ function RoleFormFields({
   permissions,
   isPending,
 }: {
-  form: UseFormReturn<RoleFormValues>;
+  form: UseFormReturn<CreateRoleInput>;
   permissions: Permission[];
   isPending: boolean;
 }) {
@@ -96,8 +91,8 @@ function CreateRoleForm({
   permissions: Permission[];
   onClose: () => void;
 }) {
-  const form = useForm<RoleFormValues>({
-    resolver: zodResolver(createRoleSchema) as never,
+  const form = useForm<CreateRoleInput>({
+    resolver: zodResolver(CreateRoleSchema),
     mode: 'onSubmit',
     reValidateMode: 'onSubmit',
     defaultValues: { name: '', permissionIds: [] },
@@ -136,8 +131,8 @@ function EditRoleForm({
   permissions: Permission[];
   onClose: () => void;
 }) {
-  const form = useForm<RoleFormValues>({
-    resolver: zodResolver(updateRoleSchema) as never,
+  const form = useForm<UpdateRoleInput>({
+    resolver: zodResolver(UpdateRoleSchema),
     mode: 'onSubmit',
     reValidateMode: 'onSubmit',
     defaultValues: {

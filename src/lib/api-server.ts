@@ -1,6 +1,7 @@
 import { auth } from '@/auth';
-import { config } from '@/config/config';
-import axios, { AxiosError } from 'axios';
+import { api as configApi } from '@/config/config';
+import axios from 'axios';
+import { redirect } from 'next/navigation';
 
 /**
  * Buat Axios instance yang sudah inject accessToken dari session NextAuth.
@@ -17,11 +18,12 @@ import axios, { AxiosError } from 'axios';
 export async function createServerApiClient() {
   const session = await auth();
   const instance = axios.create({
-    baseURL: config.api.baseUrl,
+    baseURL: configApi.baseUrl,
     headers: {
       'Content-Type': 'application/json',
-      ...(session?.accessToken && { Authorization: `Bearer ${session.accessToken}` }),
+      ...(session?.accessToken && { Authorization: `Bearer ${session.accessToken.trim()}` }),
     },
+    timeout: 10_000,
   });
 
   /**
@@ -30,11 +32,11 @@ export async function createServerApiClient() {
    */
   instance.interceptors.response.use(
     (response) => response,
-    (error: AxiosError) => {
+    async (error: Record<string, any>) => {
+      // JWT expired — redirect ke login (refresh token juga sudah expired/fail)
+      if (error.response?.data?.message === 'jwt expired') redirect('/login');
       console.log(error.response);
 
-      // Token expired tapi jwt() callback belum sempat refresh
-      // (edge case — biasanya gak terjadi karena refresh proaktif di jwt() callback)
       if (error.response?.status === 401) throw new Error('UNAUTHORIZED');
       if (error.response?.status === 403) throw new Error('FORBIDDEN');
       if (error.response?.status === 404) throw new Error('NOT FOUND');

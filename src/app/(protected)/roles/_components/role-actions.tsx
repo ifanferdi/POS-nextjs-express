@@ -50,7 +50,7 @@ export function RoleActions({ role, permissions, userCount }: RoleActionsProps) 
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-36">
           <DropdownMenuItem onClick={() => setEditOpen(true)} className="cursor-pointer">
-            <PencilIcon />
+            <PencilIcon className="mr-1" />
             <span>Edit</span>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
@@ -59,7 +59,7 @@ export function RoleActions({ role, permissions, userCount }: RoleActionsProps) 
             onClick={() => setDeleteOpen(true)}
             className="cursor-pointer"
           >
-            <TrashIcon />
+            <TrashIcon className="mr-1" />
             <span>Delete</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -77,17 +77,17 @@ export function RoleActions({ role, permissions, userCount }: RoleActionsProps) 
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Delete Role</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete <strong>{role.name}</strong>? This action cannot be
-              undone.
-              {userCount > 0 && (
-                <span className="mt-2 block text-warning">
-                  This role is assigned to {userCount} user{userCount !== 1 ? 's' : ''}. They will
-                  lose these permissions.
-                </span>
-              )}
-            </DialogDescription>
           </DialogHeader>
+          <DialogDescription>
+            Are you sure you want to delete <strong>{role.name}</strong>? This action cannot be
+            undone.
+            {userCount > 0 && (
+              <span className="mt-2 block text-warning">
+                This role is assigned to {userCount} user{userCount !== 1 ? 's' : ''}. They will
+                lose these permissions.
+              </span>
+            )}
+          </DialogDescription>
           <DialogFooter>
             <Button variant="destructive" onClick={handleDelete}>
               Delete

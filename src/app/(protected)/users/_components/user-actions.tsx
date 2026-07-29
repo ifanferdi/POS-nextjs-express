@@ -60,7 +60,7 @@ export function UserActions({ user, roles }: UserActionsProps) {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-36">
           <DropdownMenuItem onClick={() => setEditOpen(true)} className="cursor-pointer">
-            <PencilIcon />
+            <PencilIcon className="mr-1" />
             <span>Edit</span>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
@@ -69,7 +69,7 @@ export function UserActions({ user, roles }: UserActionsProps) {
             onClick={() => setDeleteOpen(true)}
             className="cursor-pointer"
           >
-            <TrashIcon />
+            <TrashIcon className="mr-1" />
             <span>Delete</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -79,7 +79,7 @@ export function UserActions({ user, roles }: UserActionsProps) {
         mode="edit"
         user={user}
         roles={roles}
-        open={editOpen}
+        editOpen={editOpen}
         onOpenChange={setEditOpen}
       />
 
@@ -87,11 +87,11 @@ export function UserActions({ user, roles }: UserActionsProps) {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Delete User</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete <strong>{user.profile.fullName}</strong>? This action
-              cannot be undone.
-            </DialogDescription>
           </DialogHeader>
+          <DialogDescription>
+            Are you sure you want to delete <strong>{user.profile.fullName}</strong>? This action
+            cannot be undone.
+          </DialogDescription>
           <DialogFooter>
             <Button variant="destructive" onClick={handleDelete} disabled={isPending}>
               Delete

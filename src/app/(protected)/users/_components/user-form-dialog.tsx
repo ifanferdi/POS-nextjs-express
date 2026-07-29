@@ -19,7 +19,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Gender, Role, User } from '@/domain';
+import { options } from '@/config/config';
+import { Role, User } from '@/domain';
 import { createUserAction, updateUserAction } from '@/features/users/action';
 import {
   CreateUserInput,
@@ -36,16 +37,6 @@ import { toast } from 'sonner';
 type UserWithoutPermissions = Omit<User, 'permissions'>;
 
 type RoleOption = Pick<Role, 'id' | 'name'>;
-
-const genderOptions = [
-  { label: 'Male', value: Gender.MALE },
-  { label: 'Female', value: Gender.FEMALE },
-];
-
-const activeOptions = [
-  { label: 'Active', value: 'true' },
-  { label: 'Inactive', value: 'false' },
-];
 
 function UserFormFields({
   form,
@@ -190,7 +181,7 @@ function UserFormFields({
                   <SelectValue placeholder="Select Gender" />
                 </SelectTrigger>
                 <SelectContent position="item-aligned">
-                  {genderOptions.map((g) => (
+                  {options.genderOptions.map((g) => (
                     <SelectItem key={g.value} value={g.value}>
                       {g.label}
                     </SelectItem>
@@ -243,7 +234,7 @@ function UserFormFields({
                 <SelectValue placeholder="Select Status" />
               </SelectTrigger>
               <SelectContent position="item-aligned">
-                {activeOptions.map((o) => (
+                {options.activeOptions.map((o) => (
                   <SelectItem key={o.value} value={o.value}>
                     {o.label}
                   </SelectItem>
@@ -380,26 +371,20 @@ interface UserFormDialogProps {
   roles: RoleOption[];
   // Controlled mode (optional) — saat dipakai dari dropdown item, parent yang kontrol open state.
   // Tanpa props ini, komponen render trigger button sendiri (untuk header "Add New User").
-  open?: boolean;
+  editOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
 }
 
-export function UserFormDialog({
-  mode,
-  user,
-  roles,
-  open: controlledOpen,
-  onOpenChange,
-}: UserFormDialogProps) {
+export function UserFormDialog({ mode, user, roles, editOpen, onOpenChange }: UserFormDialogProps) {
   const [internalOpen, setInternalOpen] = useState(false);
-  const isControlled = controlledOpen !== undefined && onOpenChange !== undefined;
-  const open = isControlled ? controlledOpen : internalOpen;
-  const setOpen = isControlled ? onOpenChange : setInternalOpen;
+  const isEditAction = editOpen !== undefined && onOpenChange !== undefined;
+  const open = isEditAction ? editOpen : internalOpen;
+  const setOpen = isEditAction ? onOpenChange : setInternalOpen;
   const isEditMode = mode === 'edit';
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      {!isControlled && (
+      {!isEditAction && (
         <DialogTrigger asChild>
           <Button variant="default" className="h-10 px-3">
             Add New User

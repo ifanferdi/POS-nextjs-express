@@ -14,3 +14,5 @@ export enum RoleRelation {
   USERS = 'users',
   PERMISSIONS = 'permissions',
 }
+
+export type RoleOption = Pick<Role, 'id' | 'name'>;

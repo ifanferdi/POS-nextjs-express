@@ -43,15 +43,43 @@ function DialogContent({
   className,
   children,
   showCloseButton = true,
+  onInteractOutside,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   showCloseButton?: boolean;
 }) {
+  // ponytail: Select/DropdownMenu di-dalam Dialog menjadi DismissableLayer lebih
+  // tinggi yang disableOutsidePointerEvents → dialog content jadi pointer-events:none.
+  // Click "di dalam dialog" jatuh tembus ke overlay → deferred dismiss menutup
+  // dialog di klik berikutnya. Catat saat ada menu terbuka (capture pointerdown,
+  // sebelum menu tutup) lalu block onInteractOutside — user maksudnya nutup menu,
+  // bukan dialog. Upgrade path: turun ke per-instance guard kalau debounce memberi
+  // false positive di klik cepat berturut-turut.
+  const suppressDismissRef = React.useRef(false);
+  React.useEffect(() => {
+    const onPointerDownCapture = () => {
+      const openMenu = document.querySelector(
+        '[data-slot="select-content"][data-state="open"], [data-slot="dropdown-menu-content"][data-state="open"]',
+      );
+      if (openMenu) suppressDismissRef.current = true;
+    };
+    document.addEventListener('pointerdown', onPointerDownCapture, true);
+    return () => document.removeEventListener('pointerdown', onPointerDownCapture, true);
+  }, []);
+
   return (
     <DialogPortal>
       <DialogOverlay />
       <DialogPrimitive.Content
         data-slot="dialog-content"
+        onInteractOutside={(e) => {
+          if (suppressDismissRef.current) {
+            suppressDismissRef.current = false;
+            e.preventDefault();
+            return;
+          }
+          onInteractOutside?.(e);
+        }}
         className={cn(
           'fixed top-1/2 left-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-xl bg-popover p-4 text-sm text-popover-foreground ring-1 ring-foreground/10 duration-100 outline-none sm:max-w-sm data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95',
           className,

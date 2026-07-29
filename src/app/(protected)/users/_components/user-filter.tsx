@@ -14,6 +14,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { options } from '@/config/config';
 import { Role } from '@/domain';
 import { CircleDotIcon, FilterIcon, ShieldCheckIcon, XIcon } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -24,11 +25,6 @@ type RoleOption = Pick<Role, 'id' | 'name'>;
 interface UserFilterProps {
   roles: RoleOption[];
 }
-
-const statusOptions = [
-  { label: 'Active', value: 'true' },
-  { label: 'Inactive', value: 'false' },
-];
 
 export function UserFilter({ roles }: UserFilterProps) {
   const router = useRouter();
@@ -81,13 +77,13 @@ export function UserFilter({ roles }: UserFilterProps) {
               onValueChange={(v) => updateParam('roleId', v === 'all' ? null : v)}
             >
               <DropdownMenuRadioItem value="all">All Roles</DropdownMenuRadioItem>
-              {roles.map((r) => (
+              {roles.map((role) => (
                 <DropdownMenuRadioItem
-                  key={r.id}
-                  value={String(r.id)}
-                  className={`cursor-pointer ${r.id.toString() === currentRoleId && 'bg-muted'}`}
+                  key={role.id}
+                  value={String(role.id)}
+                  className={`cursor-pointer ${role.id.toString() === currentRoleId && 'bg-muted'}`}
                 >
-                  {r.name}
+                  {role.name}
                 </DropdownMenuRadioItem>
               ))}
             </DropdownMenuRadioGroup>
@@ -104,13 +100,13 @@ export function UserFilter({ roles }: UserFilterProps) {
               onValueChange={(v) => updateParam('isActive', v === 'all' ? null : v)}
             >
               <DropdownMenuRadioItem value="all">All Status</DropdownMenuRadioItem>
-              {statusOptions.map((s) => (
+              {options.activeOptions.map((option) => (
                 <DropdownMenuRadioItem
-                  key={s.value}
-                  value={s.value}
-                  className={`cursor-pointer ${s.value === currentIsActive && 'bg-muted'}`}
+                  key={option.value}
+                  value={option.value}
+                  className={`cursor-pointer ${option.value === currentIsActive && 'bg-muted'}`}
                 >
-                  {s.label}
+                  {option.label}
                 </DropdownMenuRadioItem>
               ))}
             </DropdownMenuRadioGroup>

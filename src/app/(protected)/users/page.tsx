@@ -1,20 +1,17 @@
 import { UserFilter } from '@/app/(protected)/users/_components/user-filter';
 import { UserFormDialog } from '@/app/(protected)/users/_components/user-form-dialog';
-import { UserPagination } from '@/app/(protected)/users/_components/user-pagination';
 import { UserSearch } from '@/app/(protected)/users/_components/user-search';
-import { UserTable } from '@/app/(protected)/users/_components/user-table';
-import { Role, UserRelation } from '@/domain';
+import { UsersTableSection } from '@/app/(protected)/users/_components/user-table';
+import { Skeleton } from '@/components/ui/skeleton';
+import { UserRelation,RoleOption } from '@/domain';
 import { getAllRoles } from '@/features/roles/api';
-import { getAllUser } from '@/features/users/api';
 import { GetAllUserParams } from '@/features/users/schema';
 import { Suspense } from 'react';
-
-type RoleOption = Pick<Role, 'id' | 'name'>;
+import { UserTableSkeleton } from './_components/user-table-skeleton';
 
 interface UsersPageProps {
   searchParams: Promise<{
     page?: string;
-    limit?: string;
     q?: string;
     roleId?: string;
     isActive?: string;
@@ -22,24 +19,24 @@ interface UsersPageProps {
 }
 
 export default async function UsersPage({ searchParams }: UsersPageProps) {
-  const { page, limit, q, roleId, isActive } = await searchParams;
+  const { page, q, roleId, isActive } = await searchParams;
   const pageNum = Number(page ?? 1);
-  const limitNum = Number(limit ?? 10);
   const roleIdNum = roleId ? Number(roleId) : undefined;
   const isActiveBool = isActive === 'true' ? true : isActive === 'false' ? false : undefined;
 
   const params: GetAllUserParams = {
     page: pageNum,
-    limit: limitNum,
     q,
     roleId: roleIdNum,
     isActive: isActiveBool,
     with: [UserRelation.PROFILE, UserRelation.ROLE],
   };
 
-  const [{ data: users, ...meta }, roles] = await Promise.all([getAllUser(params), getAllRoles()]);
-
-  const roleOptions: RoleOption[] = roles.map((r) => ({ id: r.id, name: r.name }));
+  const { data: roles } = await getAllRoles<RoleOption>({
+    limit: -1,
+    columns: ['id', 'name'],
+    orderBy: ['name:asc'],
+  });
 
   return (
     <div className="space-y-6">
@@ -48,18 +45,19 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
           <h1 className="text-2xl font-semibold tracking-tight">Users</h1>
           <p className="mt-1 text-sm text-muted-foreground">Manage your application users</p>
         </div>
-        <UserFormDialog mode="create" roles={roleOptions} />
+        <UserFormDialog mode="create" roles={roles} />
       </div>
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <Suspense fallback={null}>
+        <Suspense fallback={<Skeleton className="h-9 w-full sm:w-72" />}>
           <UserSearch />
         </Suspense>
-        <Suspense fallback={null}>
-          <UserFilter roles={roleOptions} />
+        <Suspense fallback={<Skeleton className="h-9 w-24" />}>
+          <UserFilter roles={roles} />
         </Suspense>
       </div>
-      <UserTable users={users} roles={roleOptions} />
-      <UserPagination page={meta.page} totalPages={meta.totalPages} total={meta.total} />
+      <Suspense fallback={<UserTableSkeleton />}>
+        <UsersTableSection params={params} roles={roles} />
+      </Suspense>
     </div>
   );
 }

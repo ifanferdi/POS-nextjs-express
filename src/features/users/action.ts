@@ -6,27 +6,12 @@ import {
   UpdateUserInput,
   UpdateUserSchema,
 } from '@/features/users/schema';
-import { createServerApiClient } from '@/lib/api-server';
-import { calculateAge } from '@/lib/helper';
 import { revalidatePath } from 'next/cache';
+import * as api from './api';
 
 export interface ActionResult {
   success: boolean;
   error?: string;
-}
-
-function buildPayload(data: CreateUserInput | UpdateUserInput) {
-  return {
-    username: data.username,
-    password: data.password,
-    confirmPassword: data.confirmPassword,
-    isActive: data.isActive,
-    roleId: data.roleId,
-    profile: {
-      ...data.profile,
-      age: calculateAge(new Date(data.profile.dateOfBirth)),
-    },
-  };
 }
 
 export async function createUserAction(input: CreateUserInput): Promise<ActionResult> {
@@ -34,8 +19,8 @@ export async function createUserAction(input: CreateUserInput): Promise<ActionRe
   if (!validate.success) return { success: false, error: 'Input tidak valid.' };
 
   try {
-    const api = await createServerApiClient();
-    await api.post('/v1/users', buildPayload(validate.data));
+  
+    await api.createUser(validate.data);
     revalidatePath('/users');
 
     return { success: true };
@@ -52,8 +37,7 @@ export async function updateUserAction(id: number, input: UpdateUserInput): Prom
   if (!validate.success) return { success: false, error: 'Input tidak valid.' };
 
   try {
-    const api = await createServerApiClient();
-    await api.put(`/v1/users/${id}`, buildPayload(validate.data));
+    await api.updateUser(id, validate.data);
     revalidatePath('/users');
 
     return { success: true };
@@ -67,8 +51,7 @@ export async function updateUserAction(id: number, input: UpdateUserInput): Prom
 
 export async function deleteUserAction(id: number): Promise<ActionResult> {
   try {
-    const api = await createServerApiClient();
-    await api.delete(`/v1/users/${id}`);
+    await api.deleteUser(id);
     revalidatePath('/users');
 
     return { success: true };
