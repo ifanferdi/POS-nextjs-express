@@ -1,12 +1,12 @@
 import { LoginBrandPanel } from '@/app/(auth)/_components/login-brand-panel';
 import { LoginForm } from '@/app/(auth)/_components/login-form';
-import { ThemeToggle } from '@/components/theme-toggle';
 import { auth } from '@/auth';
+import { ThemeToggle } from '@/components/theme-toggle';
 import { redirect } from 'next/navigation';
 
 export default async function LoginPage() {
   const session = await auth();
-  if (session) redirect('/users');
+  if (session && !session.error) redirect('/users');
 
   return (
     <div className="grid min-h-screen lg:grid-cols-2">

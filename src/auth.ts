@@ -1,4 +1,4 @@
-import { config } from '@/config/config';
+import { auth as authConfig } from '@/config/config';
 import { loginRequest, refreshTokenRequest } from '@/features/auth/api';
 import { RefreshTokenResponseDto } from '@/features/auth/dto';
 import { LoginSchema } from '@/features/auth/schema';
@@ -14,36 +14,8 @@ async function refreshAccessToken(refreshToken: string): Promise<RefreshTokenRes
 }
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  session: {
-    strategy: 'jwt', // wajib untuk Credentials Provider — lihat dokumentasi resmi
-  },
-
-  providers: [
-    Credentials({
-      name: 'Credentials',
-      credentials: {
-        username: { label: 'Username', type: 'text' },
-        password: { label: 'Password', type: 'password' },
-      },
-
-      async authorize(credentials) {
-        try {
-          const { username, password } = LoginSchema.parse(credentials);
-
-          // Objek ini yang akan masuk ke parameter `user` di callback jwt()
-          const login = await loginRequest(username, password);
-
-          return login;
-        } catch (error) {
-          console.log(error);
-          // authorize() return null → NextAuth tampilkan error di halaman login
-          // Lihat: https://authjs.dev/getting-started/authentication/credentials
-          return null;
-        }
-      },
-    }),
-  ],
-
+  session: { strategy: 'jwt' },
+  providers: [handleSignIn()],
   callbacks: {
     /**
      * Dipanggil setiap session diakses.
@@ -55,13 +27,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.id = user.id;
         token.accessToken = user.token;
         token.refreshToken = user.refreshToken;
-        token.accessTokenExpiry = user.tokenExpiry;
+        token.tokenExpiry = user.tokenExpiry;
+        token.user = user.user;
         return token;
       }
 
       // Request berikutnya — cek proaktif apakah token perlu di-refresh
-      const bufferMs = config.auth.refreshBufferSeconds * 1000;
-      const isExpiringSoon = Date.now() > token.accessTokenExpiry - bufferMs;
+      const bufferMs = authConfig.refreshBufferSeconds * 1000;
+      const isExpiringSoon = Date.now() > token.tokenExpiry - bufferMs;
 
       if (!isExpiringSoon) {
         return token; // token masih fresh, gak perlu refresh
@@ -69,13 +42,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
       try {
         const refreshed = await refreshAccessToken(token.refreshToken);
-        // const myAccount = await getMyAccountRequest(refreshed.token, {
-        //   with: [UserRelation.PROFILE, UserRelation.ROLE_PERMISSIONS],
-        // });
 
+        token.id = refreshed.user.id;
         token.accessToken = refreshed.token;
         token.refreshToken = refreshed.refreshToken;
-        token.accessTokenExpiry = refreshed.tokenExpiry;
+        token.tokenExpiry = refreshed.tokenExpiry;
+        token.user = refreshed.user;
         // token.role = myAccount.role; // ← role terbaru dari backend
         // token.permissions = myAccount.permissions; // ← permissions terbaru dari backend
 
@@ -94,9 +66,38 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async session({ session, token }) {
       session.accessToken = token.accessToken;
       session.user.id = token.sub as string;
+      session.user = token.user;
+      session.error = token.error; // propagate RefreshTokenError ke session
+
       return session;
     },
   },
 
   pages: { signIn: '/login' },
 });
+
+function handleSignIn(): import('@auth/core/providers').Provider {
+  return Credentials({
+    name: 'Credentials',
+    credentials: {
+      username: { label: 'Username', type: 'text' },
+      password: { label: 'Password', type: 'password' },
+    },
+
+    async authorize(credentials) {
+      try {
+        const { username, password } = LoginSchema.parse(credentials);
+
+        // Objek ini yang akan masuk ke parameter `user` di callback jwt()
+        const login = await loginRequest(username, password);
+
+        return login;
+      } catch (error) {
+        console.log(error);
+        // authorize() return null → NextAuth tampilkan error di halaman login
+        // Lihat: https://authjs.dev/getting-started/authentication/credentials
+        return null;
+      }
+    },
+  });
+}

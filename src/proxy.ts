@@ -7,7 +7,7 @@ const authRoutes = ['/login'];
 export default async function proxy(req: NextRequest) {
   const session = await auth(); // ← panggil auth() langsung
 
-  const isLoggedIn = !!session;
+  const isLoggedIn = !!session && !session.error;
   const isPublicRoute = publicRoutes.includes(req.nextUrl.pathname);
   const isAuthRoute = authRoutes.includes(req.nextUrl.pathname);
 

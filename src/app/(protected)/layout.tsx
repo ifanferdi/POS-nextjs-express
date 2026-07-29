@@ -8,11 +8,7 @@ import React from 'react';
 export default async function ProtectedLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
 
-  if (!session) redirect('/login');
-
-  if ((session as any).error === 'RefreshTokenError') {
-    redirect('/login');
-  }
+  if (!session || session.error === 'RefreshTokenError') redirect('/login');
 
   return (
     <SidebarProvider>

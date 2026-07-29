@@ -1,4 +1,4 @@
-import { config } from '@/config/config';
+import { api as configApi } from '@/config/config';
 import { User, UserRelation } from '@/domain';
 import axios from 'axios';
 import { LoginResponseDto, RefreshTokenResponseDto } from './dto';
@@ -9,23 +9,23 @@ import { LoginResponseDto, RefreshTokenResponseDto } from './dto';
  */
 
 export async function loginRequest(username: string, password: string) {
-  const response = await axios.post<LoginResponseDto>(`${config.api.baseUrl}/v1/auth/sign-in`, {
+  const response = await axios.post<LoginResponseDto>(`${configApi.baseUrl}/v1/auth/sign-in`, {
     username,
     password,
   });
-  return response.data; // { accessToken, refreshToken, accessTokenExpiry, ... }
+  return response.data; // { accessToken, refreshToken, tokenExpiry, ... }
 }
 
 export async function refreshTokenRequest(refreshToken: string) {
   const response = await axios.post<RefreshTokenResponseDto>(
-    `${config.api.baseUrl}/v1/auth/refresh-token`,
+    `${configApi.baseUrl}/v1/auth/refresh-token`,
     { refreshToken },
   );
   return response.data;
 }
 
 export async function getMyAccountRequest(accessToken: string, params?: { with: UserRelation[] }) {
-  const response = await axios.get<User>(`${config.api.baseUrl}/v1/user/my-account`, {
+  const response = await axios.get<User>(`${configApi.baseUrl}/v1/user/my-account`, {
     params,
     headers: { Authorization: `Bearer ${accessToken}` },
   });
