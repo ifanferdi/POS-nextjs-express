@@ -1,4 +1,5 @@
 import { UserActions } from '@/app/(protected)/users/_components/user-actions';
+import { TablePagination } from '@/components/shared/table';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -9,15 +10,14 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { icons } from '@/config/config';
 import { RoleOption, User } from '@/domain';
 import { getAllUser } from '@/features/users/api';
 import { GetAllUserParams } from '@/features/users/schema';
 import { getInitials } from '@/lib/helper';
 import _ from 'lodash';
-import { UsersIcon } from 'lucide-react';
 import moment from 'moment';
 import Link from 'next/link';
-import { UserPagination } from './user-pagination';
 
 interface UsersTableSectionProps {
   params: GetAllUserParams;
@@ -28,7 +28,12 @@ export async function UsersTableSection({ params, roles }: UsersTableSectionProp
   return (
     <>
       <UserTable users={users} roles={roles} />
-      <UserPagination page={meta.page} totalPages={meta.totalPages} total={meta.total} />
+      <TablePagination
+        page={meta.page}
+        totalPages={meta.totalPages}
+        total={meta.total}
+        baseUrl="/users"
+      />
     </>
   );
 }
@@ -42,7 +47,7 @@ function UserTable({ users, roles }: UserTableProps) {
     return (
       <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-16">
         <div className="mb-3 flex size-12 items-center justify-center rounded-full bg-muted">
-          <UsersIcon className="size-6 text-muted-foreground" />
+          <icons.user className="size-6 text-muted-foreground" />
         </div>
         <p className="text-sm font-medium">No users found</p>
         <p className="mt-1 text-sm text-muted-foreground">Try adjusting your search or filters.</p>
@@ -53,7 +58,7 @@ function UserTable({ users, roles }: UserTableProps) {
   return (
     <div className="overflow-hidden rounded-lg border border-border/60">
       <Table>
-        {UserTableHeader}
+        <UserTableHeader />
         <TableBody>
           {users.map((user) => (
             <TableRow key={user.id} className="group">
@@ -74,13 +79,7 @@ function UserTable({ users, roles }: UserTableProps) {
               <TableCell className="text-muted-foreground">
                 {`${user.profile.placeOfBirth}, ${moment(user.profile.dateOfBirth).format('MMM D YYYY')}`}
               </TableCell>
-              <TableCell>
-                <span
-                  className={`inline-flex h-5 items-center rounded-full px-2 text-xs font-medium bg-gray-500/10 text-gray-600 dark:text-gray-400`}
-                >
-                  {user.role.name}
-                </span>
-              </TableCell>
+              <TableCell className="text-muted-foreground">{user.role.name}</TableCell>
               <TableCell>
                 {user.isActive ? (
                   <Badge className="bg-success/10 text-success hover:bg-success/15">
@@ -107,18 +106,20 @@ function UserTable({ users, roles }: UserTableProps) {
   );
 }
 
-export const UserTableHeader = (
-  <>
+export function UserTableHeader() {
+  const HEADERS = ['Name', 'Username', 'Gender', 'Birth', 'Role', 'Status', 'Actions'];
+  return (
     <TableHeader>
       <TableRow className="bg-muted/40 hover:bg-muted/40">
-        <TableHead className="text-xs text-muted-foreground">Name</TableHead>
-        <TableHead className="text-xs text-muted-foreground">Username</TableHead>
-        <TableHead className="text-xs text-muted-foreground">Gender</TableHead>
-        <TableHead className="text-xs text-muted-foreground">Birth</TableHead>
-        <TableHead className="text-xs text-muted-foreground">Role</TableHead>
-        <TableHead className="text-xs text-muted-foreground">Status</TableHead>
-        <TableHead className="text-right text-xs text-muted-foreground">Actions</TableHead>
+        {HEADERS.map((header) => (
+          <TableHead
+            key={header}
+            className={`text-xs text-muted-foreground ${header === 'Actions' ? 'text-right' : ''}`}
+          >
+            {header}
+          </TableHead>
+        ))}
       </TableRow>
     </TableHeader>
-  </>
-);
+  );
+}

@@ -15,16 +15,17 @@ import {
   SidebarRail,
   SidebarSeparator,
 } from '@/components/ui/sidebar';
+import { icons } from '@/config/config';
 import { getInitials } from '@/lib/helper';
-import { Box, KeyRound, ShieldCheck, Users } from 'lucide-react';
+import { ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 const navItems = [
-  { title: 'Users', href: '/users', icon: Users },
-  { title: 'Roles', href: '/roles', icon: ShieldCheck },
-  { title: 'Permissions', href: '/permissions', icon: KeyRound },
-  { title: 'Products', href: '/products', icon: Box },
+  { title: 'Users', href: '/users', icon: icons.user },
+  { title: 'Roles', href: '/roles', icon: icons.role },
+  { title: 'Permissions', href: '/permissions', icon: icons.permission },
+  { title: 'Products', href: '/products', icon: icons.product },
 ];
 
 interface AppSidebarProps {

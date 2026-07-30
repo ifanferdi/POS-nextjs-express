@@ -12,9 +12,6 @@ export function UserSearch() {
   const [value, setValue] = useState(searchParams.get('q') ?? '');
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
-  // ponytail: hold searchParams in ref so pushSearch has stable identity.
-  // Without this, pushSearch changes whenever URL updates (useSearchParams returns new ref),
-  // which re-triggers the debounce effect → infinite 500ms loop.
   const searchParamsRef = useRef(searchParams);
   useEffect(() => {
     searchParamsRef.current = searchParams;

@@ -10,7 +10,6 @@ import { createServerApiClient } from '@/lib/api-server';
 export async function getAllUser<T = User>(params: GetAllUserParams) {
   const api = await createServerApiClient();
   const response = await api.get<PaginatedResponse<T>>('/v1/users', { params });
-  await new Promise((resolve) => setTimeout(resolve, 5000));
   return response.data;
 }
 

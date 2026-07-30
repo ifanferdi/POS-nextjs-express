@@ -1,4 +1,5 @@
 import { ProductActions } from '@/app/(protected)/products/_components/product-actions';
+import { TablePagination } from '@/components/shared/table';
 import { Badge } from '@/components/ui/badge';
 import {
   Table,
@@ -8,12 +9,11 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { icons } from '@/config/config';
 import { CategoryOption, Product } from '@/domain';
 import { getAllProducts } from '@/features/products/api';
 import { GetAllProductParams } from '@/features/products/schema';
-import { BoxIcon } from 'lucide-react';
 import Link from 'next/link';
-import { ProductPagination } from './product-pagination';
 
 interface ProductsTableSectionProps {
   params: GetAllProductParams;
@@ -24,7 +24,12 @@ export async function ProductsTableSection({ params, categories }: ProductsTable
   return (
     <>
       <ProductTable products={products} categories={categories} />
-      <ProductPagination page={meta.page} total={meta.total} totalPages={meta.totalPages} />
+      <TablePagination
+        page={meta.page}
+        totalPages={meta.totalPages}
+        total={meta.total}
+        baseUrl="/products"
+      />
     </>
   );
 }
@@ -38,7 +43,7 @@ function ProductTable({ products, categories }: ProductTableProps) {
     return (
       <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-16">
         <div className="mb-3 flex size-12 items-center justify-center rounded-full bg-muted">
-          <BoxIcon className="size-6 text-muted-foreground" />
+          <icons.product className="size-6 text-muted-foreground" />
         </div>
         <p className="text-sm font-medium">No products found</p>
         <p className="mt-1 text-sm text-muted-foreground">Try adjusting your search or filters.</p>
@@ -48,7 +53,7 @@ function ProductTable({ products, categories }: ProductTableProps) {
   return (
     <div className="overflow-hidden rounded-lg border border-border/60">
       <Table>
-        {ProductTableHeader}
+        <ProductTableHeader />
         <TableBody>
           {products.map((product) => (
             <TableRow key={product.id} className="group">
@@ -117,16 +122,20 @@ function handleCategoriesColumn(product: Product) {
   );
 }
 
-export const ProductTableHeader = (
-  <TableHeader>
-    <TableRow className="bg-muted/40 hover:bg-muted/40">
-      <TableHead className="text-xs text-muted-foreground">Name</TableHead>
-      <TableHead className="text-xs text-muted-foreground">Sku</TableHead>
-      <TableHead className="text-xs text-muted-foreground">Stock</TableHead>
-      <TableHead className="text-xs text-muted-foreground">Price</TableHead>
-      <TableHead className="text-xs text-muted-foreground">Categories</TableHead>
-      <TableHead className="text-xs text-muted-foreground">Is Active?</TableHead>
-      <TableHead className="text-right text-xs text-muted-foreground">Actions</TableHead>
-    </TableRow>
-  </TableHeader>
-);
+export function ProductTableHeader() {
+  const HEADERS = ['Name', 'Sku', 'Stock', 'Price', 'Categories', 'Is Active?', 'Actions'];
+  return (
+    <TableHeader>
+      <TableRow className="bg-muted/40 hover:bg-muted/40">
+        {HEADERS.map((header) => (
+          <TableHead
+            key={header}
+            className={`text-xs text-muted-foreground ${header === 'Actions' ? 'text-right' : ''}`}
+          >
+            {header}
+          </TableHead>
+        ))}
+      </TableRow>
+    </TableHeader>
+  );
+}

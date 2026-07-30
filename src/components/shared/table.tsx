@@ -1,18 +1,33 @@
 'use client';
-
 import { Button } from '@/components/ui/button';
 import { buildPageItems } from '@/lib/helper';
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useTransition } from 'react';
+import { Skeleton as SkeletonComponent } from '../ui/skeleton';
 
-interface ProductPaginationProps {
+interface SkeletonProps {
+  className?: string;
+}
+export function Skeleton({ className }: SkeletonProps) {
+  return <SkeletonComponent className={`bg-muted-foreground/20 dark:bg-muted ${className}`} />;
+}
+
+export function ActionSkeleton({ className }: SkeletonProps) {
+  return (
+    <div className="flex justify-end">
+      <Skeleton className={`size-8 rounded-full ${className}`} />
+    </div>
+  );
+}
+
+interface TablePaginationProps {
   page: number;
   totalPages: number;
   total: number;
+  baseUrl: string;
 }
-
-export function ProductPagination({ page, totalPages, total }: ProductPaginationProps) {
+export function TablePagination({ page, totalPages, total, baseUrl }: TablePaginationProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
@@ -21,7 +36,7 @@ export function ProductPagination({ page, totalPages, total }: ProductPagination
     const params = new URLSearchParams(searchParams.toString());
     params.set('page', String(newPage));
     startTransition(() => {
-      router.push(`/products?${params.toString()}`);
+      router.push(`${baseUrl}?${params.toString()}`);
     });
   }
 

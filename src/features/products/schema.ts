@@ -21,12 +21,12 @@ export const GetAllProductSchema = BasePagination.extend({
 
 const BaseProductSchema = z.object({
   name: stringSchema,
-  description: optionalStringSchema.nullable(),
+  description: optionalStringSchema,
   price: numberSchema,
-  cost: optionalNumberSchema.nullable(),
-  sku: optionalStringSchema.nullable(),
-  barcode: optionalStringSchema.nullable(),
-  imagePath: optionalStringSchema.nullable(),
+  cost: optionalNumberSchema,
+  sku: optionalStringSchema,
+  barcode: optionalStringSchema,
+  imagePath: optionalStringSchema,
   isActive: booleanSchema,
   stock: numberSchema,
   categoryIds: z.array(numberSchema).min(1),

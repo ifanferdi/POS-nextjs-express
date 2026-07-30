@@ -43,83 +43,6 @@ import { useMemo, useState, useTransition } from 'react';
 import { Controller, useForm, UseFormReturn } from 'react-hook-form';
 import { toast } from 'sonner';
 
-interface ProductFormProps {
-  categories: CategoryOption[];
-  mode: 'create' | 'edit';
-  product?: Product;
-  onClose: () => void;
-}
-
-export function ProductForm({ categories, product, mode, onClose }: ProductFormProps) {
-  const [isPending, startTransition] = useTransition();
-  const isCreateMode = mode === 'create';
-
-  const defaultValues = {
-    name: isCreateMode ? '' : product!.name,
-    description: isCreateMode ? '' : (product!.description ?? ''),
-    price: isCreateMode ? '' : product!.price,
-    cost: isCreateMode ? '' : (product!.cost ?? ''),
-    sku: isCreateMode ? '' : (product!.sku ?? ''),
-    barcode: isCreateMode ? '' : (product!.barcode ?? ''),
-    // imagePath: isCreateMode ? '' : product!.imagePath,
-    isActive: isCreateMode ? true : product!.isActive,
-    stock: isCreateMode ? '' : product!.stock,
-    categoryIds: isCreateMode ? [] : _.map(product!.categories, 'id'),
-  };
-
-  const form = useForm<CreateProductInput | UpdateProductInput>({
-    resolver: zodResolver(isCreateMode ? CreateProductSchema : UpdateProductSchema),
-    mode: 'onSubmit',
-    reValidateMode: 'onSubmit',
-    defaultValues: defaultValues as CreateProductInput | UpdateProductInput,
-  });
-
-  const onSubmit = (input: CreateProductInput | UpdateProductInput) =>
-    startTransition(async () => {
-      input.price = Number(input.price);
-      input.stock = Number(input.stock);
-      if (input.cost) input.cost = Number(input.cost);
-
-      const result = isCreateMode
-        ? await createProductAction(input)
-        : await updateProductAction(product!.id, input);
-
-      if (!result.success) {
-        toast.error(result.error ?? 'Something went wrong.');
-        return;
-      }
-      toast.success(
-        isCreateMode ? 'Create new product successfully!' : 'Update product successfully',
-      );
-      form.reset();
-      onClose();
-    });
-
-  return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-      <DialogHeader>
-        <DialogTitle>{isCreateMode ? 'Add New Product' : 'Edit Product'}</DialogTitle>
-      </DialogHeader>
-      <ProductFormFields
-        form={form}
-        categories={categories}
-        isEditMode={!isCreateMode}
-        isPending={isPending}
-      />
-      <DialogFooter>
-        <Button type="submit" disabled={isPending}>
-          Save Changes
-        </Button>
-        <DialogClose asChild>
-          <Button type="button" variant="outline" onClick={() => form.reset()} disabled={isPending}>
-            Reset
-          </Button>
-        </DialogClose>
-      </DialogFooter>
-    </form>
-  );
-}
-
 interface ProductFormDialogProps {
   mode: 'create' | 'edit';
   product?: Product;
@@ -165,79 +88,79 @@ export function ProductFormDialog({
   );
 }
 
-interface ProductFormFieldsProps {
-  form: UseFormReturn<CreateProductInput | UpdateProductInput>;
+interface ProductFormProps {
+  mode: 'create' | 'edit';
   categories: CategoryOption[];
-  isEditMode: boolean;
-  isPending: boolean;
+  onClose: () => void;
+  product?: Product;
 }
+function ProductForm({ categories, product, mode, onClose }: ProductFormProps) {
+  const [isPending, startTransition] = useTransition();
+  const isCreateMode = mode === 'create';
 
-function CategoryMultiSelect({
-  categories,
-  value,
-  onChange,
-  disabled,
-}: {
-  categories: CategoryOption[];
-  value: number[];
-  onChange: (v: number[]) => void;
-  disabled?: boolean;
-}) {
-  const [query, setQuery] = useState('');
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return q ? categories.filter((c) => c.name.toLowerCase().includes(q)) : categories;
-  }, [categories, query]);
+  const defaultValues = {
+    name: isCreateMode ? '' : product!.name,
+    description: isCreateMode ? '' : (product!.description ?? ''),
+    price: isCreateMode ? '' : product!.price,
+    cost: isCreateMode ? '' : (product!.cost ?? ''),
+    sku: isCreateMode ? '' : (product!.sku ?? ''),
+    barcode: isCreateMode ? '' : (product!.barcode ?? ''),
+    // imagePath: isCreateMode ? '' : product!.imagePath,
+    isActive: isCreateMode ? true : product!.isActive,
+    stock: isCreateMode ? '' : product!.stock,
+    categoryIds: isCreateMode ? [] : _.map(product!.categories, 'id'),
+  };
 
-  function toggle(id: number, checked: boolean) {
-    onChange(checked ? [...value, id] : value.filter((v) => v !== id));
-  }
+  const form = useForm<CreateProductInput | UpdateProductInput>({
+    resolver: zodResolver(isCreateMode ? CreateProductSchema : UpdateProductSchema),
+    mode: 'onSubmit',
+    reValidateMode: 'onSubmit',
+    defaultValues: defaultValues as CreateProductInput | UpdateProductInput,
+  });
+
+  const onSubmit = (input: CreateProductInput | UpdateProductInput) =>
+    startTransition(async () => {
+      const result = isCreateMode
+        ? await createProductAction(input)
+        : await updateProductAction(product!.id, input);
+
+      if (!result.success) {
+        toast.error(result.error ?? 'Something went wrong.');
+        return;
+      }
+      toast.success(
+        isCreateMode ? 'Create new product successfully!' : 'Update product successfully',
+      );
+      form.reset();
+      onClose();
+    });
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          type="button"
-          variant="outline"
-          className="w-full justify-between font-normal"
-          disabled={disabled}
-        >
-          {value.length > 0 ? `${value.length} selected` : 'Select Categories'}
-          <ChevronDown className="size-4 opacity-50" />
+    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <DialogHeader>
+        <DialogTitle>{isCreateMode ? 'Add New Product' : 'Edit Product'}</DialogTitle>
+      </DialogHeader>
+      <ProductFormFields form={form} categories={categories} isPending={isPending} />
+      <DialogFooter>
+        <Button type="submit" disabled={isPending}>
+          Save Changes
         </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-(--radix-dropdown-menu-trigger-width)">
-        <div className="p-1">
-          <Input
-            placeholder="Search categories..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={(e) => e.stopPropagation()}
-            className="h-8"
-          />
-        </div>
-        <div className="max-h-60 overflow-y-auto">
-          {filtered.length === 0 ? (
-            <div className="px-2 py-4 text-center text-sm text-muted-foreground">No results.</div>
-          ) : (
-            filtered.map((cat) => (
-              <DropdownMenuCheckboxItem
-                key={cat.id}
-                checked={value.includes(cat.id)}
-                onCheckedChange={(checked) => toggle(cat.id, checked)}
-                onSelect={(e) => e.preventDefault()}
-              >
-                {cat.name}
-              </DropdownMenuCheckboxItem>
-            ))
-          )}
-        </div>
-      </DropdownMenuContent>
-    </DropdownMenu>
+        <DialogClose asChild>
+          <Button type="button" variant="outline" onClick={() => form.reset()} disabled={isPending}>
+            Reset
+          </Button>
+        </DialogClose>
+      </DialogFooter>
+    </form>
   );
 }
 
-function ProductFormFields({ form, categories, isEditMode, isPending }: ProductFormFieldsProps) {
+interface ProductFormFieldsProps {
+  form: UseFormReturn<CreateProductInput | UpdateProductInput>;
+  categories: CategoryOption[];
+  isPending: boolean;
+}
+function ProductFormFields({ form, categories, isPending }: ProductFormFieldsProps) {
   return (
     <FieldGroup>
       <Controller
@@ -284,7 +207,9 @@ function ProductFormFields({ form, categories, isEditMode, isPending }: ProductF
               <FieldLabel htmlFor="price">Price</FieldLabel>
               <Input
                 {...field}
-                value={field.value ? Number(field.value) : undefined}
+                onChange={(e) =>
+                  field.onChange(e.target.value === '' ? '' : Number(e.target.value))
+                }
                 id="price"
                 type="number"
                 aria-invalid={fieldState.invalid}
@@ -303,10 +228,9 @@ function ProductFormFields({ form, categories, isEditMode, isPending }: ProductF
               <FieldLabel htmlFor="cost">Cost</FieldLabel>
               <Input
                 {...field}
-                // onChange={(e) =>
-                //   field.onChange(e.target.value === '' ? '' : Number(e.target.value))
-                // }
-                value={field.value ? Number(field.value) : undefined}
+                onChange={(e) =>
+                  field.onChange(e.target.value === '' ? '' : Number(e.target.value))
+                }
                 id="cost"
                 type="number"
                 aria-invalid={fieldState.invalid}
@@ -345,10 +269,9 @@ function ProductFormFields({ form, categories, isEditMode, isPending }: ProductF
               <FieldLabel htmlFor="stock">Stock</FieldLabel>
               <Input
                 {...field}
-                // onChange={(e) =>
-                //   field.onChange(e.target.value === '' ? '' : Number(e.target.value))
-                // }
-                value={field.value ? Number(field.value) : undefined}
+                onChange={(e) =>
+                  field.onChange(e.target.value === '' ? '' : Number(e.target.value))
+                }
                 id="stock"
                 type="number"
                 aria-invalid={fieldState.invalid}
@@ -433,5 +356,70 @@ function ProductFormFields({ form, categories, isEditMode, isPending }: ProductF
         )}
       />
     </FieldGroup>
+  );
+}
+
+function CategoryMultiSelect({
+  categories,
+  value,
+  onChange,
+  disabled,
+}: {
+  categories: CategoryOption[];
+  value: number[];
+  onChange: (v: number[]) => void;
+  disabled?: boolean;
+}) {
+  const [query, setQuery] = useState('');
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return q ? categories.filter((c) => c.name.toLowerCase().includes(q)) : categories;
+  }, [categories, query]);
+
+  function toggle(id: number, checked: boolean) {
+    onChange(checked ? [...value, id] : value.filter((v) => v !== id));
+  }
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full justify-between font-normal"
+          disabled={disabled}
+        >
+          {value.length > 0 ? `${value.length} selected` : 'Select Categories'}
+          <ChevronDown className="size-4 opacity-50" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="w-(--radix-dropdown-menu-trigger-width)">
+        <div className="p-1">
+          <Input
+            placeholder="Search categories..."
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => e.stopPropagation()}
+            className="h-8"
+          />
+        </div>
+        <div className="max-h-60 overflow-y-auto">
+          {filtered.length === 0 ? (
+            <div className="px-2 py-4 text-center text-sm text-muted-foreground">No results.</div>
+          ) : (
+            filtered.map((cat) => (
+              <DropdownMenuCheckboxItem
+                key={cat.id}
+                checked={value.includes(cat.id)}
+                onCheckedChange={(checked) => toggle(cat.id, checked)}
+                onSelect={(e) => e.preventDefault()}
+              >
+                {cat.name}
+              </DropdownMenuCheckboxItem>
+            ))
+          )}
+        </div>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

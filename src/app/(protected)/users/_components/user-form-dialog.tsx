@@ -1,5 +1,6 @@
 'use client';
 
+import { DialogCreateButton } from '@/components/shared/button';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -20,7 +21,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { options } from '@/config/config';
-import { Role, User } from '@/domain';
+import { RoleOption, User } from '@/domain';
 import { createUserAction, updateUserAction } from '@/features/users/action';
 import {
   CreateUserInput,
@@ -34,24 +35,112 @@ import { useState, useTransition } from 'react';
 import { Controller, UseFormReturn, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
-type UserWithoutPermissions = Omit<User, 'permissions'>;
+type UserWithoutPermissions = Ompit<User, 'permissions'>;
 
-type RoleOption = Pick<Role, 'id' | 'name'>;
+interface UserFormDialogProps {
+  mode: 'create' | 'edit';
+  user?: UserWithoutPermissions;
+  roles: RoleOption[];
+  editOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}
+export function UserFormDialog({ mode, user, roles, editOpen, onOpenChange }: UserFormDialogProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isEditAction = editOpen !== undefined && onOpenChange !== undefined;
+  const open = isEditAction ? editOpen : internalOpen;
+  const setOpen = isEditAction ? onOpenChange : setInternalOpen;
+  const isEditMode = mode === 'edit';
 
-function UserFormFields({
-  form,
-  roles,
-  isEditMode,
-  isPending,
-}: {
-  // ponytail: union UseFormReturn breaks on password required vs optional;
-  // type safety is enforced at each form's useForm<CreateUserInput | UpdateUserInput>
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  form: UseFormReturn<any>;
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      {!isEditAction && (
+        <DialogTrigger asChild>
+          <DialogCreateButton text="Add New User" />
+        </DialogTrigger>
+      )}
+      <DialogContent className="md:max-w-lg">
+        {isEditMode && user ? (
+          <UserForm mode="edit" user={user} roles={roles} onClose={() => setOpen(false)} />
+        ) : (
+          <UserForm mode="create" roles={roles} onClose={() => setOpen(false)} />
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+interface UserFormProps {
+  mode: 'create' | 'edit';
+  roles: RoleOption[];
+  onClose: () => void;
+  user?: UserWithoutPermissions;
+}
+function UserForm({ roles, user, mode, onClose }: UserFormProps) {
+  const [isPending, startTransition] = useTransition();
+  const isCreateMode = mode === 'create';
+  const defaultValues = {
+    username: isCreateMode ? '' : user!.username,
+    password: '',
+    confirmPassword: '',
+    isActive: isCreateMode ? true : user!.isActive,
+    roleId: isCreateMode ? undefined : user!.roleId,
+    profile: {
+      fullName: isCreateMode ? '' : user!.profile.fullName,
+      placeOfBirth: isCreateMode ? '' : user!.profile.placeOfBirth,
+      dateOfBirth: isCreateMode ? '' : user!.profile.dateOfBirth,
+      gender: isCreateMode ? undefined : user!.profile.gender,
+    },
+  };
+
+  const form = useForm<CreateUserInput | UpdateUserInput>({
+    resolver: zodResolver(isCreateMode ? CreateUserSchema : UpdateUserSchema),
+    mode: 'onSubmit',
+    reValidateMode: 'onSubmit',
+    defaultValues: defaultValues as CreateUserInput | UpdateUserInput,
+  });
+
+  function onSubmit(input: CreateUserInput | UpdateUserInput) {
+    startTransition(async () => {
+      const result = isCreateMode
+        ? await createUserAction(input as CreateUserInput)
+        : await updateUserAction(user!.id, input);
+      if (!result.success) {
+        toast.error(result.error ?? 'Something went wrong.');
+        return;
+      }
+      toast.success(isCreateMode ? 'Create new user successfully!' : 'Update user successfully');
+      form.reset();
+      onClose();
+    });
+  }
+
+  return (
+    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <DialogHeader>
+        <DialogTitle>{isCreateMode ? 'Add New User' : 'Edit User'}</DialogTitle>
+      </DialogHeader>
+      <UserFormFields form={form} roles={roles} isEditMode={false} isPending={isPending} />
+      <DialogFooter>
+        <Button type="submit" disabled={isPending}>
+          Save changes
+        </Button>
+        <DialogClose asChild>
+          <Button type="button" variant="outline" onClick={() => form.reset()} disabled={isPending}>
+            Reset
+          </Button>
+        </DialogClose>
+      </DialogFooter>
+    </form>
+  );
+}
+
+interface UserFormFieldsProps {
+  form: UseFormReturn<CreateUserInput | UpdateUserInput>;
   roles: RoleOption[];
   isEditMode: boolean;
   isPending: boolean;
-}) {
+}
+function UserFormFields({ form, roles, isEditMode = false, isPending }: UserFormFieldsProps) {
   return (
     <FieldGroup>
       <Controller
@@ -155,7 +244,7 @@ function UserFormFields({
                 <Input
                   {...field}
                   type="date"
-                  value={field.value ? formatDate(field.value) : ''}
+                  value={field.value ? formatDate(new Date(field.value)) : ''}
                   aria-invalid={fieldState.invalid}
                   disabled={isPending}
                 />
@@ -246,158 +335,5 @@ function UserFormFields({
         )}
       />
     </FieldGroup>
-  );
-}
-
-function CreateUserForm({ roles, onClose }: { roles: RoleOption[]; onClose: () => void }) {
-  const [isPending, startTransition] = useTransition();
-  const form = useForm<CreateUserInput>({
-    resolver: zodResolver(CreateUserSchema),
-    mode: 'onSubmit',
-    reValidateMode: 'onSubmit',
-    defaultValues: {
-      profile: {
-        fullName: '',
-        placeOfBirth: '',
-        dateOfBirth: '',
-        gender: undefined,
-      },
-      username: '',
-      password: '',
-      confirmPassword: '',
-      isActive: true,
-      roleId: undefined,
-    },
-  });
-
-  function onSubmit(input: CreateUserInput) {
-    startTransition(async () => {
-      const result = await createUserAction(input);
-      if (!result.success) {
-        toast.error(result.error ?? 'Something went wrong.');
-        return;
-      }
-      toast.success('Create new user successfully!');
-      form.reset();
-      onClose();
-    });
-  }
-
-  return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-      <DialogHeader>
-        <DialogTitle>Add New User</DialogTitle>
-      </DialogHeader>
-      <UserFormFields form={form} roles={roles} isEditMode={false} isPending={isPending} />
-      <DialogFooter>
-        <Button type="submit" disabled={isPending}>
-          Save changes
-        </Button>
-        <DialogClose asChild>
-          <Button type="button" variant="outline" onClick={() => form.reset()} disabled={isPending}>
-            Reset
-          </Button>
-        </DialogClose>
-      </DialogFooter>
-    </form>
-  );
-}
-
-function EditUserForm({
-  user,
-  roles,
-  onClose,
-}: {
-  user: UserWithoutPermissions;
-  roles: RoleOption[];
-  onClose: () => void;
-}) {
-  const [isPending, startTransition] = useTransition();
-  const form = useForm<UpdateUserInput>({
-    resolver: zodResolver(UpdateUserSchema),
-    mode: 'onSubmit',
-    reValidateMode: 'onSubmit',
-    defaultValues: {
-      profile: {
-        fullName: user.profile.fullName,
-        placeOfBirth: user.profile.placeOfBirth,
-        dateOfBirth: formatDate(new Date(user.profile.dateOfBirth)),
-        gender: user.profile.gender,
-      },
-      username: user.username,
-      password: undefined,
-      confirmPassword: undefined,
-      isActive: user.isActive,
-      roleId: user.roleId,
-    },
-  });
-
-  function onSubmit(input: UpdateUserInput) {
-    startTransition(async () => {
-      const result = await updateUserAction(user.id, input);
-      if (!result.success) {
-        toast.error(result.error ?? 'Something went wrong.');
-        return;
-      }
-      toast.success('Update user successfully!');
-      form.reset();
-      onClose();
-    });
-  }
-
-  return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-      <DialogHeader>
-        <DialogTitle>Edit User</DialogTitle>
-      </DialogHeader>
-      <UserFormFields form={form} roles={roles} isEditMode={true} isPending={isPending} />
-      <DialogFooter>
-        <Button type="submit" disabled={isPending}>
-          Save changes
-        </Button>
-        <DialogClose asChild>
-          <Button type="button" variant="outline" onClick={() => form.reset()} disabled={isPending}>
-            Reset
-          </Button>
-        </DialogClose>
-      </DialogFooter>
-    </form>
-  );
-}
-
-interface UserFormDialogProps {
-  mode: 'create' | 'edit';
-  user?: UserWithoutPermissions;
-  roles: RoleOption[];
-  // Controlled mode (optional) — saat dipakai dari dropdown item, parent yang kontrol open state.
-  // Tanpa props ini, komponen render trigger button sendiri (untuk header "Add New User").
-  editOpen?: boolean;
-  onOpenChange?: (open: boolean) => void;
-}
-
-export function UserFormDialog({ mode, user, roles, editOpen, onOpenChange }: UserFormDialogProps) {
-  const [internalOpen, setInternalOpen] = useState(false);
-  const isEditAction = editOpen !== undefined && onOpenChange !== undefined;
-  const open = isEditAction ? editOpen : internalOpen;
-  const setOpen = isEditAction ? onOpenChange : setInternalOpen;
-  const isEditMode = mode === 'edit';
-
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      {!isEditAction && (
-        <DialogTrigger asChild>
-          <Button variant="default" className="h-10 px-3">
-            Add New User
-          </Button>
-        </DialogTrigger>
-      )}
-      <DialogContent className="md:max-w-lg">
-        {isEditMode && user ? (
-          <EditUserForm user={user} roles={roles} onClose={() => setOpen(false)} />
-        ) : (
-          <CreateUserForm roles={roles} onClose={() => setOpen(false)} />
-        )}
-      </DialogContent>
-    </Dialog>
   );
 }

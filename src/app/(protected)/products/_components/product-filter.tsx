@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { options } from '@/config/config';
-import { Category, CategoryOption } from '@/domain';
+import { CategoryOption } from '@/domain';
 import { CircleDotIcon, FilterIcon, ShieldCheckIcon, XIcon } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useMemo, useState, useTransition } from 'react';

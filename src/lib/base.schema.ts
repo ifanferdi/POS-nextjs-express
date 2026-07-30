@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
-export const numberSchema = z.coerce.number();
-export const stringSchema = z.string().min(1).trim();
+export const numberSchema = z.number();
+export const stringSchema = z.string().trim();
 export const idSchema = numberSchema.min(1);
 export const nameSchema = stringSchema.max(255);
 export const emailSchema = z.email().trim();
@@ -9,7 +9,7 @@ export const usernameSchema = stringSchema.min(3).max(20);
 export const passwordSchema = stringSchema.min(8).max(16);
 export const optionalStringSchema = z.string().trim().optional();
 export const optionalNumberSchema = numberSchema.optional();
-export const booleanSchema = z.coerce.boolean();
+export const booleanSchema = z.boolean();
 
 export const BasePagination = z.object({
   page: optionalNumberSchema.optional(),

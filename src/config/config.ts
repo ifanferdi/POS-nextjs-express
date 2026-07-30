@@ -10,29 +10,37 @@
  */
 
 import { Gender } from '@/domain';
+import { Box, KeyRound, ShieldCheck, Users } from 'lucide-react';
 
 export const app = {
   name: process.env.APP_NAME ?? 'Boilerplate Next JS',
   env: process.env.NODE_ENV ?? 'development',
   url: process.env.APP_URL ?? 'http://localhost:3000',
-} as const;
+};
 
 export const api = {
   baseUrl: process.env.API_BASE_URL ?? 'http://localhost:8000/api',
-} as const;
+};
 
 export const auth = {
   secret: process.env.NEXTAUTH_SECRET ?? '',
   refreshBufferSeconds: Number(process.env.AUTH_REFRESH_BUFFER_SECONDS ?? 60),
-} as const;
+};
 
 export const options = {
   genderOptions: [
-    { label: 'Male', value: Gender.MALE },
-    { label: 'Female', value: Gender.FEMALE },
+    { label: 'Male', value: Gender.MALE ?? 'male' },
+    { label: 'Female', value: Gender.FEMALE ?? 'female' },
   ],
   activeOptions: [
     { label: 'Active', value: 'true' },
     { label: 'Inactive', value: 'false' },
   ],
-} as const;
+};
+
+export const icons = {
+  user: Users,
+  role: ShieldCheck,
+  permission: KeyRound,
+  product: Box,
+};
