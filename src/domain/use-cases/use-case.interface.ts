@@ -3,7 +3,7 @@ import { CommonUseCase } from './common.interface';
 import { OrderUseCase } from './order.interface';
 import { PaymentUseCase } from './payment.interface';
 import { PermissionUseCase } from './permission.interface';
-import { ProductCategoryUseCase } from './product-category.interface';
+import { CategoryUseCase } from './category.interface';
 import { ProductUseCase } from './product.interface';
 import { RoleUseCase } from './role.interface';
 import { UserUseCase } from './user.interface';
@@ -14,7 +14,7 @@ export interface UseCases {
   permissionUseCase: PermissionUseCase;
   roleUseCase: RoleUseCase;
   commonUseCase: CommonUseCase;
-  productCategoryUseCase: ProductCategoryUseCase;
+  categoryUseCase: CategoryUseCase;
   productUseCase: ProductUseCase;
   orderUseCase: OrderUseCase;
   paymentUseCase: PaymentUseCase;

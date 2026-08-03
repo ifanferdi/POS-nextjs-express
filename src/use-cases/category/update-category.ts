@@ -1,16 +1,16 @@
 import { ErrorBadRequest } from '../../helpers/error.helper';
-import { UpdateProductCategoryDto } from '../../validations/product-category-validation';
+import { UpdateCategoryDto } from '../../validations/category-validation';
 import BaseUseCase from '../_base-use-case';
 
-export default class UpdateProductCategory extends BaseUseCase {
-  async execute(payload: UpdateProductCategoryDto) {
+export default class UpdateCategory extends BaseUseCase {
+  async execute(payload: UpdateCategoryDto) {
     await this.checkUniqueName(payload.name, payload.id);
 
-    return this.repositories.productCategoryRepository.update(payload);
+    return this.repositories.categoryRepository.update(payload);
   }
 
   private async checkUniqueName(name: string, id?: number) {
-    const count = await this.repositories.productCategoryRepository.count({
+    const count = await this.repositories.categoryRepository.count({
       search: name,
       notId: id,
     });

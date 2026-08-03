@@ -1,12 +1,12 @@
 import { OrderItem, Product } from '../../../infrastructure/database/prisma/generated/client';
 import { ProductScalarFieldEnum } from '../../../infrastructure/database/prisma/generated/internal/prismaNamespace';
-import { IProductCategory } from './product-category';
+import { ICategory } from './category';
 
 export interface IProduct extends Product {
   id: number;
   imageUrl?: string;
   productHasCategories?: IProductHasCategory[];
-  categories?: IProductCategory[];
+  categories?: ICategory[];
   orderItems?: OrderItem[];
 }
 
@@ -14,7 +14,7 @@ export interface IProductHasCategory {
   productId: number;
   categoryId: number;
   product?: IProduct;
-  category?: IProductCategory;
+  category?: ICategory;
 }
 
 export const PRODUCT_FIELD = ProductScalarFieldEnum;

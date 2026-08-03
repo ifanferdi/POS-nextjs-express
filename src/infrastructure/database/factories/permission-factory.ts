@@ -2,7 +2,7 @@ export const entities = [
   'User',
   'Role',
   'Permission',
-  'Product Category',
+  'Category',
   'Product',
   'Order',
   'Payment',

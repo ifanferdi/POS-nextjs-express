@@ -1,5 +1,6 @@
 import e from 'express';
 import { HttpStatusCode } from '../../constants/http-status.constant';
+import { UserRelation } from '../../domain/entities/enums/user.enum';
 import { Repositories } from '../../domain/repositories/repositories.interface';
 import { extractUserId } from '../../helpers/common.helper';
 import { ErrorBadRequest } from '../../helpers/error.helper';
@@ -20,6 +21,13 @@ export default class Authorization {
         userId,
         permissions,
       });
+
+      console.log(
+        await new FindByIdUser(this.repositories).execute({
+          id: userId,
+          with: [UserRelation.PERMISSIONS],
+        }),
+      );
 
       if (!isValid)
         return res

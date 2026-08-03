@@ -10,7 +10,7 @@ const PORT = config.app.port || 8000;
   const app: Express = express();
   const httpServer = http.createServer(app);
 
-  await bootstrap(app, httpServer);
+  await bootstrap(app);
   console.log('✅  Success connected to all resources.');
 
   httpServer.listen(PORT, () => console.log(`✅  Listening on port: ${PORT}`));

@@ -118,7 +118,7 @@ model RoleHasPermission {
 // POS MODELS
 // -----------------------------------------------------------------------------
 
-model ProductCategory {
+model Category {
   id          Int      @id @default(autoincrement())
   name        String   @unique @db.VarChar(255)
   description String?  @db.Text
@@ -157,7 +157,7 @@ model ProductHasCategory {
   categoryId Int
 
   product  Product          @relation(fields: [productId], references: [id], onDelete: Cascade)
-  category ProductCategory  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  category Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 
   @@id([productId, categoryId])
   @@map("product_has_categories")

@@ -1,9 +1,9 @@
 import express from 'express';
 import Authorization from '../../../use-cases/auth/authorization';
-import ProductCategoryController from '../controller/product-category-controller';
+import CategoryController from '../controller/category-controller';
 
-export default function ProductCategoryRoutes(
-  controller: ProductCategoryController,
+export default function CategoryRoutes(
+  controller: CategoryController,
   auth: Authorization,
 ) {
   const router = express.Router();
@@ -20,8 +20,8 @@ export default function ProductCategoryRoutes(
     .put('/:id', controller.update)
     .delete('/:id', controller.destroy);
 
-  router.use(auth.authorize(['Show Product Category']), showRoutes);
-  router.use(auth.authorize(['Manage Product Category']), manageRoutes);
+  router.use(auth.authorize(['Show Category']), showRoutes);
+  router.use(auth.authorize(['Manage Category']), manageRoutes);
 
   return router;
 }

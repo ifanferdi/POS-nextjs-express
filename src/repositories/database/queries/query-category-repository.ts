@@ -1,19 +1,19 @@
-import { ProductCategoryRelation } from '../../../domain/entities/enums/product-category.enum';
+import { CategoryRelation } from '../../../domain/entities/enums/category.enum';
 import {
-  PRODUCT_CATEGORY_FIELD,
-  PRODUCT_CATEGORY_FIELDS,
-} from '../../../domain/entities/models/product-category';
+  CATEGORY_FIELD,
+  CATEGORY_FIELDS,
+} from '../../../domain/entities/models/category';
 import { Prisma } from '../../../infrastructure/database/prisma/generated/client';
 import {
-  FindAllProductCategoryDto,
-  FindByIdProductCategoryDto,
-} from '../../../validations/product-category-validation';
+  FindAllCategoryDto,
+  FindByIdCategoryDto,
+} from '../../../validations/category-validation';
 
-export default class QueryProductCategoryRepository {
-  handleInclude(relation: FindAllProductCategoryDto['with'] & FindByIdProductCategoryDto['with']) {
+export default class QueryCategoryRepository {
+  handleInclude(relation: FindAllCategoryDto['with'] & FindByIdCategoryDto['with']) {
     const include: Record<string, any> = {};
 
-    if (relation?.includes(ProductCategoryRelation.PRODUCTS))
+    if (relation?.includes(CategoryRelation.PRODUCTS))
       include.productHasCategories = { select: { product: true } };
 
     return Object.keys(include).length ? include : undefined;
@@ -21,11 +21,11 @@ export default class QueryProductCategoryRepository {
 
   handleWhere(
     params: Omit<
-      Partial<FindAllProductCategoryDto & FindByIdProductCategoryDto>,
+      Partial<FindAllCategoryDto & FindByIdCategoryDto>,
       'columns' | 'with' | 'orderBy'
     >,
   ) {
-    const where: Prisma.ProductCategoryWhereInput = {};
+    const where: Prisma.CategoryWhereInput = {};
 
     if (params.id) where.id = params.id;
     if (params.ids?.length) where.id = { in: params.ids };
@@ -36,7 +36,7 @@ export default class QueryProductCategoryRepository {
     return where;
   }
 
-  handleOrderBy(params: Pick<FindAllProductCategoryDto, 'orderBy'>) {
+  handleOrderBy(params: Pick<FindAllCategoryDto, 'orderBy'>) {
     if (!params.orderBy) return [{ updatedAt: 'desc' }] as Record<string, 'asc' | 'desc'>[];
 
     return params.orderBy.map(({ field, direction }) => ({
@@ -44,8 +44,8 @@ export default class QueryProductCategoryRepository {
     })) as Record<string, 'asc' | 'desc'>[];
   }
 
-  handleSelect(cols: PRODUCT_CATEGORY_FIELD[] = PRODUCT_CATEGORY_FIELDS) {
-    const select: Prisma.ProductCategorySelect = {};
+  handleSelect(cols: CATEGORY_FIELD[] = CATEGORY_FIELDS) {
+    const select: Prisma.CategorySelect = {};
 
     if (cols && cols.length > 0) cols.forEach((c) => ((select as any)[c] = true));
 

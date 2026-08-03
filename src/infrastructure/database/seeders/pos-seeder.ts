@@ -9,12 +9,12 @@ export default class PosSeeder implements Seeder {
   constructor(private prisma: PrismaClient) {}
 
   async execute(): Promise<void> {
-    const categories = await this.seedProductCategories();
+    const categories = await this.seedCategories();
     const products = await this.seedProducts(categories);
     await this.seedOrders(products);
   }
 
-  private async seedProductCategories() {
+  private async seedCategories() {
     const data = [
       { name: 'Makanan', description: 'Berbagai macam makanan' },
       { name: 'Minuman', description: 'Berbagai macam minuman' },
@@ -25,7 +25,7 @@ export default class PosSeeder implements Seeder {
 
     const categories = [];
     for (const cat of data) {
-      categories.push(await this.prisma.productCategory.create({ data: cat }));
+      categories.push(await this.prisma.category.create({ data: cat }));
     }
     return categories;
   }

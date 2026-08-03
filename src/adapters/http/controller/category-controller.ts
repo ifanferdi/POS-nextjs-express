@@ -4,22 +4,22 @@ import { HttpStatusCode } from '../../../constants/http-status.constant';
 import { handleOrderByRequest } from '../../../helpers/common.helper';
 import { BaseFindById } from '../../../validations/base-validation';
 import {
-  CreateProductCategoryDto,
-  CreateProductCategorySchema,
-  FindAllProductCategoryDto,
-  FindAllProductCategorySchema,
-  FindByIdProductCategoryDto,
-  FindByIdProductCategorySchema,
-  UpdateProductCategoryDto,
-  UpdateProductCategorySchema,
-} from '../../../validations/product-category-validation';
+  CreateCategoryDto,
+  CreateCategorySchema,
+  FindAllCategoryDto,
+  FindAllCategorySchema,
+  FindByIdCategoryDto,
+  FindByIdCategorySchema,
+  UpdateCategoryDto,
+  UpdateCategorySchema,
+} from '../../../validations/category-validation';
 import BaseController from './_base-controller';
 
-export default class ProductCategoryController extends BaseController {
+export default class CategoryController extends BaseController {
   findAll = asyncHandler(async (req: e.Request & Record<string, any>, res: e.Response) => {
     const request = req.route.methods.get ? req.query : req.body;
 
-    const params: FindAllProductCategoryDto = {
+    const params: FindAllCategoryDto = {
       page: Number(request.page) || 1,
       limit: Number(request.limit) || 10,
       orderBy: handleOrderByRequest(request),
@@ -31,53 +31,49 @@ export default class ProductCategoryController extends BaseController {
       with: request.with,
     };
 
-    FindAllProductCategorySchema.parse(params);
+    FindAllCategorySchema.parse(params);
 
-    const result =
-      await this.useCases.productCategoryUseCase.findAllProductCategory.execute(params);
+    const result = await this.useCases.categoryUseCase.findAllCategory.execute(params);
 
     res.send(result);
   });
 
   findOne = asyncHandler(async (req: e.Request, res: e.Response) => {
-    const params: FindByIdProductCategoryDto = {
+    const params: FindByIdCategoryDto = {
       id: Number(req.params.id),
       with: req.query.with as any,
     };
 
-    FindByIdProductCategorySchema.parse(params);
+    FindByIdCategorySchema.parse(params);
 
-    const result =
-      await this.useCases.productCategoryUseCase.findByIdProductCategory.execute(params);
+    const result = await this.useCases.categoryUseCase.findByIdCategory.execute(params);
 
     res.send(result);
   });
 
   create = asyncHandler(async (req: e.Request, res: e.Response) => {
-    const payload: CreateProductCategoryDto = {
+    const payload: CreateCategoryDto = {
       name: req.body.name,
       description: req.body.description,
     };
 
-    CreateProductCategorySchema.parse(payload);
+    CreateCategorySchema.parse(payload);
 
-    const category =
-      await this.useCases.productCategoryUseCase.createProductCategory.execute(payload);
+    const category = await this.useCases.categoryUseCase.createCategory.execute(payload);
 
     res.status(HttpStatusCode.CREATED).send({ message: 'Success.', category });
   });
 
   update = asyncHandler(async (req: e.Request, res: e.Response) => {
-    const payload: UpdateProductCategoryDto = {
+    const payload: UpdateCategoryDto = {
       id: Number(req.params.id),
       name: req.body.name,
       description: req.body.description,
     };
 
-    UpdateProductCategorySchema.parse(payload);
+    UpdateCategorySchema.parse(payload);
 
-    const category =
-      await this.useCases.productCategoryUseCase.updateProductCategory.execute(payload);
+    const category = await this.useCases.categoryUseCase.updateCategory.execute(payload);
 
     res.send({ message: 'Success.', category });
   });
@@ -86,9 +82,7 @@ export default class ProductCategoryController extends BaseController {
     const params = { id: Number(req.params.id) };
     BaseFindById.parse(params);
 
-    await this.useCases.productCategoryUseCase.deleteProductCategory.execute(
-      params as BaseFindById,
-    );
+    await this.useCases.categoryUseCase.deleteCategory.execute(params as BaseFindById);
 
     res.send({ message: 'Success.' });
   });

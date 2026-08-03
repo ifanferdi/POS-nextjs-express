@@ -1,11 +1,10 @@
 import { Express } from 'express';
-import http from 'http';
 import AuthController from './adapters/http/controller/auth-controller';
+import CategoryController from './adapters/http/controller/category-controller';
 import DashboardController from './adapters/http/controller/dashboard-controller';
 import OrderController from './adapters/http/controller/order-controller';
 import PaymentController from './adapters/http/controller/payment-controller';
 import PermissionController from './adapters/http/controller/permission-controller';
-import ProductCategoryController from './adapters/http/controller/product-category-controller';
 import ProductController from './adapters/http/controller/product-controller';
 import RoleController from './adapters/http/controller/role-controller';
 import UserController from './adapters/http/controller/user-controller';
@@ -16,10 +15,10 @@ import { Repositories } from './domain/repositories/repositories.interface';
 import { UseCases } from './domain/use-cases/use-case.interface';
 import { prisma } from './infrastructure/database/prisma/prisma';
 import RedisConnection from './infrastructure/redis/redis-connection';
+import CategoryRepository from './repositories/database/category-repository';
 import OrderRepository from './repositories/database/order-repository';
 import PaymentRepository from './repositories/database/payment-repository';
 import PermissionRepository from './repositories/database/permission-repository';
-import ProductCategoryRepository from './repositories/database/product-category-repository';
 import ProductRepository from './repositories/database/product-repository';
 import RoleRepository from './repositories/database/role-repository';
 import UserRepository from './repositories/database/user-repository';
@@ -33,6 +32,11 @@ import CheckToken from './use-cases/auth/check-token';
 import RefreshToken from './use-cases/auth/refresh-token';
 import SignIn from './use-cases/auth/sign-in';
 import SignOut from './use-cases/auth/sign-out';
+import CreateCategory from './use-cases/category/create-category';
+import DeleteCategory from './use-cases/category/delete-category';
+import FindAllCategory from './use-cases/category/find-all-category';
+import FindByIdCategory from './use-cases/category/find-by-id-category';
+import UpdateCategory from './use-cases/category/update-category';
 import Dashboard from './use-cases/common/dashboard';
 import PosDashboard from './use-cases/common/pos-dashboard';
 import CancelOrder from './use-cases/order/cancel-order';
@@ -50,11 +54,6 @@ import FindAllPermission from './use-cases/permission/find-all-permission';
 import FindByIdPermission from './use-cases/permission/find-by-id-permission';
 import ResetCachePermission from './use-cases/permission/reset-cache-permission';
 import UpdatePermission from './use-cases/permission/update-permission';
-import CreateProductCategory from './use-cases/product-category/create-product-category';
-import DeleteProductCategory from './use-cases/product-category/delete-product-category';
-import FindAllProductCategory from './use-cases/product-category/find-all-product-category';
-import FindByIdProductCategory from './use-cases/product-category/find-by-id-product-category';
-import UpdateProductCategory from './use-cases/product-category/update-product-category';
 import CreateProduct from './use-cases/product/create-product';
 import DeleteProduct from './use-cases/product/delete-product';
 import FindAllProduct from './use-cases/product/find-all-product';
@@ -76,7 +75,7 @@ import ProfileImage from './use-cases/user/profile-image';
 import RestoreUser from './use-cases/user/restore-user';
 import UpdateUser from './use-cases/user/update-user';
 
-export default async function bootstrap(app: Express, httpServer: http.Server) {
+export default async function bootstrap(app: Express) {
   const repositories = await setupRepositories();
   const useCases = setupUseCases(repositories);
   const controllers = setupControllers(useCases);
@@ -91,7 +90,7 @@ function setupControllers(useCases: UseCases): Controllers {
     authController: new AuthController(useCases),
     permissionController: new PermissionController(useCases),
     roleController: new RoleController(useCases),
-    productCategoryController: new ProductCategoryController(useCases),
+    categoryController: new CategoryController(useCases),
     productController: new ProductController(useCases),
     orderController: new OrderController(useCases),
     paymentController: new PaymentController(useCases),
@@ -105,7 +104,7 @@ async function setupRepositories(): Promise<Repositories> {
     roleRepository: new RoleRepository(prisma),
     permissionRepository: new PermissionRepository(prisma),
     userRepository: new UserRepository(prisma),
-    productCategoryRepository: new ProductCategoryRepository(prisma),
+    categoryRepository: new CategoryRepository(prisma),
     productRepository: new ProductRepository(prisma),
     orderRepository: new OrderRepository(prisma),
     paymentRepository: new PaymentRepository(prisma),
@@ -158,12 +157,12 @@ function setupUseCases(repositories: Repositories): UseCases {
       deleteRole: new DeleteRole(repositories),
       roleAssignPermission: new RoleAssignPermission(repositories),
     },
-    productCategoryUseCase: {
-      findAllProductCategory: new FindAllProductCategory(repositories),
-      findByIdProductCategory: new FindByIdProductCategory(repositories),
-      createProductCategory: new CreateProductCategory(repositories),
-      updateProductCategory: new UpdateProductCategory(repositories),
-      deleteProductCategory: new DeleteProductCategory(repositories),
+    categoryUseCase: {
+      findAllCategory: new FindAllCategory(repositories),
+      findByIdCategory: new FindByIdCategory(repositories),
+      createCategory: new CreateCategory(repositories),
+      updateCategory: new UpdateCategory(repositories),
+      deleteCategory: new DeleteCategory(repositories),
     },
     productUseCase: {
       findAllProduct: new FindAllProduct(repositories),
