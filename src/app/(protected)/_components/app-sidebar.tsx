@@ -23,8 +23,6 @@ import { usePathname } from 'next/navigation';
 
 const navItems = [
   { title: 'Users', href: '/users', icon: icons.user },
-  { title: 'Roles', href: '/roles', icon: icons.role },
-  { title: 'Permissions', href: '/permissions', icon: icons.permission },
   { title: 'Products', href: '/products', icon: icons.product },
 ];
 
