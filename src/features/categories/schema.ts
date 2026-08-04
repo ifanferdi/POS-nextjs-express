@@ -10,7 +10,7 @@ import { z } from 'zod';
 const Relation = z.array(z.enum(CategoryRelation)).optional();
 
 export const GetAllCategorySchema = BasePagination.extend({
-  productId: z.union([numberSchema, z.array(optionalNumberSchema)]).optional(),
+  CategoryId: z.union([numberSchema, z.array(optionalNumberSchema)]).optional(),
   with: Relation,
 });
 

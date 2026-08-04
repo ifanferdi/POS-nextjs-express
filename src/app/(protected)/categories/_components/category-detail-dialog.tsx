@@ -1,0 +1,72 @@
+'use client';
+
+import { BoxesIcon } from 'lucide-react';
+import moment from 'moment';
+import { useState } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Separator } from '@/components/ui/separator';
+import { Category } from '@/domain';
+
+export function CategoryDetailDialog({ category }: { category: Category }) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <button className="w-full gap-3 text-left group">
+          <span className="font-medium group-hover:underline">{category.name}</span>
+        </button>
+      </DialogTrigger>
+      <DialogContent className="md:max-w-lg">
+        <DialogHeader>
+          <div className="flex items-center gap-3">
+            <div className="flex size-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <BoxesIcon className="size-6" />
+            </div>
+            <div>
+              <DialogTitle className="text-xl">{category.name}</DialogTitle>
+              <DialogDescription>Category detail</DialogDescription>
+            </div>
+          </div>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Description
+            </p>
+            <p className="text-sm">{category.description || 'No description provided.'}</p>
+          </div>
+          <Separator />
+          <dl className="grid grid-cols-1 gap-x-8 gap-y-3 sm:grid-cols-2">
+            <div className="space-y-0.5">
+              <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Created At
+              </dt>
+              <dd className="text-sm">
+                {moment(category.createdAt).format('MMMM D, YYYY, HH:mm')}
+              </dd>
+            </div>
+            <div className="space-y-0.5">
+              <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Updated At
+              </dt>
+              <dd className="text-sm">
+                {moment(category.updatedAt).format('MMMM D, YYYY, HH:mm')}
+              </dd>
+            </div>
+          </dl>
+          <p className="text-xs text-muted-foreground">
+            Category ID: <span className="font-mono">{category.id}</span>
+          </p>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}

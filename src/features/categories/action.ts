@@ -26,7 +26,7 @@ export async function createCategoryAction(input: CreateCategoryInput): Promise<
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Gagal membuat product.',
+      error: error instanceof Error ? error.message : 'Gagal membuat Category.',
     };
   }
 }
@@ -46,7 +46,7 @@ export async function updateCategoryAction(
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Gagal mengubah product.',
+      error: error instanceof Error ? error.message : 'Gagal mengubah Category.',
     };
   }
 }
@@ -60,7 +60,7 @@ export async function deleteCategoryAction(id: number): Promise<ActionResult> {
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Gagal menghapus product.',
+      error: error instanceof Error ? error.message : 'Gagal menghapus Category.',
     };
   }
 }
