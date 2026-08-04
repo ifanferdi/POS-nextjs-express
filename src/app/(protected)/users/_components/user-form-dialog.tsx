@@ -44,7 +44,8 @@ interface UserFormDialogProps {
   editOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
 }
-export function UserFormDialog({ mode, user, roles, editOpen, onOpenChange }: UserFormDialogProps) {
+export function UserFormDialog(props: UserFormDialogProps) {
+  const { mode, user, roles, editOpen, onOpenChange } = props;
   const [internalOpen, setInternalOpen] = useState(false);
   const isEditAction = editOpen !== undefined && onOpenChange !== undefined;
   const open = isEditAction ? editOpen : internalOpen;
@@ -75,7 +76,8 @@ interface UserFormProps {
   onClose: () => void;
   user?: UserWithoutPermissions;
 }
-function UserForm({ roles, user, mode, onClose }: UserFormProps) {
+function UserForm(props: UserFormProps) {
+  const { roles, user, mode, onClose } = props;
   const [isPending, startTransition] = useTransition();
   const isCreateMode = mode === 'create';
   const defaultValues = {
@@ -140,7 +142,11 @@ interface UserFormFieldsProps {
   isEditMode: boolean;
   isPending: boolean;
 }
-function UserFormFields({ form, roles, isEditMode = false, isPending }: UserFormFieldsProps) {
+function 
+
+
+UserFormFields(props: UserFormFieldsProps) {
+  const { form, roles, isEditMode, isPending } = props;
   return (
     <FieldGroup>
       <Controller

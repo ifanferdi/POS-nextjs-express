@@ -2,6 +2,12 @@ import moment from 'moment';
 
 export const calculateAge = (dateOfBirth: Date) => moment().diff(moment(dateOfBirth), 'years');
 export const formatDate = (date: Date) => moment(date).format('YYYY-MM-DD');
+export const formatCurrency = (n: number, decimalDigits = 2) =>
+  new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    maximumFractionDigits: decimalDigits,
+  }).format(n);
 
 export function getInitials(name: string) {
   return name

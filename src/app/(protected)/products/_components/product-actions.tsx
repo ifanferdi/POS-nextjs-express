@@ -20,6 +20,7 @@ import {
 import { Category, CategoryOption, Product } from '@/domain';
 import { deleteProductAction } from '@/features/products/action';
 import { MoreHorizontalIcon, PencilIcon, TrashIcon } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
 import { ProductFormDialog } from './product-form-dialog';
@@ -30,6 +31,8 @@ interface ProductActionsProps {
 }
 
 export function ProductActions({ product, categories }: ProductActionsProps) {
+  const router = useRouter();
+  const pathname = usePathname();
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -44,6 +47,7 @@ export function ProductActions({ product, categories }: ProductActionsProps) {
 
       toast.success('Product deleted successfully.');
       setDeleteOpen(false);
+      if (pathname !== '/products') router.push('/products');
     });
   }
 

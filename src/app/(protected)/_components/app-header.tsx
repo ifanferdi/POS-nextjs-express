@@ -16,11 +16,7 @@ import { logoutAction } from '@/features/auth/action';
 import { LogOut } from 'lucide-react';
 import { useTransition } from 'react';
 
-interface AppHeaderProps {
-  username?: string;
-}
-
-export function AppHeader({ username }: AppHeaderProps) {
+export function AppHeader({ username }: { username?: string }) {
   const [isPending, startTransition] = useTransition();
 
   function handleLogout() {
@@ -41,9 +37,7 @@ export function AppHeader({ username }: AppHeaderProps) {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="sm" className="gap-2">
               <Avatar size="sm">
-                <AvatarFallback className="bg-primary/10 text-primary">
-                  {initials}
-                </AvatarFallback>
+                <AvatarFallback className="bg-primary/10 text-primary">{initials}</AvatarFallback>
               </Avatar>
               <span className="hidden text-sm font-medium sm:inline">{displayName}</span>
             </Button>

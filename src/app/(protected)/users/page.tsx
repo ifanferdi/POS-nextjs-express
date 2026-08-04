@@ -1,13 +1,13 @@
 import { UserFilter } from '@/app/(protected)/users/_components/user-filter';
 import { UserFormDialog } from '@/app/(protected)/users/_components/user-form-dialog';
 import { UserSearch } from '@/app/(protected)/users/_components/user-search';
-import { UsersTableSection } from '@/app/(protected)/users/_components/user-table';
+import { UserTableSection } from '@/app/(protected)/users/_components/user-table';
+import { UserTableSkeleton } from '@/app/(protected)/users/_components/user-table-skeleton';
 import { Skeleton } from '@/components/ui/skeleton';
-import { UserRelation,RoleOption } from '@/domain';
+import { RoleOption, UserRelation } from '@/domain';
 import { getAllRoles } from '@/features/roles/api';
 import { GetAllUserParams } from '@/features/users/schema';
 import { Suspense } from 'react';
-import { UserTableSkeleton } from './_components/user-table-skeleton';
 
 interface UsersPageProps {
   searchParams: Promise<{
@@ -56,7 +56,7 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
         </Suspense>
       </div>
       <Suspense fallback={<UserTableSkeleton />}>
-        <UsersTableSection params={params} roles={roles} />
+        <UserTableSection params={params} roles={roles} />
       </Suspense>
     </div>
   );

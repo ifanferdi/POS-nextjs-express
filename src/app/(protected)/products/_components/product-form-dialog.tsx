@@ -51,13 +51,8 @@ interface ProductFormDialogProps {
   editOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
 }
-export function ProductFormDialog({
-  mode,
-  product,
-  categories,
-  editOpen,
-  onOpenChange,
-}: ProductFormDialogProps) {
+export function ProductFormDialog(props: ProductFormDialogProps) {
+  const { mode, product, categories, editOpen, onOpenChange } = props;
   const [internalOpen, setInternalOpen] = useState(false);
   const isEditAction = editOpen !== undefined && onOpenChange !== undefined;
   const open = isEditAction ? editOpen : internalOpen;
@@ -93,7 +88,8 @@ interface ProductFormProps {
   onClose: () => void;
   product?: Product;
 }
-function ProductForm({ categories, product, mode, onClose }: ProductFormProps) {
+function ProductForm(props: ProductFormProps) {
+  const { mode, product, categories, onClose } = props;
   const [isPending, startTransition] = useTransition();
   const isCreateMode = mode === 'create';
 
@@ -159,7 +155,8 @@ interface ProductFormFieldsProps {
   categories: CategoryOption[];
   isPending: boolean;
 }
-function ProductFormFields({ form, categories, isPending }: ProductFormFieldsProps) {
+function ProductFormFields(props: ProductFormFieldsProps) {
+  const { form, categories, isPending } = props;
   return (
     <FieldGroup>
       <Controller
@@ -358,17 +355,14 @@ function ProductFormFields({ form, categories, isPending }: ProductFormFieldsPro
   );
 }
 
-function CategoryMultiSelect({
-  categories,
-  value,
-  onChange,
-  disabled,
-}: {
+interface CategoryMultiSelectProps {
   categories: CategoryOption[];
   value: number[];
   onChange: (v: number[]) => void;
   disabled?: boolean;
-}) {
+}
+function CategoryMultiSelect(props: CategoryMultiSelectProps) {
+  const { categories, value, onChange, disabled } = props;
   const [query, setQuery] = useState('');
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();

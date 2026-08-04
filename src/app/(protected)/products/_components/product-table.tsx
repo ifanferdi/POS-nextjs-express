@@ -12,13 +12,15 @@ import {
 import { CategoryOption, Product } from '@/domain';
 import { getAllProducts } from '@/features/products/api';
 import { GetAllProductParams } from '@/features/products/schema';
+import { formatCurrency } from '@/lib/helper';
 import Link from 'next/link';
 
-interface ProductsTableSectionProps {
+interface ProductTableSectionProps {
   params: GetAllProductParams;
   categories: CategoryOption[];
 }
-export async function ProductsTableSection({ params, categories }: ProductsTableSectionProps) {
+export async function ProductTableSection(props: ProductTableSectionProps) {
+  const { params, categories } = props;
   const { data: products, ...meta } = await getAllProducts(params);
   return (
     <>
@@ -37,7 +39,8 @@ interface ProductTableProps {
   products: Product[];
   categories: CategoryOption[];
 }
-function ProductTable({ products, categories }: ProductTableProps) {
+function ProductTable(props: ProductTableProps) {
+  const { products, categories } = props;
   if (products.length === 0) return <EmptyTable entities="products" icon="product" />;
 
   return (
@@ -56,7 +59,9 @@ function ProductTable({ products, categories }: ProductTableProps) {
                 {product.sku === '' ? '-' : product.sku}
               </TableCell>
               <TableCell className="text-muted-foreground">{product.stock} item</TableCell>
-              <TableCell className="text-muted-foreground">{product.price}</TableCell>
+              <TableCell className="text-muted-foreground">
+                {formatCurrency(product.price)}
+              </TableCell>
               <TableCell className="text-muted-foreground">
                 {handleCategoriesColumn(product)}
               </TableCell>
@@ -120,7 +125,7 @@ export function ProductTableHeader() {
         {HEADERS.map((header) => (
           <TableHead
             key={header}
-            className={`text-xs text-muted-foreground ${header === 'Actions' ? 'text-right' : ''}`}
+            className={`text-xs text-muted-foreground ${header === 'Actions' ? 'text-right w-0' : ''}`}
           >
             {header}
           </TableHead>

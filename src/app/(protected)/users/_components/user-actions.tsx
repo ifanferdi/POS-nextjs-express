@@ -33,7 +33,8 @@ interface UserActionsProps {
   roles: RoleOption[];
 }
 
-export function UserActions({ user, roles }: UserActionsProps) {
+export function UserActions(props: UserActionsProps) {
+  const { user, roles } = props;
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [isPending, startTransition] = useTransition();

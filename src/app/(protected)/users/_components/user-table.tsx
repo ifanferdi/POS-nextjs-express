@@ -18,11 +18,12 @@ import _ from 'lodash';
 import moment from 'moment';
 import Link from 'next/link';
 
-interface UsersTableSectionProps {
+interface UserTableSectionProps {
   params: GetAllUserParams;
   roles: RoleOption[];
 }
-export async function UsersTableSection({ params, roles }: UsersTableSectionProps) {
+export async function UserTableSection(props: UserTableSectionProps) {
+  const { params, roles } = props;
   const { data: users, ...meta } = await getAllUser(params);
   return (
     <>
@@ -41,7 +42,8 @@ interface UserTableProps {
   users: Omit<User, 'permissions'>[];
   roles: RoleOption[];
 }
-function UserTable({ users, roles }: UserTableProps) {
+function UserTable(props: UserTableProps) {
+  const { users, roles } = props;
   if (users.length === 0) return <EmptyTable entities="users" icon="user" />;
 
   return (
@@ -103,7 +105,7 @@ export function UserTableHeader() {
         {HEADERS.map((header) => (
           <TableHead
             key={header}
-            className={`text-xs text-muted-foreground ${header === 'Actions' ? 'text-right' : ''}`}
+            className={`text-xs text-muted-foreground ${header === 'Actions' ? 'text-right w-0' : ''}`}
           >
             {header}
           </TableHead>

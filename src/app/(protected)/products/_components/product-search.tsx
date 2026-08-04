@@ -20,8 +20,6 @@ export function ProductSearch() {
   const pushSearch = useCallback(
     (q: string) => {
       const params = new URLSearchParams(searchParamsRef.current.toString());
-      console.log(params.values());
-
       if (q) {
         params.set('page', '1');
         params.set('q', q);

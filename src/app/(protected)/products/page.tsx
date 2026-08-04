@@ -1,12 +1,12 @@
+import { ProductTableSection } from '@/app/(protected)/products/_components/product-table';
+import { ProductTableSkeleton } from '@/app/(protected)/products/_components/product-table-skeleton';
 import { CategoryOption, ProductRelation } from '@/domain';
 import { getAllCategories } from '@/features/categories/api';
 import { GetAllProductParams } from '@/features/products/schema';
 import { Suspense } from 'react';
-import { ProductFilter } from './_components/product-filter';
-import { ProductFormDialog } from './_components/product-form-dialog';
-import { ProductSearch } from './_components/product-search';
-import { ProductsTableSection } from './_components/product-table';
-import { ProductTableSkeleton } from './_components/product-table-skeleton';
+import { ProductFilter } from '@/app/(protected)/products/_components/product-filter';
+import { ProductFormDialog } from '@/app/(protected)/products/_components/product-form-dialog';
+import { ProductSearch } from '@/app/(protected)/products/_components/product-search';
 
 interface ProductsPageProps {
   searchParams: Promise<{
@@ -59,7 +59,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
         </Suspense>
       </div>
       <Suspense fallback={<ProductTableSkeleton />}>
-        <ProductsTableSection categories={categories} params={params} />
+        <ProductTableSection categories={categories} params={params} />
       </Suspense>
     </div>
   );
