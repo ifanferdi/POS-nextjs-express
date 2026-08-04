@@ -35,7 +35,7 @@ import { useState, useTransition } from 'react';
 import { Controller, UseFormReturn, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
-type UserWithoutPermissions = Ompit<User, 'permissions'>;
+type UserWithoutPermissions = Omit<User, 'permissions'>;
 
 interface UserFormDialogProps {
   mode: 'create' | 'edit';

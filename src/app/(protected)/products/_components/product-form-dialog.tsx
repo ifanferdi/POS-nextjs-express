@@ -1,5 +1,6 @@
 'use client';
 
+import { DialogCreateButton } from '@/components/shared/button';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -67,9 +68,7 @@ export function ProductFormDialog({
     <Dialog open={open} onOpenChange={setOpen}>
       {!isEditAction && (
         <DialogTrigger asChild>
-          <Button variant="default" className="x-10 px3">
-            Add New Product
-          </Button>
+          <DialogCreateButton text="Add New Product" />
         </DialogTrigger>
       )}
       <DialogContent className="md:max-w-lg">

@@ -1,14 +1,38 @@
-import type { ComponentProps } from 'react';
-import { Button } from '../ui/button';
+import type { VariantProps } from 'class-variance-authority';
+import React from 'react';
+import { Button as ButtonComponent, buttonVariants } from '../ui/button';
 
-interface CreateButtonProps extends ComponentProps<'button'> {
-  text?: string;
+const buttonClass = 'h-10 min-w-24 px-3';
+
+export function DialogCreateButton({
+  text = 'Add New',
+  variant = 'default',
+  ...props
+}: {
+  text: string;
+} & React.ComponentProps<'button'> &
+  VariantProps<typeof buttonVariants> & {
+    asChild?: boolean;
+  }) {
+  return (
+    <ButtonComponent variant={variant} className={`${buttonClass} ${props.className}`} {...props}>
+      {text}
+    </ButtonComponent>
+  );
 }
 
-export function DialogCreateButton({ text = 'Add New', className, ...props }: CreateButtonProps) {
+export function Button({
+  variant = 'default',
+  className,
+  children,
+  ...props
+}: React.ComponentProps<'button'> &
+  VariantProps<typeof buttonVariants> & {
+    asChild?: boolean;
+  }) {
   return (
-    <Button variant="default" className={`h-10 px-3 ${className}`} {...props}>
-      {text}
-    </Button>
+    <ButtonComponent variant={variant} className={`${buttonClass} ${className}`} {...props}>
+      {children}
+    </ButtonComponent>
   );
 }

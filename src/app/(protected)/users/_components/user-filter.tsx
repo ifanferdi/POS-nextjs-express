@@ -1,22 +1,8 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuSeparator,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { options } from '@/config/config';
+import { DefaultFilter, Filter } from '@/components/shared/filter';
+import { icons, options } from '@/config/config';
 import { Role } from '@/domain';
-import { CircleDotIcon, FilterIcon, ShieldCheckIcon, XIcon } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useTransition } from 'react';
 
@@ -33,7 +19,7 @@ export function UserFilter({ roles }: UserFilterProps) {
 
   const currentRoleId = searchParams.get('roleId');
   const currentIsActive = searchParams.get('isActive');
-  const hasFilter = Boolean(currentRoleId || currentIsActive);
+  const hasActiveFilter = Boolean(currentRoleId || currentIsActive);
 
   function updateParam(key: string, value: string | null) {
     const params = new URLSearchParams(searchParams.toString());
@@ -55,77 +41,31 @@ export function UserFilter({ roles }: UserFilterProps) {
   }
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="outline" className={`${hasFilter && 'border-primary'}`}>
-          <FilterIcon />
-          <span>Filter</span>
-          {hasFilter && <span className="ml-1 size-1.5 rounded-full bg-primary" aria-hidden />}
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-52">
-        <DropdownMenuLabel>Filter by</DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuSub>
-          <DropdownMenuSubTrigger className={`cursor-pointer ${currentRoleId && 'bg-muted'}`}>
-            <ShieldCheckIcon />
-            <span>Role</span>
-          </DropdownMenuSubTrigger>
-          <DropdownMenuSubContent>
-            <DropdownMenuRadioGroup
-              value={currentRoleId ?? 'all'}
-              onValueChange={(v) => updateParam('roleId', v === 'all' ? null : v)}
-            >
-              <DropdownMenuRadioItem value="all">All Roles</DropdownMenuRadioItem>
-              {roles.map((role) => (
-                <DropdownMenuRadioItem
-                  key={role.id}
-                  value={String(role.id)}
-                  className={`cursor-pointer ${role.id.toString() === currentRoleId && 'bg-muted'}`}
-                >
-                  {role.name}
-                </DropdownMenuRadioItem>
-              ))}
-            </DropdownMenuRadioGroup>
-          </DropdownMenuSubContent>
-        </DropdownMenuSub>
-        <DropdownMenuSub>
-          <DropdownMenuSubTrigger className="cursor-pointer">
-            <CircleDotIcon />
-            <span>Status</span>
-          </DropdownMenuSubTrigger>
-          <DropdownMenuSubContent>
-            <DropdownMenuRadioGroup
-              value={currentIsActive ?? 'all'}
-              onValueChange={(v) => updateParam('isActive', v === 'all' ? null : v)}
-            >
-              <DropdownMenuRadioItem value="all">All Status</DropdownMenuRadioItem>
-              {options.activeOptions.map((option) => (
-                <DropdownMenuRadioItem
-                  key={option.value}
-                  value={option.value}
-                  className={`cursor-pointer ${option.value === currentIsActive && 'bg-muted'}`}
-                >
-                  {option.label}
-                </DropdownMenuRadioItem>
-              ))}
-            </DropdownMenuRadioGroup>
-          </DropdownMenuSubContent>
-        </DropdownMenuSub>
-        {hasFilter && (
+    <Filter hasActiveFilter={hasActiveFilter} resetFilter={resetFilter}>
+      <DefaultFilter
+        activeFilter={currentRoleId}
+        labelComponent={
           <>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              variant="destructive"
-              onClick={resetFilter}
-              className="cursor-pointer"
-            >
-              <XIcon />
-              <span>Clear Filter</span>
-            </DropdownMenuItem>
+            <icons.role />
+            <span>Role</span>
           </>
-        )}
-      </DropdownMenuContent>
-    </DropdownMenu>
+        }
+        onChangeFunction={(v) => updateParam('roleId', v === 'all' ? null : v)}
+        placeholderItem="All Roles"
+        items={roles.map((role) => ({ key: role.id, label: role.name }))}
+      />
+      <DefaultFilter
+        activeFilter={currentIsActive}
+        labelComponent={
+          <>
+            <icons.isActive />
+            <span>Status</span>
+          </>
+        }
+        onChangeFunction={(v) => updateParam('isActive', v === 'all' ? null : v)}
+        placeholderItem="All Status"
+        items={options.activeOptions.map((option) => ({ key: option.value, label: option.label }))}
+      />
+    </Filter>
   );
 }

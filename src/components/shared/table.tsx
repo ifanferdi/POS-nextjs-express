@@ -1,5 +1,6 @@
 'use client';
 import { Button } from '@/components/ui/button';
+import { icons } from '@/config/config';
 import { buildPageItems } from '@/lib/helper';
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -92,6 +93,25 @@ export function TablePagination({ page, totalPages, total, baseUrl }: TablePagin
           <ChevronRightIcon />
         </Button>
       </div>
+    </div>
+  );
+}
+
+export function EmptyTable({
+  entities,
+  icon,
+}: {
+  entities: string;
+  icon: keyof typeof icons;
+}) {
+  const Icon = icons[icon];
+  return (
+    <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-16">
+      <div className="mb-3 flex size-12 items-center justify-center rounded-full bg-muted">
+        <Icon className="size-6 text-muted-foreground" />
+      </div>
+      <p className="text-sm font-medium">No {entities} found</p>
+      <p className="mt-1 text-sm text-muted-foreground">Try to add new data.</p>
     </div>
   );
 }

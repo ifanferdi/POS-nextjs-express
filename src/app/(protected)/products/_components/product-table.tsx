@@ -1,5 +1,5 @@
 import { ProductActions } from '@/app/(protected)/products/_components/product-actions';
-import { TablePagination } from '@/components/shared/table';
+import { EmptyTable, TablePagination } from '@/components/shared/table';
 import { Badge } from '@/components/ui/badge';
 import {
   Table,
@@ -9,7 +9,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { icons } from '@/config/config';
 import { CategoryOption, Product } from '@/domain';
 import { getAllProducts } from '@/features/products/api';
 import { GetAllProductParams } from '@/features/products/schema';
@@ -39,16 +38,7 @@ interface ProductTableProps {
   categories: CategoryOption[];
 }
 function ProductTable({ products, categories }: ProductTableProps) {
-  if (products.length === 0)
-    return (
-      <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-16">
-        <div className="mb-3 flex size-12 items-center justify-center rounded-full bg-muted">
-          <icons.product className="size-6 text-muted-foreground" />
-        </div>
-        <p className="text-sm font-medium">No products found</p>
-        <p className="mt-1 text-sm text-muted-foreground">Try adjusting your search or filters.</p>
-      </div>
-    );
+  if (products.length === 0) return <EmptyTable entities="products" icon="product" />;
 
   return (
     <div className="overflow-hidden rounded-lg border border-border/60">

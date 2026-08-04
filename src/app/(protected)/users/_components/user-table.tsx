@@ -1,5 +1,5 @@
 import { UserActions } from '@/app/(protected)/users/_components/user-actions';
-import { TablePagination } from '@/components/shared/table';
+import { EmptyTable, TablePagination } from '@/components/shared/table';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -10,7 +10,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { icons } from '@/config/config';
 import { RoleOption, User } from '@/domain';
 import { getAllUser } from '@/features/users/api';
 import { GetAllUserParams } from '@/features/users/schema';
@@ -43,17 +42,7 @@ interface UserTableProps {
   roles: RoleOption[];
 }
 function UserTable({ users, roles }: UserTableProps) {
-  if (users.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-16">
-        <div className="mb-3 flex size-12 items-center justify-center rounded-full bg-muted">
-          <icons.user className="size-6 text-muted-foreground" />
-        </div>
-        <p className="text-sm font-medium">No users found</p>
-        <p className="mt-1 text-sm text-muted-foreground">Try adjusting your search or filters.</p>
-      </div>
-    );
-  }
+  if (users.length === 0) return <EmptyTable entities="users" icon="user" />;
 
   return (
     <div className="overflow-hidden rounded-lg border border-border/60">

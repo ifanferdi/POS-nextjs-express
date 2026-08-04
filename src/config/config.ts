@@ -10,7 +10,14 @@
  */
 
 import { Gender } from '@/domain';
-import { Box, KeyRound, ShieldCheck, Users } from 'lucide-react';
+import {
+  BoxesIcon,
+  BoxIcon,
+  KeyRoundIcon,
+  ShieldUserIcon,
+  UserRoundCheckIcon,
+  UsersIcon,
+} from 'lucide-react';
 
 export const app = {
   name: process.env.APP_NAME ?? 'Boilerplate Next JS',
@@ -39,8 +46,10 @@ export const options = {
 };
 
 export const icons = {
-  user: Users,
-  role: ShieldCheck,
-  permission: KeyRound,
-  product: Box,
+  user: UsersIcon,
+  role: ShieldUserIcon,
+  permission: KeyRoundIcon,
+  product: BoxIcon,
+  isActive: UserRoundCheckIcon,
+  category: BoxesIcon,
 };
