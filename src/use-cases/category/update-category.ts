@@ -11,7 +11,7 @@ export default class UpdateCategory extends BaseUseCase {
 
   private async checkUniqueName(name: string, id?: number) {
     const count = await this.repositories.categoryRepository.count({
-      search: name,
+      name,
       notId: id,
     });
 

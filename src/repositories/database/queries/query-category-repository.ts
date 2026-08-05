@@ -1,13 +1,7 @@
 import { CategoryRelation } from '../../../domain/entities/enums/category.enum';
-import {
-  CATEGORY_FIELD,
-  CATEGORY_FIELDS,
-} from '../../../domain/entities/models/category';
+import { CATEGORY_FIELD, CATEGORY_FIELDS } from '../../../domain/entities/models/category';
 import { Prisma } from '../../../infrastructure/database/prisma/generated/client';
-import {
-  FindAllCategoryDto,
-  FindByIdCategoryDto,
-} from '../../../validations/category-validation';
+import { FindAllCategoryDto, FindByIdCategoryDto } from '../../../validations/category-validation';
 
 export default class QueryCategoryRepository {
   handleInclude(relation: FindAllCategoryDto['with'] & FindByIdCategoryDto['with']) {
@@ -20,10 +14,7 @@ export default class QueryCategoryRepository {
   }
 
   handleWhere(
-    params: Omit<
-      Partial<FindAllCategoryDto & FindByIdCategoryDto>,
-      'columns' | 'with' | 'orderBy'
-    >,
+    params: Omit<Partial<FindAllCategoryDto & FindByIdCategoryDto>, 'columns' | 'with' | 'orderBy'>,
   ) {
     const where: Prisma.CategoryWhereInput = {};
 
@@ -31,7 +22,13 @@ export default class QueryCategoryRepository {
     if (params.ids?.length) where.id = { in: params.ids };
     if (params.notId)
       where.id = Array.isArray(params.notId) ? { notIn: params.notId } : { not: params.notId };
+    if (params.name)
+      where.name = Array.isArray(params.name)
+        ? { in: params.name, mode: 'insensitive' }
+        : { equals: params.name, mode: 'insensitive' };
     if (params.search) where.name = { contains: params.search, mode: 'insensitive' };
+
+    console.log({ where });
 
     return where;
   }

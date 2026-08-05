@@ -12,6 +12,7 @@ export const FindByIdCategorySchema = BaseFindById.extend({
 });
 export const FindAllCategorySchema = BasePagination(CATEGORY_FIELD).extend({
   productId: z.union([NumberSchema, z.array(NumberSchema)]).optional(),
+  name: StringSchema.optional(),
   with: Relations,
 });
 export const CreateCategorySchema = z.object({
