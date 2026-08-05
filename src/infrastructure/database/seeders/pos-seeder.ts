@@ -115,7 +115,7 @@ export default class PosSeeder implements Seeder {
           paymentMethod,
           notes: faker.helpers.maybe(() => faker.lorem.sentence(), { probability: 0.3 }),
           orderItems: { create: orderItemsData },
-          payments: {
+          payment: {
             create: {
               amount: total,
               method: paymentMethod,

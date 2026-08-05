@@ -103,7 +103,7 @@ export default class OrderRepository
 
       return tx.order.findUnique({
         where: { id: order.id },
-        include: { orderItems: { include: { product: true } }, payments: true },
+        include: { orderItems: { include: { product: true } }, payment: true },
       }) as Promise<Record<string, any>>;
     });
   }
@@ -117,7 +117,7 @@ export default class OrderRepository
     return this.prisma.$transaction(async (tx) => {
       const order = await tx.order.findFirst({
         where: { id, status: { not: OrderStatus.CANCELLED } },
-        include: { orderItems: true, payments: true },
+        include: { orderItems: true, payment: true },
       });
 
       if (!order) return;
@@ -130,10 +130,12 @@ export default class OrderRepository
         });
       }
 
-      await tx.payment.updateMany({
-        where: { orderId: order.id },
-        data: { status: PaymentStatus.REFUNDED },
-      });
+      if (order.payment) {
+        await tx.payment.update({
+          where: { orderId: order.id },
+          data: { status: PaymentStatus.REFUNDED },
+        });
+      }
 
       return tx.order.updateMany({
         where: { id },

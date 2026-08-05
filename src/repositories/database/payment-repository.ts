@@ -1,23 +1,18 @@
-import { Repository } from '../../domain/repositories/database.interface';
 import { PaymentStatus } from '../../domain/entities/enums/payment.enum';
+import { Repository } from '../../domain/repositories/database.interface';
 import { Prisma } from '../../infrastructure/database/prisma/generated/client';
 import {
   CreatePaymentDto,
   FindAllPaymentDto,
   FindByIdPaymentDto,
+  FindOnePaymentDto,
 } from '../../validations/payment-validation';
 import DatabaseBaseRepository from './_database-base-repository';
 import QueryPaymentRepository from './queries/query-payment-repository';
 
 export default class PaymentRepository
   extends DatabaseBaseRepository
-  implements
-    Repository<
-      FindAllPaymentDto,
-      FindByIdPaymentDto,
-      CreatePaymentDto,
-      CreatePaymentDto
-    >
+  implements Repository<FindAllPaymentDto, FindByIdPaymentDto, CreatePaymentDto, CreatePaymentDto>
 {
   private queryPaymentRepository = new QueryPaymentRepository();
 
@@ -43,7 +38,7 @@ export default class PaymentRepository
     });
   }
 
-  async findOne(params: FindByIdPaymentDto) {
+  async findOne(params: FindOnePaymentDto) {
     return this.prisma.payment.findFirst({
       where: this.queryPaymentRepository.handleWhere(params),
       select: { ...this.queryPaymentRepository.handleSelect() },
@@ -63,8 +58,7 @@ export default class PaymentRepository
   }
 
   destroy(id: number | number[]) {
-    if (id instanceof Array)
-      return this.prisma.payment.deleteMany({ where: { id: { in: id } } });
+    if (id instanceof Array) return this.prisma.payment.deleteMany({ where: { id: { in: id } } });
     return this.prisma.payment.delete({ where: { id } });
   }
 }

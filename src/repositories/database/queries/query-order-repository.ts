@@ -13,7 +13,7 @@ export default class QueryOrderRepository {
       include.user = { select: { id: true, username: true, profile: true } };
     if (relation?.includes(OrderRelation.ORDER_ITEMS))
       include.orderItems = { include: { product: true } };
-    if (relation?.includes(OrderRelation.PAYMENTS)) include.payments = true;
+    if (relation?.includes(OrderRelation.PAYMENT)) include.payment = true;
 
     return Object.keys(include).length ? include : undefined;
   }

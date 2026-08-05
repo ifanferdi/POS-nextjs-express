@@ -2,7 +2,7 @@ export enum OrderRelation {
   CUSTOMER = 'customer',
   USER = 'user',
   ORDER_ITEMS = 'order-items',
-  PAYMENTS = 'payments',
+  PAYMENT = 'payment',
 }
 
 export enum OrderStatus {

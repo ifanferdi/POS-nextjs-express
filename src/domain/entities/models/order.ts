@@ -12,7 +12,7 @@ export interface IOrder extends Order {
   customer?: IUser;
   user?: IUser;
   orderItems?: IOrderItem[];
-  payments?: IPayment[];
+  payment?: IPayment;
 }
 
 export interface IOrderItem extends OrderItem {
