@@ -4,7 +4,7 @@ import { OrderTableSection } from '@/app/(protected)/orders/_components/order-ta
 import { OrderTableSkeleton } from '@/app/(protected)/orders/_components/order-table-skeleton';
 import { Skeleton } from '@/components/ui/skeleton';
 import { OrderRelation, OrderStatus, PaymentMethod } from '@/domain';
-import { getAllOrders } from '@/features/orders/api';
+import { GetAllOrderParams } from '@/features/orders/schema';
 import { Suspense } from 'react';
 
 interface OrdersPageProps {
@@ -29,13 +29,13 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
   const statusEnum = coerceEnum(status, Object.values(OrderStatus));
   const paymentMethodEnum = coerceEnum(paymentMethod, Object.values(PaymentMethod));
 
-  const records = await getAllOrders({
+  const params: GetAllOrderParams = {
     page: pageNum,
     q,
     status: statusEnum,
     paymentMethod: paymentMethodEnum,
     with: [OrderRelation.CUSTOMER, OrderRelation.ORDER_ITEMS],
-  });
+  };
 
   return (
     <div className="space-y-6">
@@ -54,7 +54,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
         </Suspense>
       </div>
       <Suspense fallback={<OrderTableSkeleton />}>
-        <OrderTableSection records={records} />
+        <OrderTableSection params={params} />
       </Suspense>
     </div>
   );

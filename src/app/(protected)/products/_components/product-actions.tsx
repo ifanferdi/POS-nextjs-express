@@ -17,9 +17,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Category, CategoryOption, Product } from '@/domain';
+import { CategoryOption, Product } from '@/domain';
 import { deleteProductAction } from '@/features/products/action';
-import { MoreHorizontalIcon, PencilIcon, TrashIcon } from 'lucide-react';
+import { EyeIcon, MoreHorizontalIcon, PencilIcon, TrashIcon } from 'lucide-react';
+import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
@@ -52,7 +53,7 @@ export function ProductActions({ product, categories }: ProductActionsProps) {
   }
 
   return (
-    <div>
+    <div className="inline-flex gap-1">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="icon-sm" aria-label="Product actions">
@@ -60,6 +61,12 @@ export function ProductActions({ product, categories }: ProductActionsProps) {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-36">
+          <DropdownMenuItem asChild className="cursor-pointer">
+            <Link href={`/products/${product.id}`}>
+              <EyeIcon />
+              <span>Detail</span>
+            </Link>
+          </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setEditOpen(true)} className="cursor-pointer">
             <PencilIcon className="mr-1" />
             <span>Edit</span>

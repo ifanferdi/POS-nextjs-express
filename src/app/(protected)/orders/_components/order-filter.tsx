@@ -2,6 +2,7 @@
 
 import { DefaultFilter, Filter } from '@/components/shared/filter';
 import { ORDER_STATUS_VALUES, PAYMENT_METHOD_VALUES } from '@/domain';
+import _ from 'lodash';
 import { ClipboardListIcon, CreditCardIcon } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useTransition } from 'react';
@@ -46,7 +47,7 @@ export function OrderFilter() {
         }
         onChangeFunction={(v) => updateParam('status', v === 'all' ? null : v)}
         placeholderItem={null}
-        items={ORDER_STATUS_VALUES.map((order) => ({ key: order, label: order }))}
+        items={ORDER_STATUS_VALUES.map((order) => ({ key: order, label: _.capitalize(order) }))}
       />
       <DefaultFilter
         activeFilter={currentPaymentMethod}
@@ -58,7 +59,10 @@ export function OrderFilter() {
         }
         onChangeFunction={(v) => updateParam('paymentMethod', v === 'all' ? null : v)}
         placeholderItem={null}
-        items={PAYMENT_METHOD_VALUES.map((payment) => ({ key: payment, label: payment }))}
+        items={PAYMENT_METHOD_VALUES.map((payment) => ({
+          key: payment,
+          label: _.capitalize(payment),
+        }))}
       />
     </Filter>
   );

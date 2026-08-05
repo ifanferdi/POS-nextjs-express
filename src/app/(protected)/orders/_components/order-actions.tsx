@@ -12,7 +12,8 @@ import {
 } from '@/components/ui/dialog';
 import { Order } from '@/domain';
 import { deleteOrderAction } from '@/features/orders/action';
-import { TrashIcon } from 'lucide-react';
+import { EyeIcon, TrashIcon } from 'lucide-react';
+import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
@@ -38,8 +39,21 @@ export function OrderActions({ order }: { order: Order }) {
   }
 
   return (
-    <div>
+    <div className="inline-flex gap-1">
       <Button
+        variant="ghost"
+        size="icon-sm"
+        asChild
+        aria-label="View order"
+        title="View"
+        className="text-muted-foreground hover:bg-info/10 hover:text-info active:scale-90"
+      >
+        <Link href={`/orders/${order.id}`}>
+          <EyeIcon />
+        </Link>
+      </Button>
+
+      {/* <Button
         variant="ghost"
         size="icon-sm"
         aria-label="Delete order"
@@ -48,7 +62,7 @@ export function OrderActions({ order }: { order: Order }) {
         className="text-destructive hover:bg-destructive/10 hover:text-destructive active:scale-90"
       >
         <TrashIcon />
-      </Button>
+      </Button> */}
 
       <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <DialogContent>

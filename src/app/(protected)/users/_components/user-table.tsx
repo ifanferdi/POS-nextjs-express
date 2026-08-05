@@ -51,8 +51,9 @@ function UserTable(props: UserTableProps) {
       <Table>
         <UserTableHeader />
         <TableBody>
-          {users.map((user) => (
+          {users.map((user, index) => (
             <TableRow key={user.id} className="group">
+              <TableCell className="text-muted-foreground text-center">{index + 1}</TableCell>
               <TableCell>
                 <Link href={`/users/${user.id}`} className="flex items-center gap-3">
                   <Avatar size="sm">
@@ -84,7 +85,7 @@ function UserTable(props: UserTableProps) {
                   </Badge>
                 )}
               </TableCell>
-              <TableCell>
+              <TableCell className="w-0">
                 <div className="flex justify-end gap-2">
                   <UserActions user={user} roles={roles} />
                 </div>
@@ -98,14 +99,14 @@ function UserTable(props: UserTableProps) {
 }
 
 export function UserTableHeader() {
-  const HEADERS = ['Name', 'Username', 'Gender', 'Birth', 'Role', 'Status', 'Actions'];
+  const HEADERS = ['#', 'Name', 'Username', 'Gender', 'Birth', 'Role', 'Status'];
   return (
     <TableHeader>
       <TableRow className="bg-muted/40 hover:bg-muted/40">
         {HEADERS.map((header) => (
           <TableHead
             key={header}
-            className={`text-xs text-muted-foreground ${header === 'Actions' ? 'text-right w-0' : ''}`}
+            className={`text-xs text-muted-foreground ${header === '#' ? 'w-0 px-3 text-center' : ''}`}
           >
             {header}
           </TableHead>

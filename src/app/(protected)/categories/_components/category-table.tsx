@@ -44,8 +44,9 @@ function CategoryTable(props: CategoryTableProps) {
       <Table>
         <CategoryTableHeader />
         <TableBody>
-          {categories.map((category) => (
+          {categories.map((category, index) => (
             <TableRow key={category.id} className="group">
+              <TableCell className="text-muted-foreground text-center">{index + 1}</TableCell>
               <TableCell>
                 <CategoryDetailDialog category={category} />
               </TableCell>
@@ -63,14 +64,14 @@ function CategoryTable(props: CategoryTableProps) {
 }
 
 export function CategoryTableHeader() {
-  const HEADERS = ['Name', 'Actions'];
+  const HEADERS = ['#', 'Name'];
   return (
     <TableHeader>
       <TableRow className="bg-muted/40 hover:bg-muted/40">
         {HEADERS.map((header) => (
           <TableHead
             key={header}
-            className={`text-xs text-muted-foreground ${header === 'Actions' ? 'text-right w-0' : ''}`}
+            className={`text-xs text-muted-foreground ${header === '#' ? 'w-0 px-3 text-center' : ''}`}
           >
             {header}
           </TableHead>

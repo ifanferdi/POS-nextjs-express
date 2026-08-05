@@ -48,8 +48,9 @@ function ProductTable(props: ProductTableProps) {
       <Table>
         <ProductTableHeader />
         <TableBody>
-          {products.map((product) => (
+          {products.map((product, index) => (
             <TableRow key={product.id} className="group">
+              <TableCell className="text-muted-foreground text-center">{index + 1}</TableCell>
               <TableCell>
                 <Link href={`/products/${product.id}`} className="flex items-center gap-3">
                   <span className="font-medium group-hover:underline">{product.name}</span>
@@ -78,7 +79,7 @@ function ProductTable(props: ProductTableProps) {
                   </Badge>
                 )}
               </TableCell>
-              <TableCell>
+              <TableCell className="w-0">
                 <div className="flex justify-end gap-2">
                   <ProductActions product={product} categories={categories} />
                 </div>
@@ -118,14 +119,14 @@ function handleCategoriesColumn(product: Product) {
 }
 
 export function ProductTableHeader() {
-  const HEADERS = ['Name', 'Sku', 'Stock', 'Price', 'Categories', 'Is Active?', 'Actions'];
+  const HEADERS = ['#', 'Name', 'Sku', 'Stock', 'Price', 'Categories', 'Is Active?'];
   return (
     <TableHeader>
       <TableRow className="bg-muted/40 hover:bg-muted/40">
         {HEADERS.map((header) => (
           <TableHead
             key={header}
-            className={`text-xs text-muted-foreground ${header === 'Actions' ? 'text-right w-0' : ''}`}
+            className={`text-xs text-muted-foreground ${header === '#' ? 'w-0 px-3 text-center' : ''}`}
           >
             {header}
           </TableHead>

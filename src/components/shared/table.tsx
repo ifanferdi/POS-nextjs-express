@@ -9,15 +9,23 @@ import { Skeleton as SkeletonComponent } from '../ui/skeleton';
 
 interface SkeletonProps {
   className?: string;
+  total?: number;
 }
-export function Skeleton({ className }: SkeletonProps) {
-  return <SkeletonComponent className={`bg-muted-foreground/20 dark:bg-muted ${className}`} />;
+export function Skeleton({ className, total }: SkeletonProps) {
+  return (
+    <SkeletonComponent
+      key={total}
+      className={`bg-muted-foreground/20 dark:bg-muted ${className}`}
+    />
+  );
 }
 
-export function ActionSkeleton({ className }: SkeletonProps) {
+export function ActionSkeleton({ className, total = 1 }: SkeletonProps) {
   return (
-    <div className="flex justify-end">
-      <Skeleton className={`size-8 rounded-full ${className}`} />
+    <div className="flex justify-end gap-0.5">
+      {Array.from({ length: total }).map((_, i) => (
+        <Skeleton key={total} className={`size-8 rounded-full ${className}`} />
+      ))}
     </div>
   );
 }
@@ -97,13 +105,7 @@ export function TablePagination({ page, totalPages, total, baseUrl }: TablePagin
   );
 }
 
-export function EmptyTable({
-  entities,
-  icon,
-}: {
-  entities: string;
-  icon: keyof typeof icons;
-}) {
+export function EmptyTable({ entities, icon }: { entities: string; icon: keyof typeof icons }) {
   const Icon = icons[icon];
   return (
     <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-16">

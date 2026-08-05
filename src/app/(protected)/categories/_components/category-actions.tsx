@@ -12,10 +12,11 @@ import {
 } from '@/components/ui/dialog';
 import { Category } from '@/domain';
 import { deleteCategoryAction } from '@/features/categories/action';
-import { PencilIcon, TrashIcon } from 'lucide-react';
+import { EyeIcon, PencilIcon, TrashIcon } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
+import { CategoryDetailDialog } from './category-detail-dialog';
 import { CategoryFormDialog } from './category-form-dialog';
 
 export function CategoryActions({ category }: { category: Category }) {
@@ -41,6 +42,20 @@ export function CategoryActions({ category }: { category: Category }) {
 
   return (
     <div className="flex items-center justify-end gap-1">
+      <CategoryDetailDialog
+        category={category}
+        trigger={
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label="View category"
+            title="View"
+            className="text-muted-foreground hover:bg-info/10 hover:text-info active:scale-90"
+          >
+            <EyeIcon />
+          </Button>
+        }
+      />
       <Button
         variant="ghost"
         size="icon-sm"

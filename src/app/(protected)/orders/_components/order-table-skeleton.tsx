@@ -11,6 +11,9 @@ export function OrderTableSkeleton({ rows = 10 }: { rows?: number }) {
           {Array.from({ length: rows }).map((_, i) => (
             <TableRow key={i}>
               <TableCell>
+                <Skeleton className={`h-4 w-4`} />
+              </TableCell>
+              <TableCell>
                 <Skeleton className="h-4 w-28" />
               </TableCell>
               <TableCell>

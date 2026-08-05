@@ -19,6 +19,7 @@ import moment from 'moment';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { type ReactNode } from 'react';
+import { OrderActions } from '../_components/order-actions';
 
 const PAYMENT_STATUS_STYLES: Record<PaymentStatus, string> = {
   [PaymentStatus.PENDING]: 'bg-warning/10 text-warning',
@@ -81,7 +82,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                 )}
               </div>
             </div>
-            {/* <OrderActions order={order} /> */}
+            <OrderActions order={order} />
           </div>
         </CardHeader>
 

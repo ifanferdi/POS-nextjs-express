@@ -11,8 +11,10 @@ export function UserTableSkeleton({ rows = 10 }: { rows?: number }) {
           {Array.from({ length: rows }).map((_, i) => (
             <TableRow key={i}>
               <TableCell>
+                <Skeleton className={`h-4 w-4`} />
+              </TableCell>
+              <TableCell>
                 <div className="flex items-center gap-3">
-                  <Skeleton className={`size-8 rounded-full`} />
                   <Skeleton className={`h-4 w-36`} />
                 </div>
               </TableCell>

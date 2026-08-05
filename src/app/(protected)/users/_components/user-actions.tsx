@@ -20,7 +20,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Role, User } from '@/domain';
 import { deleteUserAction } from '@/features/users/action';
-import { MoreHorizontalIcon, PencilIcon, TrashIcon } from 'lucide-react';
+import { EyeIcon, MoreHorizontalIcon, PencilIcon, TrashIcon } from 'lucide-react';
+import Link from 'next/link';
 import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
 
@@ -60,6 +61,12 @@ export function UserActions(props: UserActionsProps) {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-36">
+          <DropdownMenuItem asChild className="cursor-pointer">
+            <Link href={`/users/${user.id}`}>
+              <EyeIcon />
+              <span>Detail</span>
+            </Link>
+          </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setEditOpen(true)} className="cursor-pointer">
             <PencilIcon className="mr-1" />
             <span>Edit</span>

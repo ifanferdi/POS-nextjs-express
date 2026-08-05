@@ -8,16 +8,20 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Order, OrderStatus, PaginatedResponse } from '@/domain';
+import { Order, OrderStatus } from '@/domain';
+import { getAllOrders } from '@/features/orders/api';
+import { GetAllOrderParams } from '@/features/orders/schema';
 import { formatCurrency } from '@/lib/helper';
 import moment from 'moment';
 import Link from 'next/link';
+import { OrderActions } from './order-actions';
 
 interface OrderTableSectionProps {
-  records: PaginatedResponse<Order>;
+  params: GetAllOrderParams;
 }
 export async function OrderTableSection(props: OrderTableSectionProps) {
-  const { data: orders, ...meta } = props.records;
+  const { params } = props;
+  const { data: orders, ...meta } = await getAllOrders(params);
   return (
     <>
       <OrderTable orders={orders} />
@@ -43,8 +47,9 @@ function OrderTable(props: OrderTableProps) {
       <Table>
         <OrderTableHeader />
         <TableBody>
-          {orders.map((order) => (
+          {orders.map((order, index) => (
             <TableRow key={order.id} className="group">
+              <TableCell className="text-muted-foreground text-center">{index + 1}</TableCell>
               <TableCell>
                 <Link href={`/orders/${order.id}`} className="font-medium group-hover:underline">
                   {order.orderNumber}
@@ -72,11 +77,11 @@ function OrderTable(props: OrderTableProps) {
               <TableCell>
                 <OrderStatusBadge status={order.status} />
               </TableCell>
-              {/* <TableCell>
+              <TableCell className="w-0">
                 <div className="flex justify-end gap-2">
                   <OrderActions order={order} />
                 </div>
-              </TableCell> */}
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>
@@ -108,14 +113,14 @@ export function OrderStatusBadge({ status }: { status: OrderStatus }) {
 }
 
 export function OrderTableHeader() {
-  const HEADERS = ['Order #', 'Customer', 'Date', 'Items', 'Total', 'Payment', 'Status'];
+  const HEADERS = ['#', 'Order #', 'Customer', 'Date', 'Items', 'Total', 'Payment', 'Status'];
   return (
     <TableHeader>
       <TableRow className="bg-muted/40 hover:bg-muted/40">
         {HEADERS.map((header) => (
           <TableHead
             key={header}
-            className={`text-xs text-muted-foreground ${header === 'Actions' ? 'text-right w-0' : ''}`}
+            className={`text-xs text-muted-foreground ${header === '#' ? 'w-0 px-3 text-center' : ''}`}
           >
             {header}
           </TableHead>

@@ -2,7 +2,7 @@
 
 import { BoxesIcon } from 'lucide-react';
 import moment from 'moment';
-import { useState } from 'react';
+import { type ReactNode, useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -14,15 +14,23 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { Category } from '@/domain';
 
-export function CategoryDetailDialog({ category }: { category: Category }) {
+export function CategoryDetailDialog({
+  category,
+  trigger,
+}: {
+  category: Category;
+  trigger?: ReactNode;
+}) {
   const [open, setOpen] = useState(false);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <button className="w-full gap-3 text-left group">
-          <span className="font-medium group-hover:underline">{category.name}</span>
-        </button>
+        {trigger ?? (
+          <button className="w-full gap-3 text-left group">
+            <span className="font-medium group-hover:underline">{category.name}</span>
+          </button>
+        )}
       </DialogTrigger>
       <DialogContent className="md:max-w-lg">
         <DialogHeader>
