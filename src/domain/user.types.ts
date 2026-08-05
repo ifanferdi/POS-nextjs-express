@@ -5,6 +5,7 @@ export enum Gender {
   MALE = 'male',
   FEMALE = 'female',
 }
+export const GENDER_VALUES = Object.values(Gender);
 
 export interface User {
   id: number;

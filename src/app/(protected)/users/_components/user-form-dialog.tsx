@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { options } from '@/config/config';
-import { RoleOption, User } from '@/domain';
+import { GENDER_VALUES, RoleOption, User } from '@/domain';
 import { createUserAction, updateUserAction } from '@/features/users/action';
 import {
   CreateUserInput,
@@ -32,7 +32,7 @@ import {
 import { formatDate } from '@/lib/helper';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useState, useTransition } from 'react';
-import { Controller, UseFormReturn, useForm } from 'react-hook-form';
+import { Controller, useForm, UseFormReturn } from 'react-hook-form';
 import { toast } from 'sonner';
 
 type UserWithoutPermissions = Omit<User, 'permissions'>;
@@ -142,10 +142,7 @@ interface UserFormFieldsProps {
   isEditMode: boolean;
   isPending: boolean;
 }
-function 
-
-
-UserFormFields(props: UserFormFieldsProps) {
+function UserFormFields(props: UserFormFieldsProps) {
   const { form, roles, isEditMode, isPending } = props;
   return (
     <FieldGroup>
@@ -276,9 +273,9 @@ UserFormFields(props: UserFormFieldsProps) {
                   <SelectValue placeholder="Select Gender" />
                 </SelectTrigger>
                 <SelectContent position="item-aligned">
-                  {options.genderOptions.map((g) => (
-                    <SelectItem key={g.value} value={g.value}>
-                      {g.label}
+                  {GENDER_VALUES.map((value) => (
+                    <SelectItem key={value} value={value} className="capitalize">
+                      {value}
                     </SelectItem>
                   ))}
                 </SelectContent>

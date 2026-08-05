@@ -9,12 +9,13 @@
  * 3. Reusable — kalau dipakai project lain, cukup ganti .env, config.ts tetap sama
  */
 
-import { Gender } from '@/domain';
+import { OrderStatus, PaymentMethod } from '@/domain';
 import {
   BoxesIcon,
   BoxIcon,
   KeyRoundIcon,
   ShieldUserIcon,
+  ShoppingCartIcon,
   UserRoundCheckIcon,
   UsersIcon,
 } from 'lucide-react';
@@ -35,10 +36,6 @@ export const auth = {
 };
 
 export const options = {
-  genderOptions: [
-    { label: 'Male', value: Gender.MALE ?? 'male' },
-    { label: 'Female', value: Gender.FEMALE ?? 'female' },
-  ],
   activeOptions: [
     { label: 'Active', value: 'true' },
     { label: 'Inactive', value: 'false' },
@@ -52,4 +49,5 @@ export const icons = {
   product: BoxIcon,
   isActive: UserRoundCheckIcon,
   category: BoxesIcon,
+  order: ShoppingCartIcon,
 };

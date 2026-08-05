@@ -25,6 +25,7 @@ const navItems = [
   { title: 'Users', href: '/users', icon: icons.user },
   { title: 'Categories', href: '/categories', icon: icons.category },
   { title: 'Products', href: '/products', icon: icons.product },
+  { title: 'Orders', href: '/orders', icon: icons.order },
 ];
 
 interface AppSidebarProps {
