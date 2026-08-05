@@ -1,7 +1,7 @@
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PoolConfig } from 'pg';
 import config from '../../../config/config';
-import { PrismaClient } from '../prisma/generated/client';
+import { PrismaClient } from './generated/client';
 
 const connectionString = config.database.url;
 
