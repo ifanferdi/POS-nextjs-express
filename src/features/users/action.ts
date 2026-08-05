@@ -1,5 +1,7 @@
 'use server';
 
+import { ActionResult } from '@/domain';
+import { User } from '@/domain/user.types';
 import {
   CreateUserInput,
   CreateUserSchema,
@@ -9,17 +11,11 @@ import {
 import { revalidatePath } from 'next/cache';
 import * as api from './api';
 
-export interface ActionResult {
-  success: boolean;
-  error?: string;
-}
-
-export async function createUserAction(input: CreateUserInput): Promise<ActionResult> {
+export async function createUserAction(input: CreateUserInput): Promise<ActionResult<User>> {
   const validate = CreateUserSchema.safeParse(input);
   if (!validate.success) return { success: false, error: 'Input tidak valid.' };
 
   try {
-  
     await api.createUser(validate.data);
     revalidatePath('/users');
 
@@ -32,7 +28,10 @@ export async function createUserAction(input: CreateUserInput): Promise<ActionRe
   }
 }
 
-export async function updateUserAction(id: number, input: UpdateUserInput): Promise<ActionResult> {
+export async function updateUserAction(
+  id: number,
+  input: UpdateUserInput,
+): Promise<ActionResult<User>> {
   const validate = UpdateUserSchema.safeParse(input);
   if (!validate.success) return { success: false, error: 'Input tidak valid.' };
 
@@ -49,7 +48,7 @@ export async function updateUserAction(id: number, input: UpdateUserInput): Prom
   }
 }
 
-export async function deleteUserAction(id: number): Promise<ActionResult> {
+export async function deleteUserAction(id: number): Promise<ActionResult<User>> {
   try {
     await api.deleteUser(id);
     revalidatePath('/users');

@@ -1,4 +1,4 @@
-import { PaginatedResponse, Product } from '@/domain';
+import { ApiResponse, PaginatedResponse, Product } from '@/domain';
 import {
   CreateProductInput,
   GetAllProductParams,
@@ -6,6 +6,10 @@ import {
   UpdateProductInput,
 } from '@/features/products/schema';
 import { createServerApiClient } from '@/lib/api-server';
+
+interface ProductApiResponse extends ApiResponse {
+  product: Product;
+}
 
 export async function getAllProducts<T = Product>(params: GetAllProductParams) {
   const api = await createServerApiClient();
@@ -23,21 +27,21 @@ export async function getProductById<T = Product>(id: number, relation?: Product
 
 export async function createProduct(input: CreateProductInput) {
   const api = await createServerApiClient();
-  const response = await api.post('/v1/products', input);
+  const response = await api.post<ProductApiResponse>('/v1/products', input);
 
   return response.data;
 }
 
 export async function updateProduct(id: number, input: UpdateProductInput) {
   const api = await createServerApiClient();
-  const response = await api.put(`/v1/products/${id}`, input);
+  const response = await api.put<ProductApiResponse>(`/v1/products/${id}`, input);
 
   return response.data;
 }
 
 export async function deleteProduct(id: number) {
   const api = await createServerApiClient();
-  const response = await api.delete(`/v1/products/${id}`);
+  const response = await api.delete<ApiResponse>(`/v1/products/${id}`);
 
   return response.data;
 }

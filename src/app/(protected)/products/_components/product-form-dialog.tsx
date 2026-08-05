@@ -30,6 +30,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { options } from '@/config/config';
 import { CategoryOption, Product } from '@/domain';
+import { createCategoryAction } from '@/features/categories/action';
 import { createProductAction, updateProductAction } from '@/features/products/action';
 import {
   CreateProductInput,
@@ -39,8 +40,8 @@ import {
 } from '@/features/products/schema';
 import { zodResolver } from '@hookform/resolvers/zod';
 import _ from 'lodash';
-import { ChevronDown } from 'lucide-react';
-import { useMemo, useState, useTransition } from 'react';
+import { ChevronDown, PlusIcon, XIcon } from 'lucide-react';
+import { useMemo, useRef, useState, useTransition } from 'react';
 import { Controller, useForm, UseFormReturn } from 'react-hook-form';
 import { toast } from 'sonner';
 
@@ -298,32 +299,6 @@ function ProductFormFields(props: ProductFormFieldsProps) {
         )}
       />
       <Controller
-        name="isActive"
-        control={form.control}
-        render={({ field, fieldState }) => (
-          <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor="isActive">Status</FieldLabel>
-            <Select
-              value={String(field.value)}
-              onValueChange={(v) => field.onChange(v === 'true')}
-              disabled={isPending}
-            >
-              <SelectTrigger id="isActive" aria-invalid={fieldState.invalid} className="w-full">
-                <SelectValue placeholder="Select Status" />
-              </SelectTrigger>
-              <SelectContent position="item-aligned">
-                {options.activeOptions.map((o) => (
-                  <SelectItem key={o.value} value={o.value}>
-                    {o.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-          </Field>
-        )}
-      />
-      <Controller
         name="categoryIds"
         control={form.control}
         render={({ field, fieldState }) => (
@@ -351,30 +326,81 @@ function ProductFormFields(props: ProductFormFieldsProps) {
           </Field>
         )}
       />
+      <Controller
+        name="isActive"
+        control={form.control}
+        render={({ field, fieldState }) => (
+          <Field data-invalid={fieldState.invalid}>
+            <FieldLabel htmlFor="isActive">Status</FieldLabel>
+            <Select
+              value={String(field.value)}
+              onValueChange={(v) => field.onChange(v === 'true')}
+              disabled={isPending}
+            >
+              <SelectTrigger id="isActive" aria-invalid={fieldState.invalid} className="w-full">
+                <SelectValue placeholder="Select Status" />
+              </SelectTrigger>
+              <SelectContent position="item-aligned">
+                {options.activeOptions.map((o) => (
+                  <SelectItem key={o.value} value={o.value}>
+                    {o.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+          </Field>
+        )}
+      />
     </FieldGroup>
   );
 }
 
-interface CategoryMultiSelectProps {
+function CategoryMultiSelect({
+  categories,
+  value,
+  onChange,
+  disabled,
+}: {
   categories: CategoryOption[];
   value: number[];
   onChange: (v: number[]) => void;
   disabled?: boolean;
-}
-function CategoryMultiSelect(props: CategoryMultiSelectProps) {
-  const { categories, value, onChange, disabled } = props;
+}) {
   const [query, setQuery] = useState('');
+  const [added, setAdded] = useState<CategoryOption[]>([]);
+  const [isCreating, startCreating] = useTransition();
+  const searchRef = useRef<HTMLInputElement>(null);
+  const allCategories = useMemo(() => [...categories, ...added], [categories, added]);
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return q ? categories.filter((c) => c.name.toLowerCase().includes(q)) : categories;
-  }, [categories, query]);
+    return q ? allCategories.filter((c) => c.name.toLowerCase().includes(q)) : allCategories;
+  }, [allCategories, query]);
 
   function toggle(id: number, checked: boolean) {
     onChange(checked ? [...value, id] : value.filter((v) => v !== id));
   }
 
+  function handleAddNew() {
+    const name = query.trim();
+    if (!name) return;
+    startCreating(async () => {
+      const result = await createCategoryAction({ name });
+      if (!result.success || !result.data) {
+        toast.error(result.error ?? 'Failed to create category.');
+        return;
+      }
+      setAdded((prev) => [...prev, result.data!]);
+      onChange([...value, result.data!.id]);
+      setQuery('');
+      toast.success(`Category "${result.data!.name}" created.`);
+    });
+  }
+
+  const showAddNew = query.trim();
+
   return (
-    <DropdownMenu>
+    <DropdownMenu onOpenChange={(open) => open && setTimeout(() => searchRef.current?.focus(), 0)}>
       <DropdownMenuTrigger asChild>
         <Button
           type="button"
@@ -387,17 +413,28 @@ function CategoryMultiSelect(props: CategoryMultiSelectProps) {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-(--radix-dropdown-menu-trigger-width)">
-        <div className="p-1">
+        <div className="relative p-1">
           <Input
+            ref={searchRef}
             placeholder="Search categories..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => e.stopPropagation()}
-            className="h-8"
+            className="h-8 pr-7"
           />
+          {query && (
+            <button
+              type="button"
+              onClick={() => setQuery('')}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground transition hover:text-foreground"
+              aria-label="Clear search"
+            >
+              <XIcon className="size-3.5" />
+            </button>
+          )}
         </div>
         <div className="max-h-60 overflow-y-auto">
-          {filtered.length === 0 ? (
+          {filtered.length === 0 && !showAddNew ? (
             <div className="px-2 py-4 text-center text-sm text-muted-foreground">No results.</div>
           ) : (
             filtered.map((cat) => (
@@ -410,6 +447,20 @@ function CategoryMultiSelect(props: CategoryMultiSelectProps) {
                 {cat.name}
               </DropdownMenuCheckboxItem>
             ))
+          )}
+          {showAddNew && (
+            <button
+              type="button"
+              onClick={handleAddNew}
+              disabled={isCreating}
+              className="flex w-full items-center gap-2 border-t border-border/60 px-2 py-2.5 text-left text-sm transition hover:bg-muted disabled:opacity-50"
+            >
+              <PlusIcon className="size-4 text-primary" />
+              <span>
+                Add <strong className="font-medium">&quot;{query.trim()}&quot;</strong> as new
+                category
+              </span>
+            </button>
           )}
         </div>
       </DropdownMenuContent>

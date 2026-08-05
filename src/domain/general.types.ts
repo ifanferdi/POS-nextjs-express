@@ -5,3 +5,14 @@ export interface PaginatedResponse<T> {
   totalPages: number;
   data: T[];
 }
+
+interface BaseResponse {
+  message: string;
+}
+export interface ActionResult<T> {
+  success: boolean;
+  error?: string;
+  data?: T;
+}
+
+export interface ApiResponse extends BaseResponse {}

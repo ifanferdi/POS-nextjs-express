@@ -1,5 +1,6 @@
 'use server';
 
+import { ActionResult, Product } from '@/domain';
 import {
   CreateProductInput,
   CreateProductSchema,
@@ -9,12 +10,9 @@ import {
 import { revalidatePath } from 'next/cache';
 import * as api from './api';
 
-export interface ActionResult {
-  success: boolean;
-  error?: string;
-}
-
-export async function createProductAction(input: CreateProductInput): Promise<ActionResult> {
+export async function createProductAction(
+  input: CreateProductInput,
+): Promise<ActionResult<Product>> {
   const validate = CreateProductSchema.safeParse(input);
   if (!validate.success) return { success: false, error: 'Input tidak valid.' };
 
@@ -34,7 +32,7 @@ export async function createProductAction(input: CreateProductInput): Promise<Ac
 export async function updateProductAction(
   id: number,
   input: UpdateProductInput,
-): Promise<ActionResult> {
+): Promise<ActionResult<Product>> {
   const validate = UpdateProductSchema.safeParse(input);
   if (!validate.success) return { success: false, error: 'Input tidak valid.' };
 
@@ -51,7 +49,7 @@ export async function updateProductAction(
   }
 }
 
-export async function deleteProductAction(id: number): Promise<ActionResult> {
+export async function deleteProductAction(id: number): Promise<ActionResult<Product>> {
   try {
     await api.deleteProduct(id);
     revalidatePath('/products');

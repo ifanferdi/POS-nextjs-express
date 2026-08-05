@@ -1,5 +1,6 @@
 'use server';
 
+import { ActionResult, Category } from '@/domain';
 import {
   CreateCategoryInput,
   CreateCategorySchema,
@@ -9,20 +10,17 @@ import {
 import { revalidatePath } from 'next/cache';
 import * as api from './api';
 
-export interface ActionResult {
-  success: boolean;
-  error?: string;
-}
-
-export async function createCategoryAction(input: CreateCategoryInput): Promise<ActionResult> {
+export async function createCategoryAction(
+  input: CreateCategoryInput,
+): Promise<ActionResult<Category>> {
   const validate = CreateCategorySchema.safeParse(input);
   if (!validate.success) return { success: false, error: 'Input tidak valid.' };
 
   try {
-    await api.createCategory(validate.data);
+    const { category: data } = await api.createCategory(validate.data);
     revalidatePath('/categories');
 
-    return { success: true };
+    return { success: true, data };
   } catch (error) {
     return {
       success: false,
@@ -34,7 +32,7 @@ export async function createCategoryAction(input: CreateCategoryInput): Promise<
 export async function updateCategoryAction(
   id: number,
   input: UpdateCategoryInput,
-): Promise<ActionResult> {
+): Promise<ActionResult<Category>> {
   const validate = UpdateCategorySchema.safeParse(input);
   if (!validate.success) return { success: false, error: 'Input tidak valid.' };
 
@@ -51,7 +49,7 @@ export async function updateCategoryAction(
   }
 }
 
-export async function deleteCategoryAction(id: number): Promise<ActionResult> {
+export async function deleteCategoryAction(id: number): Promise<ActionResult<Category>> {
   try {
     await api.deleteCategory(id);
     revalidatePath('/categories');

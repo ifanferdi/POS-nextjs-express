@@ -11,16 +11,10 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Category, CategoryOption } from '@/domain';
+import { Category } from '@/domain';
 import { createCategoryAction, updateCategoryAction } from '@/features/categories/action';
 import {
   CreateCategoryInput,
@@ -29,8 +23,7 @@ import {
   UpdateCategorySchema,
 } from '@/features/categories/schema';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ChevronDown } from 'lucide-react';
-import { useMemo, useState, useTransition } from 'react';
+import { useState, useTransition } from 'react';
 import { Controller, useForm, UseFormReturn } from 'react-hook-form';
 import { toast } from 'sonner';
 
@@ -170,70 +163,5 @@ function CategoryFormFields(props: CategoryFormFieldsProps) {
         )}
       />
     </FieldGroup>
-  );
-}
-
-function CategoryMultiSelect({
-  categories,
-  value,
-  onChange,
-  disabled,
-}: {
-  categories: CategoryOption[];
-  value: number[];
-  onChange: (v: number[]) => void;
-  disabled?: boolean;
-}) {
-  const [query, setQuery] = useState('');
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return q ? categories.filter((c) => c.name.toLowerCase().includes(q)) : categories;
-  }, [categories, query]);
-
-  function toggle(id: number, checked: boolean) {
-    onChange(checked ? [...value, id] : value.filter((v) => v !== id));
-  }
-
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          type="button"
-          variant="outline"
-          className="w-full justify-between font-normal"
-          disabled={disabled}
-        >
-          {value.length > 0 ? `${value.length} selected` : 'Select Categories'}
-          <ChevronDown className="size-4 opacity-50" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-(--radix-dropdown-menu-trigger-width)">
-        <div className="p-1">
-          <Input
-            placeholder="Search categories..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={(e) => e.stopPropagation()}
-            className="h-8"
-          />
-        </div>
-        <div className="max-h-60 overflow-y-auto">
-          {filtered.length === 0 ? (
-            <div className="px-2 py-4 text-center text-sm text-muted-foreground">No results.</div>
-          ) : (
-            filtered.map((cat) => (
-              <DropdownMenuCheckboxItem
-                key={cat.id}
-                checked={value.includes(cat.id)}
-                onCheckedChange={(checked) => toggle(cat.id, checked)}
-                onSelect={(e) => e.preventDefault()}
-              >
-                {cat.name}
-              </DropdownMenuCheckboxItem>
-            ))
-          )}
-        </div>
-      </DropdownMenuContent>
-    </DropdownMenu>
   );
 }
