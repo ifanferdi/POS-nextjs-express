@@ -99,7 +99,7 @@ function UserTable(props: UserTableProps) {
 }
 
 export function UserTableHeader() {
-  const HEADERS = ['#', 'Name', 'Username', 'Gender', 'Birth', 'Role', 'Status'];
+  const HEADERS = ['#', 'Name', 'Username', 'Gender', 'Birth', 'Role', 'Status', ''];
   return (
     <TableHeader>
       <TableRow className="bg-muted/40 hover:bg-muted/40">

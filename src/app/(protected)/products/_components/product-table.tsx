@@ -119,7 +119,7 @@ function handleCategoriesColumn(product: Product) {
 }
 
 export function ProductTableHeader() {
-  const HEADERS = ['#', 'Name', 'Sku', 'Stock', 'Price', 'Categories', 'Is Active?'];
+  const HEADERS = ['#', 'Name', 'Sku', 'Stock', 'Price', 'Categories', 'Is Active?', ''];
   return (
     <TableHeader>
       <TableRow className="bg-muted/40 hover:bg-muted/40">

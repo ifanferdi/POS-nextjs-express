@@ -16,9 +16,9 @@ export function OrderTableSkeleton({ rows = 10 }: { rows?: number }) {
               <TableCell>
                 <Skeleton className="h-4 w-28" />
               </TableCell>
-              <TableCell>
+              {/* <TableCell>
                 <Skeleton className="h-4 w-36" />
-              </TableCell>
+              </TableCell> */}
               <TableCell>
                 <Skeleton className="h-4 w-24" />
               </TableCell>

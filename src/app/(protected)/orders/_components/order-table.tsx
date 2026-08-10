@@ -51,13 +51,13 @@ function OrderTable(props: OrderTableProps) {
             <TableRow key={order.id} className="group">
               <TableCell className="text-muted-foreground text-center">{index + 1}</TableCell>
               <TableCell>
-                <Link href={`/orders/${order.id}`} className="font-medium group-hover:underline">
-                  {order.orderNumber}
+                <Link href={`/orders/${order.id}`} className="flex items-center gap-3">
+                  <span className="font-medium group-hover:underline">{order.orderNumber}</span>
                 </Link>
               </TableCell>
-              <TableCell className="text-muted-foreground">
+              {/* <TableCell className="text-muted-foreground">
                 {order.customer?.profile.fullName ?? 'Walk-in Customer'}
-              </TableCell>
+              </TableCell> */}
               <TableCell className="text-muted-foreground">
                 {moment(order.createdAt).format('MMM D, YYYY HH:mm')}
               </TableCell>
@@ -113,7 +113,17 @@ export function OrderStatusBadge({ status }: { status: OrderStatus }) {
 }
 
 export function OrderTableHeader() {
-  const HEADERS = ['#', 'Order #', 'Customer', 'Date', 'Items', 'Total', 'Payment', 'Status'];
+  const HEADERS = [
+    '#',
+    'Order #',
+    // 'Customer',
+    'Date',
+    'Items',
+    'Total',
+    'Payment',
+    'Status',
+    '',
+  ];
   return (
     <TableHeader>
       <TableRow className="bg-muted/40 hover:bg-muted/40">

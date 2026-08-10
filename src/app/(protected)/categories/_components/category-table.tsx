@@ -64,7 +64,7 @@ function CategoryTable(props: CategoryTableProps) {
 }
 
 export function CategoryTableHeader() {
-  const HEADERS = ['#', 'Name'];
+  const HEADERS = ['#', 'Name', ''];
   return (
     <TableHeader>
       <TableRow className="bg-muted/40 hover:bg-muted/40">
