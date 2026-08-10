@@ -15,10 +15,10 @@ export async function createOrderAction(input: CreateOrderInput): Promise<Action
   if (!validate.success) return { success: false, error: 'Input tidak valid.' };
 
   try {
-    await api.createOrder(validate.data);
+    const response = await api.createOrder(validate.data);
     revalidatePath('/orders');
 
-    return { success: true };
+    return { success: true, data: response.order };
   } catch (error) {
     return {
       success: false,

@@ -13,7 +13,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { logoutAction } from '@/features/auth/action';
-import { LogOut } from 'lucide-react';
+import { CalculatorIcon, LogOut } from 'lucide-react';
+import Link from 'next/link';
 import { useTransition } from 'react';
 
 export function AppHeader({ username }: { username?: string }) {
@@ -32,6 +33,12 @@ export function AppHeader({ username }: { username?: string }) {
     <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-border/60 bg-background/80 px-4 backdrop-blur-sm">
       <SidebarTrigger />
       <div className="ml-auto flex items-center gap-1.5">
+        <Button asChild variant="default" size="sm" className="gap-2">
+          <Link href="/pos">
+            <CalculatorIcon className="size-4" />
+            <span className="hidden sm:inline">POS</span>
+          </Link>
+        </Button>
         <ThemeToggle />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
