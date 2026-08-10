@@ -1,7 +1,11 @@
 import e from 'express';
 import asyncHandler from 'express-async-handler';
 import { HttpStatusCode } from '../../../constants/http-status.constant';
-import { extractUserId, handleNumberOrArrayRequest, handleOrderByRequest } from '../../../helpers/common.helper';
+import {
+  extractUserId,
+  handleNumberOrArrayRequest,
+  handleOrderByRequest,
+} from '../../../helpers/common.helper';
 import { BaseFindById } from '../../../validations/base-validation';
 import {
   CreateOrderDto,
@@ -60,10 +64,11 @@ export default class OrderController extends BaseController {
     const payload: CreateOrderDto = {
       customerId: req.body.customerId,
       userId: req.body.userId || extractUserId(req),
-      paymentMethod: req.body.paymentMethod,
       notes: req.body.notes,
       items: req.body.items,
+      paymentMethod: req.body.paymentMethod,
       paymentReference: req.body.paymentReference,
+      amount: req.body.amount,
     };
 
     CreateOrderSchema.parse(payload);

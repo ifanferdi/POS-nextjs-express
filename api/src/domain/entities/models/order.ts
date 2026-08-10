@@ -32,6 +32,7 @@ export interface StoreOrderDto {
   total: number;
   paymentMethod: PaymentMethod;
   paymentReference?: string;
+  amount?: number;
   notes?: string;
   meta?: Record<string, any>;
   items: {

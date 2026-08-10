@@ -1,8 +1,8 @@
+import { OrderStatus } from '../../domain/entities/enums/order.enum';
+import { PaymentStatus } from '../../domain/entities/enums/payment.enum';
 import { StoreOrderDto } from '../../domain/entities/models/order';
 import { Repository } from '../../domain/repositories/database.interface';
 import { generateOrderNumber } from '../../helpers/generate-string';
-import { OrderStatus } from '../../domain/entities/enums/order.enum';
-import { PaymentStatus } from '../../domain/entities/enums/payment.enum';
 import { Prisma } from '../../infrastructure/database/prisma/generated/client';
 import {
   FindAllOrderDto,
@@ -58,7 +58,7 @@ export default class OrderRepository
   }
 
   store(data: StoreOrderDto) {
-    const { items, total, paymentReference, paymentMethod, meta, ...orderData } = data;
+    const { amount = 0, items, total, paymentReference, paymentMethod, meta, ...orderData } = data;
 
     return this.prisma.$transaction(async (tx) => {
       const order = await tx.order.create({
@@ -75,7 +75,8 @@ export default class OrderRepository
       await tx.payment.create({
         data: {
           orderId: order.id,
-          amount: total,
+          amount: amount,
+          change: total - amount,
           method: paymentMethod,
           reference: paymentReference,
           status: PaymentStatus.COMPLETED,

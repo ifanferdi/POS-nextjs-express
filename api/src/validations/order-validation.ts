@@ -1,8 +1,7 @@
 import { z } from 'zod';
-import { OrderRelation } from '../domain/entities/enums/order.enum';
-import { ORDER_FIELD } from '../domain/entities/models/order';
-import { OrderStatus } from '../domain/entities/enums/order.enum';
+import { OrderRelation, OrderStatus } from '../domain/entities/enums/order.enum';
 import { PaymentMethod } from '../domain/entities/enums/payment.enum';
+import { ORDER_FIELD } from '../domain/entities/models/order';
 import { BaseFindById, BasePagination, NumberSchema, StringSchema } from './base-validation';
 
 const Relations = z.array(z.nativeEnum(OrderRelation).optional()).optional();
@@ -12,7 +11,9 @@ export const FindByIdOrderSchema = BaseFindById.extend({ with: Relations, column
 export const FindAllOrderSchema = BasePagination(ORDER_FIELD)
   .extend({
     status: z.union([z.nativeEnum(OrderStatus), z.array(z.nativeEnum(OrderStatus))]).optional(),
-    paymentMethod: z.union([z.nativeEnum(PaymentMethod), z.array(z.nativeEnum(PaymentMethod))]).optional(),
+    paymentMethod: z
+      .union([z.nativeEnum(PaymentMethod), z.array(z.nativeEnum(PaymentMethod))])
+      .optional(),
     customerId: z.union([NumberSchema, z.array(NumberSchema)]).optional(),
     userId: z.union([NumberSchema, z.array(NumberSchema)]).optional(),
     with: Relations,
@@ -34,10 +35,11 @@ const OrderItemSchema = z.object({
 export const CreateOrderSchema = z.object({
   customerId: NumberSchema.optional(),
   userId: NumberSchema.optional(),
-  paymentMethod: z.nativeEnum(PaymentMethod),
   notes: StringSchema.optional(),
   items: z.array(OrderItemSchema).min(1),
+  paymentMethod: z.nativeEnum(PaymentMethod),
   paymentReference: StringSchema.max(255).optional(),
+  amount: NumberSchema.optional(),
 });
 
 export const UpdateOrderStatusSchema = z.object({

@@ -208,7 +208,8 @@ model OrderItem {
 model Payment {
   id        Int           @id @default(autoincrement())
   orderId   Int           @unique
-  amount    Float
+  amount    Float         @default(0)
+  change    Float         @default(0)
   method    PaymentMethod
   reference String?       @db.VarChar(255)
   status    PaymentStatus @default(pending)
