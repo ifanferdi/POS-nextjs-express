@@ -19,30 +19,21 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { OrderStatus, PAYMENT_METHOD_VALUES, PaymentMethod } from '@/domain';
+import { PAYMENT_METHOD_VALUES, PaymentMethod } from '@/domain';
 import { createOrderAction } from '@/features/orders/action';
-import { optionalStringSchema } from '@/lib/base.schema';
-import { CartItem, useCartStore } from '@/stores/pos-cart-store';
+import { PosCheckoutForm, PosCheckoutFormSchema } from '@/features/orders/schema';
 import { formatCurrency } from '@/lib/helper';
+import { CartItem, useCartStore } from '@/stores/pos-cart-store';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useTransition } from 'react';
+import { useEffect, useTransition } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { toast } from 'sonner';
-import { z } from 'zod';
 
 const PAYMENT_LABELS: Record<PaymentMethod, string> = {
   [PaymentMethod.CASH]: 'Cash',
   [PaymentMethod.CARD]: 'Card',
   [PaymentMethod.TRANSFER]: 'Transfer',
 };
-
-const PosCheckoutFormSchema = z.object({
-  paymentMethod: z.enum(PaymentMethod),
-  notes: optionalStringSchema,
-  amountTendered: z.number().optional(),
-});
-
-type PosCheckoutForm = z.input<typeof PosCheckoutFormSchema>;
 
 interface PosCheckoutDialogProps {
   open: boolean;
@@ -51,7 +42,6 @@ interface PosCheckoutDialogProps {
   subtotal: number;
   onCheckoutSuccess: (result: PosLastOrder) => void;
 }
-
 export function PosCheckoutDialog({
   open,
   onOpenChange,
@@ -66,11 +56,19 @@ export function PosCheckoutDialog({
     mode: 'onSubmit',
     reValidateMode: 'onSubmit',
     defaultValues: {
+      subtotal,
       paymentMethod: PaymentMethod.CASH,
       notes: '',
       amountTendered: 0,
+      paymentReference: '',
     },
   });
+
+  // defaultValues hanya berlaku saat mount. Sync subtotal ke form state
+  // saat prop berubah (cart bertambah/berkurang) supaya superRefine validasi pakai nilai terbaru.
+  useEffect(() => {
+    form.setValue('subtotal', subtotal);
+  }, [subtotal, form]);
 
   function onSubmit(data: PosCheckoutForm) {
     startTransition(async () => {
@@ -82,12 +80,12 @@ export function PosCheckoutDialog({
       }
 
       const result = await createOrderAction({
-        customerId: null,
         userId: cashierId,
-        status: OrderStatus.COMPLETED,
-        paymentMethod: data.paymentMethod,
         notes: data.notes || undefined,
-        orderItems: snapshot.map((i) => ({ productId: i.productId, quantity: i.quantity })),
+        items: snapshot.map((i) => ({ productId: i.productId, quantity: i.quantity })),
+        paymentMethod: data.paymentMethod,
+        paymentReference: data.paymentReference,
+        amount: amountTendered,
       });
 
       if (!result.success || !result.data) {
@@ -138,7 +136,11 @@ export function PosCheckoutDialog({
                     onValueChange={(v) => field.onChange(v as PaymentMethod)}
                     disabled={isPending}
                   >
-                    <SelectTrigger id="paymentMethod" aria-invalid={fieldState.invalid} className="w-full">
+                    <SelectTrigger
+                      id="paymentMethod"
+                      aria-invalid={fieldState.invalid}
+                      className="w-full"
+                    >
                       <SelectValue placeholder="Pilih metode" />
                     </SelectTrigger>
                     <SelectContent position="item-aligned">
@@ -154,25 +156,45 @@ export function PosCheckoutDialog({
               )}
             />
 
-            {paymentMethod === PaymentMethod.CASH && (
+            {paymentMethod === PaymentMethod.CASH ? (
               <Controller
                 name="amountTendered"
                 control={form.control}
-                render={({ field }) => (
-                  <Field>
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
                     <FieldLabel htmlFor="amountTendered">Uang Diterima</FieldLabel>
                     <Input
                       id="amountTendered"
                       type="number"
                       min={0}
-                      step={1000}
+                      step={100}
                       disabled={isPending}
-                      value={field.value ?? 0}
+                      aria-invalid={fieldState.invalid}
+                      value={field.value}
                       onChange={(e) => field.onChange(Number(e.target.value))}
                     />
+                    {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                     <p className="text-xs text-muted-foreground">
                       Kembalian: <span className="font-medium">{formatCurrency(change)}</span>
                     </p>
+                  </Field>
+                )}
+              />
+            ) : (
+              <Controller
+                name="paymentReference"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor="paymentReference">Referensi Pembayaran</FieldLabel>
+                    <Input
+                      id="paymentReference"
+                      disabled={isPending}
+                      aria-invalid={fieldState.invalid}
+                      value={field.value}
+                      placeholder="ID Transaksi / No. Rekening / No. Kartu"
+                    />
+                    {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                   </Field>
                 )}
               />
@@ -195,10 +217,10 @@ export function PosCheckoutDialog({
               )}
             />
           </FieldGroup>
-
+{/* 
           <div className="rounded-lg bg-muted/40 p-3 text-xs text-muted-foreground">
             Total final (pajak &amp; diskon) dihitung backend setelah submit.
-          </div>
+          </div> */}
 
           <DialogFooter>
             <Button

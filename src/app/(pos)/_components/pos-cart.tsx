@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { formatCurrency } from '@/lib/helper';
 import { cartSubtotal, useCartStore } from '@/stores/pos-cart-store';
 import { InfoIcon, MinusIcon, PlusIcon, ShoppingBagIcon, Trash2Icon } from 'lucide-react';
+import Image from 'next/image';
 import { useState } from 'react';
 
 interface PosCartProps {
@@ -49,7 +50,11 @@ export function PosCart({ cashierId, onCheckoutSuccess }: PosCartProps) {
               >
                 <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-md bg-muted">
                   {item.imagePath ? (
-                    <img src={item.imagePath} alt={item.name} className="size-full object-cover" />
+                    <Image
+                      src={item.imagePath}
+                      alt={item.name}
+                      className="size-full object-cover"
+                    />
                   ) : (
                     <span className="text-xs font-medium text-muted-foreground">
                       {item.name.slice(0, 2).toUpperCase()}
