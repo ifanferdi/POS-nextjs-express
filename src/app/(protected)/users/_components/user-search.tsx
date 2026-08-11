@@ -70,6 +70,7 @@ export function UserSearch() {
           if (e.key === 'Enter') handleEnter();
         }}
         readOnly={isPending}
+        className="pr-7"
       />
       {searchIcon()}
     </InputGroup>

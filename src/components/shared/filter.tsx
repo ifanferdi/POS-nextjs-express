@@ -14,7 +14,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { InputGroup, InputGroupInput } from '@/components/ui/input-group';
-import { FilterIcon, X, XIcon } from 'lucide-react';
+import { FilterIcon, XIcon } from 'lucide-react';
 import { ChangeEventHandler, Dispatch, JSX, SetStateAction } from 'react';
 
 export function Filter({
@@ -149,10 +149,10 @@ export function MultiSelectSearchFilter({
               value={query}
               onChange={onChangeFunction}
               onKeyDown={(e) => e.stopPropagation()}
-              className="h-8"
+              className="h-8 pr-7"
             />
             {query !== '' && (
-              <X
+              <XIcon
                 className={`absolute right-2.5 size-4 text-muted-foreground cursor-pointer hover:text-foreground`}
                 onClick={() => setQuery('')}
                 aria-label="Clear search"
