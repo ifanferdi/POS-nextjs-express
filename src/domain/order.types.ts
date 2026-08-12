@@ -41,13 +41,13 @@ export interface Order {
   status: OrderStatus;
   paymentMethod: PaymentMethod | null;
   notes: string | null;
-  meta: Record<string, any> | null;
+  meta: Record<string, unknown> | null;
   createdAt: Date;
   updatedAt: Date;
-  orderItems?: OrderItem[];
-  customer?: User;
-  user?: User;
-  payment?: Payment;
+  orderItems: OrderItem[];
+  customer: User;
+  user: User;
+  payment: Payment;
 }
 
 export interface OrderItem {
@@ -57,7 +57,7 @@ export interface OrderItem {
   quantity: number;
   unitPrice: number;
   totalPrice: number;
-  meta: Record<string, any> | null;
+  meta: Record<string, unknown> | null;
   createdAt: Date;
   updatedAt: Date;
   product?: Product;
@@ -66,7 +66,11 @@ export interface OrderItem {
 export interface Payment {
   id: number;
   orderId: number;
+  subtotal: number;
+  rounding: number;
+  total: number;
   amount: number;
+  change: number;
   method: PaymentMethod;
   reference: string | null;
   status: PaymentStatus;

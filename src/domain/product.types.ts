@@ -9,6 +9,7 @@ export interface Product {
   sku: string | null;
   barcode: string | null;
   imagePath: string | null;
+  imageUrl: string | null;
   isActive: boolean;
   stock: number;
   createdAt: Date;

@@ -1,6 +1,5 @@
 import { PosProductGridSkeleton } from '@/app/(pos)/_components/pos-product-grid-skeleton';
 import { PosView } from '@/app/(pos)/_components/pos-view';
-import { auth } from '@/auth';
 import { Skeleton } from '@/components/ui/skeleton';
 import { CategoryOption, Product, ProductRelation } from '@/domain';
 import { getAllCategories } from '@/features/categories/api';
@@ -8,24 +7,14 @@ import { getAllProducts } from '@/features/products/api';
 import { Suspense } from 'react';
 
 export default async function PosPage() {
-  const session = await auth();
-  const cashierId = Number(session?.user?.id);
-  const cashierName = session?.user?.username ?? 'Cashier';
-
   return (
     <Suspense fallback={<PosViewSkeleton />}>
-      <PosViewLoader cashierId={cashierId} cashierName={cashierName} />
+      <PosViewLoader />
     </Suspense>
   );
 }
 
-async function PosViewLoader({
-  cashierId,
-  cashierName,
-}: {
-  cashierId: number;
-  cashierName: string;
-}) {
+async function PosViewLoader() {
   const { data: products, total: totalProducts } = await getAllProducts<Product>({
     isActive: true,
     limit: 15,
@@ -39,15 +28,7 @@ async function PosViewLoader({
     orderBy: ['name:asc'],
   });
 
-  return (
-    <PosView
-      cashierId={cashierId}
-      cashierName={cashierName}
-      products={products}
-      totalProducts={totalProducts}
-      categories={categories}
-    />
-  );
+  return <PosView products={products} totalProducts={totalProducts} categories={categories} />;
 }
 
 function PosViewSkeleton() {

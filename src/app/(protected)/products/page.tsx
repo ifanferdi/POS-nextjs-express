@@ -1,12 +1,12 @@
+import { ProductFilter } from '@/app/(protected)/products/_components/product-filter';
+import { ProductFormDialog } from '@/app/(protected)/products/_components/product-form-dialog';
+import { ProductSearch } from '@/app/(protected)/products/_components/product-search';
 import { ProductTableSection } from '@/app/(protected)/products/_components/product-table';
 import { ProductTableSkeleton } from '@/app/(protected)/products/_components/product-table-skeleton';
 import { CategoryOption, ProductRelation } from '@/domain';
 import { getAllCategories } from '@/features/categories/api';
 import { GetAllProductParams } from '@/features/products/schema';
 import { Suspense } from 'react';
-import { ProductFilter } from '@/app/(protected)/products/_components/product-filter';
-import { ProductFormDialog } from '@/app/(protected)/products/_components/product-form-dialog';
-import { ProductSearch } from '@/app/(protected)/products/_components/product-search';
 
 interface ProductsPageProps {
   searchParams: Promise<{
@@ -33,6 +33,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
     categoryId: categoryIdsNum,
     isActive: isActiveBool,
     with: [ProductRelation.CATEGORIES],
+    orderBy: ['name:asc'],
   };
 
   const { data: categories } = await getAllCategories<CategoryOption>({

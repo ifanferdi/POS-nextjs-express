@@ -1,20 +1,19 @@
 'use client';
 
 import { PosCheckoutDialog } from '@/app/(pos)/_components/pos-checkout-dialog';
-import type { PosLastOrder } from '@/app/(pos)/_components/pos-view';
 import { Button } from '@/components/ui/button';
+import { cartSubtotal, useCartStore } from '@/hooks/pos-cart-store';
 import { formatCurrency } from '@/lib/helper';
-import { cartSubtotal, useCartStore } from '@/stores/pos-cart-store';
 import { InfoIcon, MinusIcon, PlusIcon, ShoppingBagIcon, Trash2Icon } from 'lucide-react';
 import Image from 'next/image';
 import { useState } from 'react';
+import { PosLastOrder } from './pos-view';
 
 interface PosCartProps {
-  cashierId: number;
   onCheckoutSuccess: (result: PosLastOrder) => void;
 }
 
-export function PosCart({ cashierId, onCheckoutSuccess }: PosCartProps) {
+export function PosCart({ onCheckoutSuccess }: PosCartProps) {
   const items = useCartStore((s) => s.items);
   const inc = useCartStore((s) => s.inc);
   const dec = useCartStore((s) => s.dec);
@@ -49,11 +48,13 @@ export function PosCart({ cashierId, onCheckoutSuccess }: PosCartProps) {
                 className="flex gap-3 rounded-lg border border-border/40 p-2.5 bg-primary/20 dark:bg-primary/40 transition hover:bg-primary/30 dark:hover:bg-primary/20 hover:border-primary"
               >
                 <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-md bg-muted">
-                  {item.imagePath ? (
+                  {item.imageUrl ? (
                     <Image
-                      src={item.imagePath}
+                      src={item.imageUrl}
                       alt={item.name}
                       className="size-full object-cover"
+                      height={200}
+                      width={200}
                     />
                   ) : (
                     <span className="text-xs font-medium text-muted-foreground">
@@ -112,7 +113,7 @@ export function PosCart({ cashierId, onCheckoutSuccess }: PosCartProps) {
       <div className="border-t border-border/60 p-4">
         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
           <InfoIcon className="size-3.5" />
-          <span>Pajak &amp; diskon dihitung backend</span>
+          <span>Sudah termasuk pajak.</span>
         </div>
         <div className="mt-2 flex items-center justify-between">
           <span className="text-sm font-medium text-muted-foreground">Estimasi</span>
@@ -133,7 +134,6 @@ export function PosCart({ cashierId, onCheckoutSuccess }: PosCartProps) {
       <PosCheckoutDialog
         open={checkoutOpen}
         onOpenChange={setCheckoutOpen}
-        cashierId={cashierId}
         subtotal={subtotal}
         onCheckoutSuccess={onCheckoutSuccess}
       />

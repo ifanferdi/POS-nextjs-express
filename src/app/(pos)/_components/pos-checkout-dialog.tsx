@@ -1,6 +1,5 @@
 'use client';
 
-import type { PosLastOrder } from '@/app/(pos)/_components/pos-view';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -22,12 +21,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { PAYMENT_METHOD_VALUES, PaymentMethod } from '@/domain';
 import { createOrderAction } from '@/features/orders/action';
 import { PosCheckoutForm, PosCheckoutFormSchema } from '@/features/orders/schema';
-import { formatCurrency } from '@/lib/helper';
-import { CartItem, useCartStore } from '@/stores/pos-cart-store';
+import { CartItem, useCartStore } from '@/hooks/pos-cart-store';
+import { calculateRounding, formatCurrency } from '@/lib/helper';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { InfoIcon } from 'lucide-react';
 import { useEffect, useTransition } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { toast } from 'sonner';
+import { PosLastOrder } from './pos-view';
 
 const PAYMENT_LABELS: Record<PaymentMethod, string> = {
   [PaymentMethod.CASH]: 'Cash',
@@ -38,25 +39,24 @@ const PAYMENT_LABELS: Record<PaymentMethod, string> = {
 interface PosCheckoutDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  cashierId: number;
   subtotal: number;
   onCheckoutSuccess: (result: PosLastOrder) => void;
 }
 export function PosCheckoutDialog({
   open,
   onOpenChange,
-  cashierId,
   subtotal,
   onCheckoutSuccess,
 }: PosCheckoutDialogProps) {
   const [isPending, startTransition] = useTransition();
+  const { rounding, total } = calculateRounding(subtotal);
 
   const form = useForm<PosCheckoutForm>({
     resolver: zodResolver(PosCheckoutFormSchema),
     mode: 'onSubmit',
     reValidateMode: 'onSubmit',
     defaultValues: {
-      subtotal,
+      subtotal: total,
       paymentMethod: PaymentMethod.CASH,
       notes: '',
       amountTendered: 0,
@@ -67,8 +67,8 @@ export function PosCheckoutDialog({
   // defaultValues hanya berlaku saat mount. Sync subtotal ke form state
   // saat prop berubah (cart bertambah/berkurang) supaya superRefine validasi pakai nilai terbaru.
   useEffect(() => {
-    form.setValue('subtotal', subtotal);
-  }, [subtotal, form]);
+    form.setValue('subtotal', total);
+  }, [total, form]);
 
   function onSubmit(data: PosCheckoutForm) {
     startTransition(async () => {
@@ -80,7 +80,6 @@ export function PosCheckoutDialog({
       }
 
       const result = await createOrderAction({
-        userId: cashierId,
         notes: data.notes || undefined,
         items: snapshot.map((i) => ({ productId: i.productId, quantity: i.quantity })),
         paymentMethod: data.paymentMethod,
@@ -94,11 +93,9 @@ export function PosCheckoutDialog({
       }
 
       useCartStore.getState().clear();
-      onCheckoutSuccess({
-        order: result.data,
-        items: snapshot,
-        amountTendered: data.paymentMethod === PaymentMethod.CASH ? amountTendered : undefined,
-      });
+      onCheckoutSuccess({ order: result.data, items: snapshot });
+      console.log(result.data);
+
       form.reset();
       onOpenChange(false);
       toast.success(`Order ${result.data.orderNumber} berhasil dibuat.`);
@@ -107,7 +104,7 @@ export function PosCheckoutDialog({
 
   const paymentMethod = useWatch({ control: form.control, name: 'paymentMethod' });
   const amountTendered = Number(useWatch({ control: form.control, name: 'amountTendered' })) || 0;
-  const change = Math.max(0, amountTendered - subtotal);
+  const change = Math.max(0, amountTendered - total);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -118,9 +115,18 @@ export function PosCheckoutDialog({
           </DialogHeader>
 
           <div className="rounded-lg border border-border/60 bg-muted/30 p-3">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">Subtotal</span>
+              <span className="tabular-nums text-muted-foreground">{formatCurrency(subtotal)}</span>
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">Pembulatan</span>
+              <span className="tabular-nums text-muted-foreground">{formatCurrency(rounding)}</span>
+            </div>
+            <div className="border border-border/60 my-2" />
             <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Estimasi Subtotal</span>
-              <span className="font-semibold tabular-nums">{formatCurrency(subtotal)}</span>
+              <span className="text-muted-foreground">Total Pembayaran</span>
+              <span className="font-semibold tabular-nums">{formatCurrency(total)}</span>
             </div>
           </div>
 
@@ -170,8 +176,12 @@ export function PosCheckoutDialog({
                       step={100}
                       disabled={isPending}
                       aria-invalid={fieldState.invalid}
-                      value={field.value}
-                      onChange={(e) => field.onChange(Number(e.target.value))}
+                      value={field.value === 0 ? '' : field.value}
+                      onFocus={(e) => e.target.select()}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        field.onChange(val === '' ? 0 : Number(val));
+                      }}
                     />
                     {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                     <p className="text-xs text-muted-foreground">
@@ -188,6 +198,7 @@ export function PosCheckoutDialog({
                   <Field data-invalid={fieldState.invalid}>
                     <FieldLabel htmlFor="paymentReference">Referensi Pembayaran</FieldLabel>
                     <Input
+                      {...field}
                       id="paymentReference"
                       disabled={isPending}
                       aria-invalid={fieldState.invalid}
@@ -217,10 +228,11 @@ export function PosCheckoutDialog({
               )}
             />
           </FieldGroup>
-{/* 
-          <div className="rounded-lg bg-muted/40 p-3 text-xs text-muted-foreground">
-            Total final (pajak &amp; diskon) dihitung backend setelah submit.
-          </div> */}
+
+          <div className="flex gap-1.5 items-center rounded-lg bg-muted/40 p-3 text-xs text-muted-foreground">
+            <InfoIcon className="size-3.5" />
+            <span> Sudah termasuk pajak.</span>
+          </div>
 
           <DialogFooter>
             <Button

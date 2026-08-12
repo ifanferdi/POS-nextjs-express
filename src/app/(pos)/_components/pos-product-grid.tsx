@@ -5,9 +5,9 @@ import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { CategoryOption, Product } from '@/domain';
 import { fetchProductsAction } from '@/features/products/action';
+import { CartItem, useCartStore } from '@/hooks/pos-cart-store';
 import { formatCurrency } from '@/lib/helper';
 import { cn } from '@/lib/utils';
-import { CartItem, useCartStore } from '@/stores/pos-cart-store';
 import { MinusIcon, PackageIcon, PlusIcon, SearchIcon, XIcon } from 'lucide-react';
 import Image from 'next/image';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -38,6 +38,7 @@ export function PosProductGrid({
   const scrollRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
   const [expandSearchCategory, setExpandSearchCategory] = useState(false);
+  const [focus, setFocus] = useState(false);
   const [catForceCollapsed, setCatForceCollapsed] = useState(false);
   const catInputRef = useRef<HTMLInputElement>(null);
   const catExpanded = !catForceCollapsed && expandSearchCategory;
@@ -79,10 +80,11 @@ export function PosProductGrid({
     setCatForceCollapsed(false);
   }
   function handleCatLeave() {
-    if (categoryQuery === '') setExpandSearchCategory(false);
+    if (categoryQuery === '' && !focus) setExpandSearchCategory(false);
   }
   function handleCatMinimize() {
     setCatForceCollapsed(true);
+    setFocus(false);
     catInputRef.current?.blur();
     setCategoryQuery('');
   }
@@ -133,7 +135,8 @@ export function PosProductGrid({
             placeholder="Cari produk..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="pl-8"
+            className="px-8"
+            autoFocus
           />
           {query && (
             <button
@@ -149,11 +152,18 @@ export function PosProductGrid({
         <div className="flex items-center gap-2">
           <div
             className={cn(
-              'relative flex h-8 shrink-0 cursor-pointer items-center rounded-md border border-border/60 transition-all duration-150',
+              'relative flex h-8 shrink-0 cursor-pointer items-center rounded-md transition-all duration-300',
               catExpanded ? 'w-40' : 'w-8',
             )}
+            onFocus={() => (setExpandSearchCategory(true), setFocus(true))}
             onMouseEnter={handleCatEnter}
             onMouseLeave={handleCatLeave}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') {
+                // setFocus(false);
+                setExpandSearchCategory(false);
+              }
+            }}
             role="button"
             tabIndex={-1}
             aria-label="Cari kategori"
@@ -161,16 +171,16 @@ export function PosProductGrid({
             <SearchIcon className="pointer-events-none absolute left-2.5 size-3.5 text-muted-foreground" />
             <Input
               ref={catInputRef}
-              placeholder="Kategori..."
+              placeholder={expandSearchCategory ? 'Kategori...' : ''}
               value={categoryQuery}
               onChange={(e) => setCategoryQuery(e.target.value)}
               onClick={(e) => e.stopPropagation()}
               className={cn(
-                'h-8 border-0 pl-7 pr-7 text-xs shadow-none focus-visible:ring-0',
-                catExpanded ? 'opacity-100' : 'pointer-events-none opacity-0',
+                'h-8 text-xs!',
+                catExpanded ? 'opacity-100 px-7' : 'pointer-events-none px-3',
               )}
             />
-            {expandSearchCategory && categoryQuery && (
+            {expandSearchCategory && (
               <button
                 type="button"
                 onClick={(e) => {
@@ -178,14 +188,14 @@ export function PosProductGrid({
                   handleCatMinimize();
                 }}
                 onMouseDown={(e) => e.stopPropagation()}
-                className="absolute right-1 flex size-6 items-center justify-center text-muted-foreground transition hover:text-foreground"
+                className="absolute right-1 flex size-6 items-center justify-center text-muted-foreground transition hover:text-foreground h-full"
                 aria-label="Tutup pencarian kategori"
               >
                 <XIcon className="size-3.5" />
               </button>
             )}
           </div>
-          <div className="flex flex-1 gap-1.5 overflow-x-auto pb-1">
+          <div className="flex flex-1 gap-1.5 overflow-x-auto">
             <CategoryPill active={selectedCategories.size === 0} onClick={handleAll}>
               Semua
             </CategoryPill>
@@ -269,11 +279,20 @@ function ProductCard({
         added ? 'border-primary ring-2 ring-primary/20' : 'border-border/60 hover:border-border',
       )}
     >
-      <div className="flex aspect-square items-center justify-center bg-muted">
-        {product.imagePath ? (
-          <Image src={product.imagePath} alt={product.name} className="size-full object-cover" />
+      <div className="relative aspect-square w-full bg-muted">
+        {product.imageUrl ? (
+          <Image
+            src={product.imageUrl}
+            alt={product.name}
+            fill // ← otomatis isi container
+            className="object-cover"
+            sizes="(max-width: 768px) 100px, 200px"
+            loading="eager"
+          />
         ) : (
-          <PackageIcon className="size-10 text-muted-foreground/50" />
+          <div className="flex size-full items-center justify-center">
+            <PackageIcon className="size-10 text-muted-foreground/50" />
+          </div>
         )}
       </div>
       <div className="flex flex-1 flex-col gap-1 p-2">
@@ -294,6 +313,7 @@ function ProductCard({
                 name: product.name,
                 price: product.price,
                 imagePath: product.imagePath,
+                imageUrl: product.imageUrl,
                 stock: product.stock,
               })
             }

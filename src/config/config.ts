@@ -9,7 +9,6 @@
  * 3. Reusable — kalau dipakai project lain, cukup ganti .env, config.ts tetap sama
  */
 
-import { OrderStatus, PaymentMethod } from '@/domain';
 import {
   BoxesIcon,
   BoxIcon,
@@ -21,9 +20,15 @@ import {
 } from 'lucide-react';
 
 export const app = {
-  name: process.env.APP_NAME ?? 'Boilerplate Next JS',
+  name: process.env.APP_NAME ?? 'POS App',
   env: process.env.NODE_ENV ?? 'development',
   url: process.env.APP_URL ?? 'http://localhost:3000',
+};
+
+export const company = {
+  name: process.env.COMPANY_NAME ?? 'POS App',
+  address:
+    process.env.COMPANY_ADDRESS ?? 'Jl. H. Dimun 4 No.1, Rt. 02/06, Sukamaju, Cilodong, Depok',
 };
 
 export const api = {

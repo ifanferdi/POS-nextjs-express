@@ -41,3 +41,20 @@ export function buildPageItems(current: number, totalPages: number): (number | '
 
   return [1, 'ellipsis', current - 1, current, current + 1, 'ellipsis', totalPages];
 }
+
+/**
+ * Hitung pembulatan ke kelipatan terdekat (default: 100)
+ * Contoh: 20.921 → { rounding: 79, total: 21.000 }
+ */
+export function calculateRounding(
+  subtotal: number,
+  roundTo: number = 100,
+): { rounding: number; total: number } {
+  const total = Math.ceil(subtotal / roundTo) * roundTo;
+  const rounding = total - subtotal;
+
+  return {
+    rounding: Number(rounding.toFixed(2)),
+    total: Number(total.toFixed(2)),
+  };
+}

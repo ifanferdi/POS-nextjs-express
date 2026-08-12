@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import { create } from 'zustand';
 
 export interface CartItem {
@@ -5,6 +6,7 @@ export interface CartItem {
   name: string;
   price: number;
   imagePath: string | null;
+  imageUrl: string | null;
   quantity: number;
   stock: number;
 }
@@ -21,35 +23,43 @@ interface CartState {
 export const useCartStore = create<CartState>((set) => ({
   items: [],
   add: (item, quantity = 1) =>
-    set((s) => {
-      const existing = s.items.find((i) => i.productId === item.productId);
-      if (existing) {
+    set((cart) => {
+      const productId = item.productId;
+      const existing = _.find(cart.items, { productId });
+
+      if (existing)
         return {
-          items: s.items.map((i) =>
+          items: cart.items.map((i) =>
             i.productId === item.productId ? { ...i, quantity: i.quantity + quantity } : i,
           ),
         };
-      }
-      return { items: [...s.items, { ...item, quantity }] };
+
+      return { items: [...cart.items, { ...item, quantity }] };
     }),
   inc: (productId) =>
-    set((s) => ({
-      items: s.items.map((i) =>
+    set((cart) => ({
+      items: cart.items.map((i) =>
         i.productId === productId ? { ...i, quantity: i.quantity + 1 } : i,
       ),
     })),
   dec: (productId) =>
-    set((s) => ({
-      items: s.items.map((i) =>
-        i.productId === productId ? { ...i, quantity: Math.max(1, i.quantity - 1) } : i,
-      ),
-    })),
-  remove: (productId) => set((s) => ({ items: s.items.filter((i) => i.productId !== productId) })),
+    set((cart) => {
+      const existing = _.find(cart.items, { productId });
+      if (existing?.quantity === 1)
+        return { items: cart.items.filter((i) => i.productId !== productId) };
+
+      return {
+        items: cart.items.map((i) =>
+          i.productId === productId ? { ...i, quantity: Math.max(1, i.quantity - 1) } : i,
+        ),
+      };
+    }),
+  remove: (productId) =>
+    set((cart) => ({ items: cart.items.filter((i) => i.productId !== productId) })),
   clear: () => set({ items: [] }),
 }));
 
 export const cartSubtotal = (items: CartItem[]) =>
   items.reduce((sum, i) => sum + i.price * i.quantity, 0);
 
-export const cartCount = (items: CartItem[]) =>
-  items.reduce((sum, i) => sum + i.quantity, 0);
+export const cartCount = (items: CartItem[]) => items.reduce((sum, i) => sum + i.quantity, 0);

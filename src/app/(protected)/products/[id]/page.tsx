@@ -16,6 +16,7 @@ import {
   TagIcon,
 } from 'lucide-react';
 import moment from 'moment';
+import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
@@ -45,10 +46,12 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
             <div className="flex items-start gap-4">
               <div className="flex size-20 items-center justify-center overflow-hidden rounded-xl bg-muted">
                 {product.imagePath ? (
-                  <img
+                  <Image
                     src={product.imagePath}
                     alt={product.name}
                     className="size-full object-cover"
+                    width={200}
+                    height={200}
                   />
                 ) : (
                   <ImageIcon className="size-8 text-muted-foreground" />

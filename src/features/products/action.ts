@@ -74,6 +74,7 @@ export async function fetchProductsAction(limit: number): Promise<{
     const { data: products, total } = await api.getAllProducts<Product>({
       isActive: true,
       limit,
+      orderBy: ['name:asc'],
       with: [ProductRelation.CATEGORIES],
     });
     return { products, total };

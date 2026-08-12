@@ -26,7 +26,7 @@ const OrderItemSchema = z.object({
 const BaseOrderSchema = z
   .object({
     customerId: idSchema.optional().nullable(),
-    userId: idSchema.nullable(),
+    userId: idSchema.nullable().optional(),
     notes: optionalStringSchema,
     items: z.array(OrderItemSchema).min(1),
     paymentMethod: z.enum(PaymentMethod),
