@@ -254,6 +254,34 @@ function SkeletonCard() {
   );
 }
 
+interface ProductImageProps {
+  imageUrl: string | null;
+  name: string;
+}
+function ProductImage({ imageUrl, name }: ProductImageProps) {
+  const [isLoading, setIsLoading] = useState(true);
+
+  if (!imageUrl)
+    return (
+      <div className="flex size-full items-center justify-center">
+        <PackageIcon className="size-10 text-muted-foreground/50" />
+      </div>
+    );
+
+  return (
+    <Image
+      src={imageUrl}
+      alt={name}
+      fill // ← otomatis isi container
+      className={`object-cover transition-opacity duration-300 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
+      sizes="(max-width: 768px) 100px, 200px"
+      loading="lazy"
+      onLoad={() => setIsLoading(false)}
+      onError={() => setIsLoading(false)}
+    />
+  );
+}
+
 function ProductCard({
   product,
   items,
@@ -280,20 +308,7 @@ function ProductCard({
       )}
     >
       <div className="relative aspect-square w-full bg-muted">
-        {product.imageUrl ? (
-          <Image
-            src={product.imageUrl}
-            alt={product.name}
-            fill // ← otomatis isi container
-            className="object-cover"
-            sizes="(max-width: 768px) 100px, 200px"
-            loading="eager"
-          />
-        ) : (
-          <div className="flex size-full items-center justify-center">
-            <PackageIcon className="size-10 text-muted-foreground/50" />
-          </div>
-        )}
+        <ProductImage imageUrl={product.imageUrl} name={product.name} />
       </div>
       <div className="flex flex-1 flex-col gap-1 p-2">
         <p className="line-clamp-1 text-sm font-medium">{product.name}</p>
