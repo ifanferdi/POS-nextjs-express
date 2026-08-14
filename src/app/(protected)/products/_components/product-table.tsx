@@ -1,19 +1,13 @@
 import { ProductActions } from '@/app/(protected)/products/_components/product-actions';
-import { EmptyTable, TablePagination } from '@/components/shared/table';
+import {  TablePagination } from '@/components/shared/table';
+import { DataTable, EmptyTable, TooltipedCell } from '@/components/shared/table-server';
 import { Badge } from '@/components/ui/badge';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { CategoryOption, Product } from '@/domain';
 import { getAllProducts } from '@/features/products/api';
 import { GetAllProductParams } from '@/features/products/schema';
 import { formatCurrency } from '@/lib/helper';
-import Link from 'next/link';
+
+export const headers = ['#', 'Name', 'Sku', 'Stock', 'Price', 'Categories', 'Is Active?', ''];
 
 interface ProductTableSectionProps {
   params: GetAllProductParams;
@@ -44,51 +38,45 @@ function ProductTable(props: ProductTableProps) {
   if (products.length === 0) return <EmptyTable entities="products" icon="product" />;
 
   return (
-    <div className="overflow-hidden rounded-lg border border-border/60">
-      <Table>
-        <ProductTableHeader />
-        <TableBody>
-          {products.map((product, index) => (
-            <TableRow key={product.id} className="group">
-              <TableCell className="text-muted-foreground text-center">{index + 1}</TableCell>
-              <TableCell>
-                <Link href={`/products/${product.id}`} className="flex items-center gap-3">
-                  <span className="font-medium group-hover:underline">{product.name}</span>
-                </Link>
-              </TableCell>
-              <TableCell className="text-muted-foreground">
-                {product.sku === '' ? '-' : product.sku}
-              </TableCell>
-              <TableCell className="text-muted-foreground">{product.stock} item</TableCell>
-              <TableCell className="text-muted-foreground">
-                {formatCurrency(product.price)}
-              </TableCell>
-              <TableCell className="text-muted-foreground">
-                {handleCategoriesColumn(product)}
-              </TableCell>
-              <TableCell className="text-muted-foreground">
-                {product.isActive ? (
-                  <Badge className="bg-success/10 text-success hover:bg-success/15">
-                    <span className="size-1.5 rounded-full bg-success" />
-                    Active
-                  </Badge>
-                ) : (
-                  <Badge variant="destructive">
-                    <span className="size-1.5 rounded-full bg-destructive" />
-                    Inactive
-                  </Badge>
-                )}
-              </TableCell>
-              <TableCell className="w-0">
-                <div className="flex justify-end gap-2">
-                  <ProductActions product={product} categories={categories} />
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+    <DataTable
+      headers={headers}
+      records={products}
+      cells={(product) => [
+        {
+          key: 'fullname',
+          type: 'link',
+          url: `/products/${product.id}`,
+          content: TooltipedCell(product.name),
+        },
+        { key: 'sku', content: product.sku === '' ? '-' : product.sku },
+        { key: 'stock', content: `${product.stock} item` },
+        { key: 'price', content: formatCurrency(product.price) },
+        { key: 'categories', content: handleCategoriesColumn(product) },
+        {
+          key: 'isActive',
+          type: 'custom',
+          content: product.isActive ? (
+            <Badge className="bg-success/10 text-success hover:bg-success/15">
+              <span className="size-1.5 rounded-full bg-success" />
+              Active
+            </Badge>
+          ) : (
+            <Badge variant="destructive">
+              <span className="size-1.5 rounded-full bg-destructive" />
+              Inactive
+            </Badge>
+          ),
+        },
+        {
+          key: 'actions',
+          content: (
+            <div className="flex justify-end gap-2">
+              <ProductActions product={product} categories={categories} />
+            </div>
+          ),
+        },
+      ]}
+    />
   );
 }
 
@@ -115,23 +103,5 @@ function handleCategoriesColumn(product: Product) {
         </span>
       )}
     </div>
-  );
-}
-
-export function ProductTableHeader() {
-  const HEADERS = ['#', 'Name', 'Sku', 'Stock', 'Price', 'Categories', 'Is Active?', ''];
-  return (
-    <TableHeader>
-      <TableRow className="bg-muted/40 hover:bg-muted/40">
-        {HEADERS.map((header) => (
-          <TableHead
-            key={header}
-            className={`text-xs text-muted-foreground ${header === '#' ? 'w-0 px-3 text-center' : ''}`}
-          >
-            {header}
-          </TableHead>
-        ))}
-      </TableRow>
-    </TableHeader>
   );
 }

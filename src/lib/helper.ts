@@ -1,5 +1,8 @@
+import _ from 'lodash';
 import moment from 'moment';
 
+export const stringEllipsis = (str: string, length = 30) =>
+  _.truncate(str, { length, separator: '' });
 export const calculateAge = (dateOfBirth: Date) => moment().diff(moment(dateOfBirth), 'years');
 export const formatDate = (date: Date) => moment(date).format('YYYY-MM-DD');
 export const formatCurrency = (n: number, decimalDigits = 2) =>

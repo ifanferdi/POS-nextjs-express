@@ -1,20 +1,24 @@
-import { EmptyTable, TablePagination } from '@/components/shared/table';
+import {  TablePagination } from '@/components/shared/table';
+import { DataTable, EmptyTable } from '@/components/shared/table-server';
 import { Badge } from '@/components/ui/badge';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { Order, OrderStatus } from '@/domain';
 import { getAllOrders } from '@/features/orders/api';
 import { GetAllOrderParams } from '@/features/orders/schema';
 import { formatCurrency } from '@/lib/helper';
 import moment from 'moment';
-import Link from 'next/link';
 import { OrderActions } from './order-actions';
+
+export const headers = [
+  '#',
+  'Order #',
+  // 'Customer',
+  'Date',
+  'Items',
+  'Total',
+  'Payment',
+  'Status',
+  '',
+];
 
 interface OrderTableSectionProps {
   params: GetAllOrderParams;
@@ -44,48 +48,55 @@ function OrderTable(props: OrderTableProps) {
 
   return (
     <div className="overflow-hidden rounded-lg border border-border/60">
-      <Table>
-        <OrderTableHeader />
-        <TableBody>
-          {orders.map((order, index) => (
-            <TableRow key={order.id} className="group">
-              <TableCell className="text-muted-foreground text-center">{index + 1}</TableCell>
-              <TableCell>
-                <Link href={`/orders/${order.id}`} className="flex items-center gap-3">
-                  <span className="font-medium group-hover:underline">{order.orderNumber}</span>
-                </Link>
-              </TableCell>
-              {/* <TableCell className="text-muted-foreground">
-                {order.customer?.profile.fullName ?? 'Walk-in Customer'}
-              </TableCell> */}
-              <TableCell className="text-muted-foreground">
-                {moment(order.createdAt).format('MMM D, YYYY HH:mm')}
-              </TableCell>
-              <TableCell className="text-muted-foreground">
-                {order.orderItems?.length ?? 0} item
-              </TableCell>
-              <TableCell className="text-muted-foreground">{formatCurrency(order.total)}</TableCell>
-              <TableCell className="text-muted-foreground">
-                {order.paymentMethod ? (
-                  <span className="inline-flex items-center gap-1.5 capitalize">
-                    {order.paymentMethod}
-                  </span>
-                ) : (
-                  '-'
-                )}
-              </TableCell>
-              <TableCell>
-                <OrderStatusBadge status={order.status} />
-              </TableCell>
-              <TableCell className="w-0">
-                <div className="flex justify-end gap-2">
-                  <OrderActions order={order} />
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+      <DataTable
+        headers={headers}
+        records={orders}
+        cells={(order) => [
+          {
+            key: 'order-number',
+            type: 'link',
+            url: `/orders/${order.id}`,
+            content: <span className="font-medium group-hover:underline">{order.orderNumber}</span>,
+          },
+          {
+            key: 'date',
+            content: moment(order.createdAt).format('MMM D, YYYY HH:mm'),
+          },
+          {
+            key: 'items',
+            content: `${order.orderItems?.length ?? 0} item`,
+          },
+          {
+            key: 'total',
+            content: formatCurrency(order.total),
+          },
+          {
+            key: 'payment',
+            type: 'custom',
+            content: order.paymentMethod ? (
+              <span className="inline-flex items-center gap-1.5 capitalize">
+                {order.paymentMethod}
+              </span>
+            ) : (
+              '-'
+            ),
+          },
+          {
+            key: 'status',
+            type: 'custom',
+            content: <OrderStatusBadge status={order.status} />,
+          },
+          {
+            key: 'action',
+            type: 'custom',
+            content: (
+              <div className="flex justify-end gap-2">
+                <OrderActions order={order} />
+              </div>
+            ),
+          },
+        ]}
+      />
     </div>
   );
 }
@@ -109,33 +120,5 @@ export function OrderStatusBadge({ status }: { status: OrderStatus }) {
       <span className={`size-1.5 rounded-full ${dot}`} />
       <span className="capitalize">{status}</span>
     </Badge>
-  );
-}
-
-export function OrderTableHeader() {
-  const HEADERS = [
-    '#',
-    'Order #',
-    // 'Customer',
-    'Date',
-    'Items',
-    'Total',
-    'Payment',
-    'Status',
-    '',
-  ];
-  return (
-    <TableHeader>
-      <TableRow className="bg-muted/40 hover:bg-muted/40">
-        {HEADERS.map((header) => (
-          <TableHead
-            key={header}
-            className={`text-xs text-muted-foreground ${header === '#' ? 'w-0 px-3 text-center' : ''}`}
-          >
-            {header}
-          </TableHead>
-        ))}
-      </TableRow>
-    </TableHeader>
   );
 }

@@ -1,34 +1,10 @@
 'use client';
+
 import { Button } from '@/components/ui/button';
-import { icons } from '@/config/config';
 import { buildPageItems } from '@/lib/helper';
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useTransition } from 'react';
-import { Skeleton as SkeletonComponent } from '../ui/skeleton';
-
-interface SkeletonProps {
-  className?: string;
-  total?: number;
-}
-export function Skeleton({ className, total }: SkeletonProps) {
-  return (
-    <SkeletonComponent
-      key={total}
-      className={`bg-muted-foreground/20 dark:bg-muted ${className}`}
-    />
-  );
-}
-
-export function ActionSkeleton({ className, total = 1 }: SkeletonProps) {
-  return (
-    <div className="flex justify-end gap-0.5">
-      {Array.from({ length: total }).map((_, i) => (
-        <Skeleton key={total} className={`size-8 rounded-full ${className}`} />
-      ))}
-    </div>
-  );
-}
 
 interface TablePaginationProps {
   page: number;
@@ -101,19 +77,6 @@ export function TablePagination({ page, totalPages, total, baseUrl }: TablePagin
           <ChevronRightIcon />
         </Button>
       </div>
-    </div>
-  );
-}
-
-export function EmptyTable({ entities, icon }: { entities: string; icon: keyof typeof icons }) {
-  const Icon = icons[icon];
-  return (
-    <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-16">
-      <div className="mb-3 flex size-12 items-center justify-center rounded-full bg-muted">
-        <Icon className="size-6 text-muted-foreground" />
-      </div>
-      <p className="text-sm font-medium">No {entities} found</p>
-      <p className="mt-1 text-sm text-muted-foreground">Try to add new data.</p>
     </div>
   );
 }
