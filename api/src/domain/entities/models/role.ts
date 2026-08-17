@@ -1,7 +1,7 @@
-import { Role, RoleHasPermission } from '../../../infrastructure/database/prisma/generated/client';
-import { RoleScalarFieldEnum } from '../../../infrastructure/database/prisma/generated/internal/prismaNamespace';
-import { IPermission } from './permission';
-import { IUser } from './user';
+import { Role, RoleHasPermission } from '@/infrastructure/database/prisma/generated/client';
+import { RoleScalarFieldEnum } from '@/infrastructure/database/prisma/generated/internal/prismaNamespace';
+import { IPermission } from '@/domain/entities/models/permission';
+import { IUser } from '@/domain/entities/models/user';
 
 export interface IRoleHasPermission extends RoleHasPermission {
   role?: IRole;

@@ -1,7 +1,7 @@
-import { IProduct } from '../../domain/entities/models/product';
-import { ErrorNotFound } from '../../helpers/error.helper';
-import { FindByIdProductDto } from '../../validations/product-validation';
-import BaseUseCase from '../_base-use-case';
+import { IProduct } from '@/domain/entities/models/product';
+import { ErrorNotFound } from '@/helpers/error.helper';
+import { FindByIdProductDto } from '@/validations/product-validation';
+import BaseUseCase from '@/use-cases/_base-use-case';
 
 export default class FindByIdProduct extends BaseUseCase {
   async execute(params: FindByIdProductDto) {

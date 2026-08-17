@@ -1,13 +1,13 @@
-import config from '../../config/config';
-import { IUser, USER_SELECT_FIELDS } from '../../domain/entities/models/user';
-import { RedisDataAuth } from '../../domain/entities/types/auth.types';
-import checkRefreshToken from '../../helpers/check-refresh-token';
-import { ttl } from '../../helpers/common.helper';
-import { ErrorNotFound } from '../../helpers/error.helper';
-import * as jwt from '../../helpers/jwt.helper';
-import { TokenDto } from '../../validations/auth-validation';
-import BaseUseCase from '../_base-use-case';
-import SignIn from './sign-in';
+import config from '@/config/config';
+import { IUser, USER_SELECT_FIELDS } from '@/domain/entities/models/user';
+import { RedisDataAuth } from '@/domain/entities/types/auth.types';
+import checkRefreshToken from '@/helpers/check-refresh-token';
+import { ttl } from '@/helpers/common.helper';
+import { ErrorNotFound } from '@/helpers/error.helper';
+import * as jwt from '@/helpers/jwt.helper';
+import { TokenDto } from '@/validations/auth-validation';
+import BaseUseCase from '@/use-cases/_base-use-case';
+import SignIn from '@/use-cases/auth/sign-in';
 
 const REFRESH_TOKEN_TIMEOUT = config.auth.refreshTokenTimeout;
 

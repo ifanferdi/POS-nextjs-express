@@ -1,6 +1,6 @@
-import { UserRelation } from '../domain/entities/enums/user.enum';
-import { IUser } from '../domain/entities/models/user';
-import { FindAllUserDto, FindByIdUserDto } from '../validations/user-validation';
+import { UserRelation } from '@/domain/entities/enums/user.enum';
+import { IUser } from '@/domain/entities/models/user';
+import { FindAllUserDto, FindByIdUserDto } from '@/validations/user-validation';
 
 export function extractRelationData(params: FindAllUserDto | FindByIdUserDto, user: IUser) {
   const _handlePermissions = (user: IUser) => {

@@ -1,7 +1,7 @@
-import { ErrorBadRequest } from '../../helpers/error.helper';
-import { UpdateRoleDto } from '../../validations/role-validation';
-import BaseUseCase from '../_base-use-case';
-import ResetCachePermission from '../permission/reset-cache-permission';
+import { ErrorBadRequest } from '@/helpers/error.helper';
+import { UpdateRoleDto } from '@/validations/role-validation';
+import BaseUseCase from '@/use-cases/_base-use-case';
+import ResetCachePermission from '@/use-cases/permission/reset-cache-permission';
 
 export default class UpdateRole extends BaseUseCase {
   async execute(payload: UpdateRoleDto) {

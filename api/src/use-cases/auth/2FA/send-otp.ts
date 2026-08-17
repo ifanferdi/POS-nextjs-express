@@ -1,10 +1,10 @@
-import config from '../../../config/config';
-import { IUser } from '../../../domain/entities/models/user';
-import { ttl } from '../../../helpers/common.helper';
-import AppError from '../../../helpers/error.helper';
-import { generateOtp } from '../../../helpers/generate-string';
-import * as password from '../../../helpers/password.helper';
-import BaseUseCase from '../../_base-use-case';
+import config from '@/config/config';
+import { IUser } from '@/domain/entities/models/user';
+import { ttl } from '@/helpers/common.helper';
+import AppError from '@/helpers/error.helper';
+import { generateOtp } from '@/helpers/generate-string';
+import * as password from '@/helpers/password.helper';
+import BaseUseCase from '@/use-cases/_base-use-case';
 
 const APP_NAME = config.app.name;
 const OTP_TIMEOUT = config.auth.otpTimeout;

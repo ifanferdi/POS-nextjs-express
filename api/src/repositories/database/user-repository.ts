@@ -1,10 +1,10 @@
 import _ from 'lodash';
-import { Repository } from '../../domain/repositories/database.interface';
-import { Prisma } from '../../infrastructure/database/prisma/generated/client';
+import { Repository } from '@/domain/repositories/database.interface';
+import { Prisma } from '@/infrastructure/database/prisma/generated/client';
 import {
   UserCreateInput,
   UserUpdateInput,
-} from '../../infrastructure/database/prisma/generated/models/User';
+} from '@/infrastructure/database/prisma/generated/models/User';
 import {
   CreateUserDto,
   CreateUserProfileDto,
@@ -12,8 +12,8 @@ import {
   FindOneUserDto,
   UpdateUserDto,
   UpdateUserProfileDto,
-} from '../../validations/user-validation';
-import DatabaseBaseRepository from './_database-base-repository';
+} from '@/validations/user-validation';
+import DatabaseBaseRepository from '@/repositories/database/_database-base-repository';
 
 export default class UserRepository
   extends DatabaseBaseRepository

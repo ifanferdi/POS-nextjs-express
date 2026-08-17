@@ -1,7 +1,7 @@
-import { OrderRelation } from '../../../domain/entities/enums/order.enum';
-import { ORDER_FIELD, ORDER_FIELDS } from '../../../domain/entities/models/order';
-import { Prisma } from '../../../infrastructure/database/prisma/generated/client';
-import { FindAllOrderDto, FindByIdOrderDto } from '../../../validations/order-validation';
+import { OrderRelation } from '@/domain/entities/enums/order.enum';
+import { ORDER_FIELD, ORDER_FIELDS } from '@/domain/entities/models/order';
+import { Prisma } from '@/infrastructure/database/prisma/generated/client';
+import { FindAllOrderDto, FindByIdOrderDto } from '@/validations/order-validation';
 
 export default class QueryOrderRepository {
   handleInclude(relation: FindAllOrderDto['with'] & FindByIdOrderDto['with']) {

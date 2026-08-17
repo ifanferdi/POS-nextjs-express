@@ -1,5 +1,5 @@
-import { Payment } from '../../../infrastructure/database/prisma/generated/client';
-import { PaymentScalarFieldEnum } from '../../../infrastructure/database/prisma/generated/internal/prismaNamespace';
+import { Payment } from '@/infrastructure/database/prisma/generated/client';
+import { PaymentScalarFieldEnum } from '@/infrastructure/database/prisma/generated/internal/prismaNamespace';
 
 export interface IPayment extends Payment {
   order?: { id: number; orderNumber: string };

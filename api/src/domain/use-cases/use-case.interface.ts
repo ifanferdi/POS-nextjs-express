@@ -1,12 +1,12 @@
-import { AuthUseCase } from './auth.interface';
-import { CommonUseCase } from './common.interface';
-import { OrderUseCase } from './order.interface';
-import { PaymentUseCase } from './payment.interface';
-import { PermissionUseCase } from './permission.interface';
-import { CategoryUseCase } from './category.interface';
-import { ProductUseCase } from './product.interface';
-import { RoleUseCase } from './role.interface';
-import { UserUseCase } from './user.interface';
+import { AuthUseCase } from '@/domain/use-cases/auth.interface';
+import { CommonUseCase } from '@/domain/use-cases/common.interface';
+import { OrderUseCase } from '@/domain/use-cases/order.interface';
+import { PaymentUseCase } from '@/domain/use-cases/payment.interface';
+import { PermissionUseCase } from '@/domain/use-cases/permission.interface';
+import { CategoryUseCase } from '@/domain/use-cases/category.interface';
+import { ProductUseCase } from '@/domain/use-cases/product.interface';
+import { RoleUseCase } from '@/domain/use-cases/role.interface';
+import { UserUseCase } from '@/domain/use-cases/user.interface';
 
 export interface UseCases {
   userUseCase: UserUseCase;

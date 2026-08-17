@@ -1,6 +1,6 @@
-import { OrderItem, Product } from '../../../infrastructure/database/prisma/generated/client';
-import { ProductScalarFieldEnum } from '../../../infrastructure/database/prisma/generated/internal/prismaNamespace';
-import { ICategory } from './category';
+import { OrderItem, Product } from '@/infrastructure/database/prisma/generated/client';
+import { ProductScalarFieldEnum } from '@/infrastructure/database/prisma/generated/internal/prismaNamespace';
+import { ICategory } from '@/domain/entities/models/category';
 
 export interface IProduct extends Product {
   id: number;

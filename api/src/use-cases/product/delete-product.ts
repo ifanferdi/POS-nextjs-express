@@ -1,6 +1,6 @@
-import { ProductRelation } from '../../domain/entities/enums/product.enum';
-import { BaseFindById } from '../../validations/base-validation';
-import BaseUseCase from '../_base-use-case';
+import { ProductRelation } from '@/domain/entities/enums/product.enum';
+import { BaseFindById } from '@/validations/base-validation';
+import BaseUseCase from '@/use-cases/_base-use-case';
 
 export default class DeleteProduct extends BaseUseCase {
   execute({ id }: BaseFindById, options?: { isPermanently: boolean }) {

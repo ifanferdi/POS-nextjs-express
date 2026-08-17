@@ -1,7 +1,7 @@
-import { IPermission } from '../../domain/entities/models/permission';
-import { ErrorNotFound } from '../../helpers/error.helper';
-import { FindByIdPermissionDto } from '../../validations/permission-validation';
-import BaseUseCase from '../_base-use-case';
+import { IPermission } from '@/domain/entities/models/permission';
+import { ErrorNotFound } from '@/helpers/error.helper';
+import { FindByIdPermissionDto } from '@/validations/permission-validation';
+import BaseUseCase from '@/use-cases/_base-use-case';
 
 export default class FindByIdPermission extends BaseUseCase {
   async execute(params: FindByIdPermissionDto) {

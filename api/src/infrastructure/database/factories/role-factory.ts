@@ -1,6 +1,6 @@
 import _ from 'lodash';
-import { IPermission } from '../../../domain/entities/models/permission';
-import { CreateRoleDto } from '../../../validations/role-validation';
+import { IPermission } from '@/domain/entities/models/permission';
+import { CreateRoleDto } from '@/validations/role-validation';
 
 export default function RoleFactory(permissions: IPermission[]) {
   const permissionByName = _.keyBy(permissions, 'name');

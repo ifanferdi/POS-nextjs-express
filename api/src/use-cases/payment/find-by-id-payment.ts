@@ -1,6 +1,6 @@
-import { ErrorNotFound } from '../../helpers/error.helper';
-import { FindByIdPaymentDto } from '../../validations/payment-validation';
-import BaseUseCase from '../_base-use-case';
+import { ErrorNotFound } from '@/helpers/error.helper';
+import { FindByIdPaymentDto } from '@/validations/payment-validation';
+import BaseUseCase from '@/use-cases/_base-use-case';
 
 export default class FindByIdPayment extends BaseUseCase {
   async execute(params: FindByIdPaymentDto) {

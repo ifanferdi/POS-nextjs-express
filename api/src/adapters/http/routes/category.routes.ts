@@ -1,6 +1,6 @@
 import express from 'express';
-import Authorization from '../../../use-cases/auth/authorization';
-import CategoryController from '../controller/category-controller';
+import Authorization from '@/use-cases/auth/authorization';
+import CategoryController from '@/adapters/http/controller/category-controller';
 
 export default function CategoryRoutes(
   controller: CategoryController,

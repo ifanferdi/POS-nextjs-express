@@ -1,4 +1,4 @@
-import { FileType } from '../../../domain/entities/types/storage.types';
+import { FileType } from '@/domain/entities/types/storage.types';
 
 export function assetFile(fileType: FileType) {
   let file;

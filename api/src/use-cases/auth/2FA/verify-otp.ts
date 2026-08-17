@@ -1,9 +1,9 @@
-import { IUser } from '../../../domain/entities/models/user';
-import { ErrorBadRequest, ErrorNotFound, ErrorUnauthorized } from '../../../helpers/error.helper';
-import * as password from '../../../helpers/password.helper';
-import BaseUseCase from '../../_base-use-case';
-import SignIn from '../sign-in';
-import SendOtp from './send-otp';
+import { IUser } from '@/domain/entities/models/user';
+import { ErrorBadRequest, ErrorNotFound, ErrorUnauthorized } from '@/helpers/error.helper';
+import * as password from '@/helpers/password.helper';
+import BaseUseCase from '@/use-cases/_base-use-case';
+import SignIn from '@/use-cases/auth/sign-in';
+import SendOtp from '@/use-cases/auth/2FA/send-otp';
 
 export default class VerifyOtp extends BaseUseCase {
   private sendOtp = new SendOtp(this.repositories);

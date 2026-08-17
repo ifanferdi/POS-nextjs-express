@@ -1,7 +1,7 @@
 import { z } from 'zod';
-import { CategoryRelation } from '../domain/entities/enums/category.enum';
-import { CATEGORY_FIELD } from '../domain/entities/models/category';
-import { BaseFindById, BasePagination, NumberSchema, StringSchema } from './base-validation';
+import { CategoryRelation } from '@/domain/entities/enums/category.enum';
+import { CATEGORY_FIELD } from '@/domain/entities/models/category';
+import { BaseFindById, BasePagination, NumberSchema, StringSchema } from '@/validations/base-validation';
 
 const Relations = z.array(z.nativeEnum(CategoryRelation).optional()).optional();
 const columns = z.array(z.nativeEnum(CATEGORY_FIELD)).optional();

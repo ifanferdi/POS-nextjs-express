@@ -1,5 +1,5 @@
 import { createClient } from 'redis';
-import config from '../../config/config';
+import config from '@/config/config';
 
 export default async function RedisConnection() {
   const REDIS_URL = config.redis.url;

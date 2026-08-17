@@ -1,6 +1,6 @@
 import * as Sentry from '@sentry/node';
 import { Express, NextFunction, Request, Response } from 'express';
-import config from '../config/config';
+import config from '@/config/config';
 
 const NODE_ENV = config?.app.env;
 export default class UseSentry {

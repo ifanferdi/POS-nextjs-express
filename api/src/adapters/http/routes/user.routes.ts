@@ -1,6 +1,6 @@
 import express from 'express';
-import Authorization from '../../../use-cases/auth/authorization';
-import UserController from '../controller/user-controller';
+import Authorization from '@/use-cases/auth/authorization';
+import UserController from '@/adapters/http/controller/user-controller';
 
 export default function UserRoutes(controller: UserController, auth: Authorization) {
   const router = express.Router();

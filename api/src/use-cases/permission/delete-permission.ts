@@ -1,6 +1,6 @@
-import { FindByIdPermissionDto } from '../../validations/permission-validation';
-import BaseUseCase from '../_base-use-case';
-import ResetCachePermission from './reset-cache-permission';
+import { FindByIdPermissionDto } from '@/validations/permission-validation';
+import BaseUseCase from '@/use-cases/_base-use-case';
+import ResetCachePermission from '@/use-cases/permission/reset-cache-permission';
 
 export default class DeletePermission extends BaseUseCase {
   async execute({ id }: FindByIdPermissionDto) {

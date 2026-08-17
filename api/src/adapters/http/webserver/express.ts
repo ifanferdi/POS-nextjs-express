@@ -5,15 +5,15 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import swaggerUi from 'swagger-ui-express';
 import { parse } from 'yaml';
-import config from '../../../config/config';
-import { HttpStatusCode } from '../../../constants/http-status.constant';
-import { Controllers } from '../../../domain/adapters/controller.interface';
-import { UseCases } from '../../../domain/use-cases/use-case.interface';
-import Routes from '../routes';
-import ErrorHandler from './error-handler';
-import ExtractJwtToken from './extract-jwt-token';
-import RouteNotFoundHandler from './route-not-found-handler';
-import { verifySignedUrl } from './verify-signed-url';
+import config from '@/config/config';
+import { HttpStatusCode } from '@/constants/http-status.constant';
+import { Controllers } from '@/domain/adapters/controller.interface';
+import { UseCases } from '@/domain/use-cases/use-case.interface';
+import Routes from '@/adapters/http/routes';
+import ErrorHandler from '@/adapters/http/webserver/error-handler';
+import ExtractJwtToken from '@/adapters/http/webserver/extract-jwt-token';
+import RouteNotFoundHandler from '@/adapters/http/webserver/route-not-found-handler';
+import { verifySignedUrl } from '@/adapters/http/webserver/verify-signed-url';
 
 export default function routes(app: Express, controllers: Controllers, useCases: UseCases) {
   app.use(express.json());

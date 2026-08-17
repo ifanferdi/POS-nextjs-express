@@ -1,16 +1,16 @@
-import { OrderStatus } from '../../domain/entities/enums/order.enum';
-import { PaymentStatus } from '../../domain/entities/enums/payment.enum';
-import { StoreOrderDto } from '../../domain/entities/models/order';
-import { Repository } from '../../domain/repositories/database.interface';
-import { generateOrderNumber } from '../../helpers/generate-string';
-import { Prisma } from '../../infrastructure/database/prisma/generated/client';
+import { OrderStatus } from '@/domain/entities/enums/order.enum';
+import { PaymentStatus } from '@/domain/entities/enums/payment.enum';
+import { StoreOrderDto } from '@/domain/entities/models/order';
+import { Repository } from '@/domain/repositories/database.interface';
+import { generateOrderNumber } from '@/helpers/generate-string';
+import { Prisma } from '@/infrastructure/database/prisma/generated/client';
 import {
   FindAllOrderDto,
   FindByIdOrderDto,
   UpdateOrderStatusDto,
-} from '../../validations/order-validation';
-import DatabaseBaseRepository from './_database-base-repository';
-import QueryOrderRepository from './queries/query-order-repository';
+} from '@/validations/order-validation';
+import DatabaseBaseRepository from '@/repositories/database/_database-base-repository';
+import QueryOrderRepository from '@/repositories/database/queries/query-order-repository';
 
 export default class OrderRepository
   extends DatabaseBaseRepository

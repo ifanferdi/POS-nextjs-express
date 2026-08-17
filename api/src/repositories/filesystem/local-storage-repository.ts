@@ -1,9 +1,9 @@
 import crypto from 'crypto';
 import fs from 'fs';
 import { dirname as getDirName } from 'path';
-import config from '../../config/config';
-import { reformatStorageKey } from '../../helpers/common.helper';
-import { ErrorBadRequest } from '../../helpers/error.helper';
+import config from '@/config/config';
+import { reformatStorageKey } from '@/helpers/common.helper';
+import { ErrorBadRequest } from '@/helpers/error.helper';
 
 const STORAGE_DIR = config.storage.localDir;
 const APP_URL = config.app.url;

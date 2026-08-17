@@ -1,13 +1,13 @@
-import { Repository } from '../../domain/repositories/database.interface';
-import { Prisma } from '../../infrastructure/database/prisma/generated/client';
+import { Repository } from '@/domain/repositories/database.interface';
+import { Prisma } from '@/infrastructure/database/prisma/generated/client';
 import {
   CreateCategoryDto,
   FindAllCategoryDto,
   FindByIdCategoryDto,
   UpdateCategoryDto,
-} from '../../validations/category-validation';
-import DatabaseBaseRepository from './_database-base-repository';
-import QueryCategoryRepository from './queries/query-category-repository';
+} from '@/validations/category-validation';
+import DatabaseBaseRepository from '@/repositories/database/_database-base-repository';
+import QueryCategoryRepository from '@/repositories/database/queries/query-category-repository';
 
 export default class CategoryRepository
   extends DatabaseBaseRepository

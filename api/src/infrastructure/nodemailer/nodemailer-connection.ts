@@ -1,5 +1,5 @@
 import nodemailer from 'nodemailer';
-import config from '../../config/config';
+import config from '@/config/config';
 
 const SMTP_USER = config.smtp.user;
 const SMTP_PASS = config.smtp.pass;

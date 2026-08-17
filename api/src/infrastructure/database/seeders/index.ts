@@ -1,7 +1,7 @@
-import { prisma } from '../prisma/prisma';
-import PosSeeder from './pos-seeder';
-import RolePermissionSeeder from './role-permission-seeder';
-import UserSeeder from './user-seeder';
+import { prisma } from '@/infrastructure/database/prisma/prisma';
+import PosSeeder from '@/infrastructure/database/seeders/pos-seeder';
+import RolePermissionSeeder from '@/infrastructure/database/seeders/role-permission-seeder';
+import UserSeeder from '@/infrastructure/database/seeders/user-seeder';
 
 async function main() {
   await new RolePermissionSeeder(prisma).execute();

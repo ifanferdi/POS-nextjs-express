@@ -1,8 +1,8 @@
 import 'dotenv/config';
 import express, { Express } from 'express';
 import * as http from 'http';
-import bootstrap from './bootstrap';
-import config from './config/config';
+import bootstrap from '@/bootstrap';
+import config from '@/config/config';
 
 const PORT = config.app.port || 8000;
 

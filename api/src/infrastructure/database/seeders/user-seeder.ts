@@ -1,10 +1,10 @@
 import { faker } from '@faker-js/faker';
 import _ from 'lodash';
-import { Gender } from '../../../domain/entities/enums/user.enum';
-import { Seeder } from '../../../domain/infrastructures/database.interface';
-import { calculateAge } from '../../../helpers/common.helper';
-import * as argon2 from '../../../helpers/password.helper';
-import { PrismaClient } from '../prisma/generated/client';
+import { Gender } from '@/domain/entities/enums/user.enum';
+import { Seeder } from '@/domain/infrastructures/database.interface';
+import { calculateAge } from '@/helpers/common.helper';
+import * as argon2 from '@/helpers/password.helper';
+import { PrismaClient } from '@/infrastructure/database/prisma/generated/client';
 
 export default class UserSeeder implements Seeder {
   constructor(private prisma: PrismaClient) {}

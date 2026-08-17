@@ -1,8 +1,8 @@
 import e from 'express';
 import asyncHandler from 'express-async-handler';
-import { HttpStatusCode } from '../../../constants/http-status.constant';
-import { handleOrderByRequest } from '../../../helpers/common.helper';
-import { BaseFindById } from '../../../validations/base-validation';
+import { HttpStatusCode } from '@/constants/http-status.constant';
+import { handleOrderByRequest } from '@/helpers/common.helper';
+import { BaseFindById } from '@/validations/base-validation';
 import {
   CreateCategoryDto,
   CreateCategorySchema,
@@ -12,8 +12,8 @@ import {
   FindByIdCategorySchema,
   UpdateCategoryDto,
   UpdateCategorySchema,
-} from '../../../validations/category-validation';
-import BaseController from './_base-controller';
+} from '@/validations/category-validation';
+import BaseController from '@/adapters/http/controller/_base-controller';
 
 export default class CategoryController extends BaseController {
   findAll = asyncHandler(async (req: e.Request & Record<string, any>, res: e.Response) => {

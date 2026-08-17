@@ -1,8 +1,8 @@
 import e from 'express';
 import asyncHandler from 'express-async-handler';
-import { HttpStatusCode } from '../../../constants/http-status.constant';
-import { UseCases } from '../../../domain/use-cases/use-case.interface';
-import { handleNumberOrArrayRequest, handleOrderByRequest } from '../../../helpers/common.helper';
+import { HttpStatusCode } from '@/constants/http-status.constant';
+import { UseCases } from '@/domain/use-cases/use-case.interface';
+import { handleNumberOrArrayRequest, handleOrderByRequest } from '@/helpers/common.helper';
 import {
   CheckValidPermissionSchema,
   CreatePermissionDto,
@@ -13,7 +13,7 @@ import {
   FindByIdPermissionSchema,
   UpdatePermissionDto,
   UpdatePermissionSchema,
-} from '../../../validations/permission-validation';
+} from '@/validations/permission-validation';
 
 export default class PermissionController {
   constructor(private useCases: UseCases) {}

@@ -1,14 +1,14 @@
 import { Express } from 'express';
-import { Controllers } from '../../../domain/adapters/controller.interface';
-import Authorization from '../../../use-cases/auth/authorization';
-import AuthRoutes from './auth.routes';
-import OrderRoutes from './order.routes';
-import PaymentRoutes from './payment.routes';
-import PermissionRoutes from './permission.routes';
-import CategoryRoutes from './category.routes';
-import ProductRoutes from './product.routes';
-import RoleRoutes from './role.routes';
-import UserRoutes from './user.routes';
+import { Controllers } from '@/domain/adapters/controller.interface';
+import Authorization from '@/use-cases/auth/authorization';
+import AuthRoutes from '@/adapters/http/routes/auth.routes';
+import OrderRoutes from '@/adapters/http/routes/order.routes';
+import PaymentRoutes from '@/adapters/http/routes/payment.routes';
+import PermissionRoutes from '@/adapters/http/routes/permission.routes';
+import CategoryRoutes from '@/adapters/http/routes/category.routes';
+import ProductRoutes from '@/adapters/http/routes/product.routes';
+import RoleRoutes from '@/adapters/http/routes/role.routes';
+import UserRoutes from '@/adapters/http/routes/user.routes';
 
 export default function Routes(app: Express, controllers: Controllers, auth: Authorization) {
   app.get('/api/v1/dashboard', controllers.dashboardController.index);

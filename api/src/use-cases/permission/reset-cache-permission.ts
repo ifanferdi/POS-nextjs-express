@@ -1,9 +1,9 @@
 import {
   ResetCachePermissionDto,
   ResetCachePermissionSchema,
-} from '../../validations/permission-validation';
-import BaseUseCase from '../_base-use-case';
-import CheckValidPermission from './check-valid-permission';
+} from '@/validations/permission-validation';
+import BaseUseCase from '@/use-cases/_base-use-case';
+import CheckValidPermission from '@/use-cases/permission/check-valid-permission';
 
 export default class ResetCachePermission extends BaseUseCase {
   async execute(params: ResetCachePermissionDto) {

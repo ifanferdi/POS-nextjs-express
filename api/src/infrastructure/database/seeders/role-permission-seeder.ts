@@ -1,8 +1,8 @@
 import _ from 'lodash';
-import { Seeder } from '../../../domain/infrastructures/database.interface';
-import permissionFactory from '../factories/permission-factory';
-import RoleFactory from '../factories/role-factory';
-import { Permission, PrismaClient } from '../prisma/generated/client';
+import { Seeder } from '@/domain/infrastructures/database.interface';
+import permissionFactory from '@/infrastructure/database/factories/permission-factory';
+import RoleFactory from '@/infrastructure/database/factories/role-factory';
+import { Permission, PrismaClient } from '@/infrastructure/database/prisma/generated/client';
 
 export default class RolePermissionSeeder implements Seeder {
   constructor(private prisma: PrismaClient) {}

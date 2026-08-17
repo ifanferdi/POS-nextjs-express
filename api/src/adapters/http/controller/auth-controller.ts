@@ -1,7 +1,7 @@
 import e from 'express';
 import asyncHandler from 'express-async-handler';
-import { IUser } from '../../../domain/entities/models/user';
-import { extractUserId } from '../../../helpers/common.helper';
+import { IUser } from '@/domain/entities/models/user';
+import { extractUserId } from '@/helpers/common.helper';
 import {
   ResendOtpSchema,
   SignInAuthDto,
@@ -10,9 +10,9 @@ import {
   TokenSchema,
   VerifyOtpDto,
   VerifyOtpSchema,
-} from '../../../validations/auth-validation';
-import { BaseFindById } from '../../../validations/base-validation';
-import BaseController from './_base-controller';
+} from '@/validations/auth-validation';
+import { BaseFindById } from '@/validations/base-validation';
+import BaseController from '@/adapters/http/controller/_base-controller';
 
 export default class AuthController extends BaseController {
   signIn = asyncHandler(async (req: e.Request, res: e.Response) => {

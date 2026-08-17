@@ -1,5 +1,5 @@
-import { HttpStatusMessage } from '../constants/http-status-message.constant';
-import { HttpStatusCode } from '../constants/http-status.constant';
+import { HttpStatusMessage } from '@/constants/http-status-message.constant';
+import { HttpStatusCode } from '@/constants/http-status.constant';
 
 export default class AppError extends Error {
   statusCode: number;

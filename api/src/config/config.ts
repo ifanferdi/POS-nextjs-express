@@ -1,7 +1,7 @@
 import 'dotenv/config';
-import authConfig from './auth.config';
-import databaseConfig from './database.config';
-import storageConfig from './storage.config';
+import authConfig from '@/config/auth.config';
+import databaseConfig from '@/config/database.config';
+import storageConfig from '@/config/storage.config';
 
 const APP_PORT = process.env.APP_PORT || 3000;
 const config = {

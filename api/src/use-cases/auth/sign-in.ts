@@ -1,14 +1,14 @@
 import _ from 'lodash';
-import config from '../../config/config';
-import { UserRelation } from '../../domain/entities/enums/user.enum';
-import { IUser, IUserWithPassword, USER_FIELDS } from '../../domain/entities/models/user';
-import { RedisDataAuth } from '../../domain/entities/types/auth.types';
-import { ttl } from '../../helpers/common.helper';
-import { ErrorBadRequest } from '../../helpers/error.helper';
-import * as jwt from '../../helpers/jwt.helper';
-import * as password from '../../helpers/password.helper';
-import { SignInAuthDto } from '../../validations/auth-validation';
-import BaseUseCase from '../_base-use-case';
+import config from '@/config/config';
+import { UserRelation } from '@/domain/entities/enums/user.enum';
+import { IUser, IUserWithPassword, USER_FIELDS } from '@/domain/entities/models/user';
+import { RedisDataAuth } from '@/domain/entities/types/auth.types';
+import { ttl } from '@/helpers/common.helper';
+import { ErrorBadRequest } from '@/helpers/error.helper';
+import * as jwt from '@/helpers/jwt.helper';
+import * as password from '@/helpers/password.helper';
+import { SignInAuthDto } from '@/validations/auth-validation';
+import BaseUseCase from '@/use-cases/_base-use-case';
 
 const TOKEN_TIMEOUT = config.auth.tokenTimeout;
 const REFRESH_TOKEN_TIMEOUT = config.auth.refreshTokenTimeout;

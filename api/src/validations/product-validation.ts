@@ -1,8 +1,8 @@
 import { z } from 'zod';
-import { ProductRelation } from '../domain/entities/enums/product.enum';
-import { PRODUCT_FIELD } from '../domain/entities/models/product';
-import { SoftDeleteFields } from '../domain/entities/types/database.types';
-import { BaseFindById, BasePagination, NumberSchema, StringSchema } from './base-validation';
+import { ProductRelation } from '@/domain/entities/enums/product.enum';
+import { PRODUCT_FIELD } from '@/domain/entities/models/product';
+import { SoftDeleteFields } from '@/domain/entities/types/database.types';
+import { BaseFindById, BasePagination, NumberSchema, StringSchema } from '@/validations/base-validation';
 
 const Relations = z.array(z.nativeEnum(ProductRelation).optional()).optional();
 const columns = z.array(z.nativeEnum(PRODUCT_FIELD)).optional();

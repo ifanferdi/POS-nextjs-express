@@ -1,6 +1,6 @@
-import { ErrorBadRequest } from '../../helpers/error.helper';
-import { CreateProductDto } from '../../validations/product-validation';
-import BaseUseCase from '../_base-use-case';
+import { ErrorBadRequest } from '@/helpers/error.helper';
+import { CreateProductDto } from '@/validations/product-validation';
+import BaseUseCase from '@/use-cases/_base-use-case';
 
 export default class CreateProduct extends BaseUseCase {
   async execute(payload: CreateProductDto) {

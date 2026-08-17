@@ -1,7 +1,7 @@
-import { ProductRelation } from '../../../domain/entities/enums/product.enum';
-import { PRODUCT_FIELD, PRODUCT_FIELDS } from '../../../domain/entities/models/product';
-import { Prisma } from '../../../infrastructure/database/prisma/generated/client';
-import { FindAllProductDto, FindByIdProductDto } from '../../../validations/product-validation';
+import { ProductRelation } from '@/domain/entities/enums/product.enum';
+import { PRODUCT_FIELD, PRODUCT_FIELDS } from '@/domain/entities/models/product';
+import { Prisma } from '@/infrastructure/database/prisma/generated/client';
+import { FindAllProductDto, FindByIdProductDto } from '@/validations/product-validation';
 
 export default class QueryProductRepository {
   handleInclude(relation: FindAllProductDto['with'] & FindByIdProductDto['with']) {

@@ -1,5 +1,5 @@
 import client from 'amqplib';
-import config from '../../config/config';
+import config from '@/config/config';
 
 const RABBITMQ_URL = config.rabbitmq.url;
 

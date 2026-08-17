@@ -2,10 +2,10 @@ import {
   Order,
   OrderItem,
   Payment,
-} from '../../../infrastructure/database/prisma/generated/client';
-import { OrderScalarFieldEnum } from '../../../infrastructure/database/prisma/generated/internal/prismaNamespace';
-import { PaymentMethod } from '../enums/payment.enum';
-import { IUser } from './user';
+} from '@/infrastructure/database/prisma/generated/client';
+import { OrderScalarFieldEnum } from '@/infrastructure/database/prisma/generated/internal/prismaNamespace';
+import { PaymentMethod } from '@/domain/entities/enums/payment.enum';
+import { IUser } from '@/domain/entities/models/user';
 
 export interface IOrder extends Order {
   id: number;

@@ -1,11 +1,11 @@
 import _ from 'lodash';
-import { Profile, User } from '../../../infrastructure/database/prisma/generated/client';
+import { Profile, User } from '@/infrastructure/database/prisma/generated/client';
 import {
   ProfileScalarFieldEnum,
   UserScalarFieldEnum,
-} from '../../../infrastructure/database/prisma/generated/internal/prismaNamespace';
-import { IPermission } from './permission';
-import { IRole } from './role';
+} from '@/infrastructure/database/prisma/generated/internal/prismaNamespace';
+import { IPermission } from '@/domain/entities/models/permission';
+import { IRole } from '@/domain/entities/models/role';
 
 export interface IUser extends Omit<User, 'password'> {
   id: number;

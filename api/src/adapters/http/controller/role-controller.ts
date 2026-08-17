@@ -1,9 +1,9 @@
 import e from 'express';
 import asyncHandler from 'express-async-handler';
-import { HttpStatusCode } from '../../../constants/http-status.constant';
-import { UseCases } from '../../../domain/use-cases/use-case.interface';
-import { handleNumberOrArrayRequest, handleOrderByRequest } from '../../../helpers/common.helper';
-import { BaseFindById } from '../../../validations/base-validation';
+import { HttpStatusCode } from '@/constants/http-status.constant';
+import { UseCases } from '@/domain/use-cases/use-case.interface';
+import { handleNumberOrArrayRequest, handleOrderByRequest } from '@/helpers/common.helper';
+import { BaseFindById } from '@/validations/base-validation';
 import {
   CreateRoleDto,
   CreateRoleSchema,
@@ -15,7 +15,7 @@ import {
   RoleAssignPermissionSchema,
   UpdateRoleDto,
   UpdateRoleSchema,
-} from '../../../validations/role-validation';
+} from '@/validations/role-validation';
 
 export default class RoleController {
   constructor(private useCases: UseCases) {}

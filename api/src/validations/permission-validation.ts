@@ -1,7 +1,7 @@
 import { z } from 'zod';
-import { PermissionRelation } from '../domain/entities/enums/permission.enum';
-import { PERMISSION_FIELD } from '../domain/entities/models/permission';
-import { BaseFindById, BasePagination, NumberSchema, StringSchema } from './base-validation';
+import { PermissionRelation } from '@/domain/entities/enums/permission.enum';
+import { PERMISSION_FIELD } from '@/domain/entities/models/permission';
+import { BaseFindById, BasePagination, NumberSchema, StringSchema } from '@/validations/base-validation';
 
 // Permission Validation
 const PermissionWithEnum = z.array(z.nativeEnum(PermissionRelation).optional()).optional();

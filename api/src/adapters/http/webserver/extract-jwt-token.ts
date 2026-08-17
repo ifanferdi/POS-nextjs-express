@@ -1,7 +1,7 @@
 import e from 'express';
 import asyncHandler from 'express-async-handler';
-import { UseCases } from '../../../domain/use-cases/use-case.interface';
-import { ErrorUnauthorized } from '../../../helpers/error.helper';
+import { UseCases } from '@/domain/use-cases/use-case.interface';
+import { ErrorUnauthorized } from '@/helpers/error.helper';
 
 const WHITE_LIST_ROUTES = ['/api/v1/auth/sign-in', '/api/v1/auth/refresh-token', '/public/files'];
 export default (useCases: UseCases) =>

@@ -1,11 +1,11 @@
 import e from 'express';
-import { HttpStatusCode } from '../../constants/http-status.constant';
-import { Repositories } from '../../domain/repositories/repositories.interface';
-import { extractUserId } from '../../helpers/common.helper';
-import { ErrorBadRequest } from '../../helpers/error.helper';
-import { FindByIdUserDto } from '../../validations/user-validation';
-import CheckValidPermission from '../permission/check-valid-permission';
-import FindByIdUser from '../user/find-by-id-user';
+import { HttpStatusCode } from '@/constants/http-status.constant';
+import { Repositories } from '@/domain/repositories/repositories.interface';
+import { extractUserId } from '@/helpers/common.helper';
+import { ErrorBadRequest } from '@/helpers/error.helper';
+import { FindByIdUserDto } from '@/validations/user-validation';
+import CheckValidPermission from '@/use-cases/permission/check-valid-permission';
+import FindByIdUser from '@/use-cases/user/find-by-id-user';
 
 export default class Authorization {
   constructor(private readonly repositories: Repositories) {}

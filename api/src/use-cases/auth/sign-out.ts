@@ -1,7 +1,7 @@
-import config from '../../config/config';
-import * as jwt from '../../helpers/jwt.helper';
-import { BaseFindById } from '../../validations/base-validation';
-import BaseUseCase from '../_base-use-case';
+import config from '@/config/config';
+import * as jwt from '@/helpers/jwt.helper';
+import { BaseFindById } from '@/validations/base-validation';
+import BaseUseCase from '@/use-cases/_base-use-case';
 
 const AUTH_MODE = config.auth.mode;
 

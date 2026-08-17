@@ -1,10 +1,10 @@
-import { UserRelation } from '../../domain/entities/enums/user.enum';
-import { StoreOrderDto } from '../../domain/entities/models/order';
-import { IUser } from '../../domain/entities/models/user';
-import { calculateRounding } from '../../helpers/common.helper';
-import { ErrorBadRequest } from '../../helpers/error.helper';
-import { CreateOrderDto } from '../../validations/order-validation';
-import BaseUseCase from '../_base-use-case';
+import { UserRelation } from '@/domain/entities/enums/user.enum';
+import { StoreOrderDto } from '@/domain/entities/models/order';
+import { IUser } from '@/domain/entities/models/user';
+import { calculateRounding } from '@/helpers/common.helper';
+import { ErrorBadRequest } from '@/helpers/error.helper';
+import { CreateOrderDto } from '@/validations/order-validation';
+import BaseUseCase from '@/use-cases/_base-use-case';
 
 export default class CreateOrder extends BaseUseCase {
   get now() {

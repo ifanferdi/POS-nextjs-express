@@ -1,6 +1,6 @@
 import express from 'express';
-import Authorization from '../../../use-cases/auth/authorization';
-import PermissionController from '../controller/permission-controller';
+import Authorization from '@/use-cases/auth/authorization';
+import PermissionController from '@/adapters/http/controller/permission-controller';
 
 export default function PermissionRoutes(controller: PermissionController, auth: Authorization) {
   const router = express.Router();

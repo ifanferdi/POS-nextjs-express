@@ -1,4 +1,4 @@
-import BaseUseCase from '../_base-use-case';
+import BaseUseCase from '@/use-cases/_base-use-case';
 
 export default class Dashboard extends BaseUseCase {
   async execute() {

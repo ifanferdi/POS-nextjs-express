@@ -1,6 +1,6 @@
-import { BaseFindById } from '../../validations/base-validation';
-import BaseUseCase from '../_base-use-case';
-import ResetCachePermission from '../permission/reset-cache-permission';
+import { BaseFindById } from '@/validations/base-validation';
+import BaseUseCase from '@/use-cases/_base-use-case';
+import ResetCachePermission from '@/use-cases/permission/reset-cache-permission';
 
 export default class DeleteRole extends BaseUseCase {
   async execute({ id }: BaseFindById) {

@@ -1,8 +1,8 @@
-import { IUser } from '../../domain/entities/models/user';
-import { extractRelationData } from '../../helpers/extract-relationship';
-import paginate from '../../helpers/paginate.helper';
-import { FindAllUserDto } from '../../validations/user-validation';
-import BaseUseCase from '../_base-use-case';
+import { IUser } from '@/domain/entities/models/user';
+import { extractRelationData } from '@/helpers/extract-relationship';
+import paginate from '@/helpers/paginate.helper';
+import { FindAllUserDto } from '@/validations/user-validation';
+import BaseUseCase from '@/use-cases/_base-use-case';
 
 export default class FindAllUser extends BaseUseCase {
   async execute(params: FindAllUserDto) {

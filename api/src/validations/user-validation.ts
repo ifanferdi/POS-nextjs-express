@@ -1,11 +1,11 @@
 import { z } from 'zod';
-import { UserRelation } from '../domain/entities/enums/user.enum';
-import { USER_FIELD } from '../domain/entities/models/user';
-import { JwtData } from '../domain/entities/types/auth.types';
-import { SoftDeleteFields } from '../domain/entities/types/database.types';
-import { calculateAge } from '../helpers/common.helper';
-import AppError from '../helpers/error.helper';
-import { Gender } from '../domain/entities/enums/user.enum';
+import { UserRelation } from '@/domain/entities/enums/user.enum';
+import { USER_FIELD } from '@/domain/entities/models/user';
+import { JwtData } from '@/domain/entities/types/auth.types';
+import { SoftDeleteFields } from '@/domain/entities/types/database.types';
+import { calculateAge } from '@/helpers/common.helper';
+import AppError from '@/helpers/error.helper';
+import { Gender } from '@/domain/entities/enums/user.enum';
 import {
   BaseFindById,
   BasePagination,
@@ -14,7 +14,7 @@ import {
   Password,
   StringSchema,
   Username,
-} from './base-validation';
+} from '@/validations/base-validation';
 
 // User Validation
 const Relations = z.array(z.nativeEnum(UserRelation).optional()).optional();

@@ -1,6 +1,6 @@
-import config from '../../config/config';
-import { reformatStorageKey } from '../../helpers/common.helper';
-import BaseUseCase from '../_base-use-case';
+import config from '@/config/config';
+import { reformatStorageKey } from '@/helpers/common.helper';
+import BaseUseCase from '@/use-cases/_base-use-case';
 
 export default class ProfileImage extends BaseUseCase {
   async execute(image: Express.Multer.File) {

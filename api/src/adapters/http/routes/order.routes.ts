@@ -1,6 +1,6 @@
 import express from 'express';
-import Authorization from '../../../use-cases/auth/authorization';
-import OrderController from '../controller/order-controller';
+import Authorization from '@/use-cases/auth/authorization';
+import OrderController from '@/adapters/http/controller/order-controller';
 
 export default function OrderRoutes(controller: OrderController, auth: Authorization) {
   const router = express.Router();

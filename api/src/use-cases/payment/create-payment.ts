@@ -1,7 +1,7 @@
-import { OrderStatus } from '../../domain/entities/enums/order.enum';
-import { ErrorConflict, ErrorNotFound } from '../../helpers/error.helper';
-import { CreatePaymentDto } from '../../validations/payment-validation';
-import BaseUseCase from '../_base-use-case';
+import { OrderStatus } from '@/domain/entities/enums/order.enum';
+import { ErrorConflict, ErrorNotFound } from '@/helpers/error.helper';
+import { CreatePaymentDto } from '@/validations/payment-validation';
+import BaseUseCase from '@/use-cases/_base-use-case';
 
 export default class CreatePayment extends BaseUseCase {
   async execute(payload: CreatePaymentDto) {

@@ -1,8 +1,8 @@
 import e from 'express';
 import multer from 'multer';
-import config from '../config/config';
-import { ALL_FILE_TYPES, FileType } from '../domain/entities/types/storage.types';
-import { ErrorBadRequest } from './error.helper';
+import config from '@/config/config';
+import { ALL_FILE_TYPES, FileType } from '@/domain/entities/types/storage.types';
+import { ErrorBadRequest } from '@/helpers/error.helper';
 
 const ACCEPTED_IMAGE_TYPES = config.storage.acceptedImageTypes;
 const ACCEPTED_VIDEO_TYPES = config.storage.acceptedVideoTypes;

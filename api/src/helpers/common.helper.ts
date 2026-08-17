@@ -4,8 +4,8 @@ import _ from 'lodash';
 import moment from 'moment';
 import ms, { StringValue } from 'ms';
 import z from 'zod';
-import config from '../config/config';
-import AppError from './error.helper';
+import config from '@/config/config';
+import AppError from '@/helpers/error.helper';
 
 export const isLink = (string: string) => z.string().url().safeParse(string).success;
 

@@ -1,5 +1,5 @@
 import { JwtPayload } from 'jsonwebtoken';
-import { IUser } from '../models/user';
+import { IUser } from '@/domain/entities/models/user';
 
 export interface JwtData extends JwtPayload, IUser {
   iatDate?: Date;

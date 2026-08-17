@@ -1,6 +1,6 @@
-import { Repositories } from '../../domain/repositories/repositories.interface';
-import { UseCases } from '../../domain/use-cases/use-case.interface';
-import { UserEvent } from './user-event';
+import { Repositories } from '@/domain/repositories/repositories.interface';
+import { UseCases } from '@/domain/use-cases/use-case.interface';
+import { UserEvent } from '@/adapters/events/user-event';
 
 export default class EventListener {
   constructor(

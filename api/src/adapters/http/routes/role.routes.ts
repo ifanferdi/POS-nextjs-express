@@ -1,6 +1,6 @@
 import express from 'express';
-import Authorization from '../../../use-cases/auth/authorization';
-import RoleController from '../controller/role-controller';
+import Authorization from '@/use-cases/auth/authorization';
+import RoleController from '@/adapters/http/controller/role-controller';
 
 export default function RoleRoutes(controller: RoleController, auth: Authorization) {
   const router = express.Router();

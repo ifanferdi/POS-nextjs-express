@@ -1,14 +1,14 @@
 import _ from 'lodash';
-import { Repository } from '../../domain/repositories/database.interface';
-import { Prisma } from '../../infrastructure/database/prisma/generated/client';
+import { Repository } from '@/domain/repositories/database.interface';
+import { Prisma } from '@/infrastructure/database/prisma/generated/client';
 import {
   CreateProductDto,
   FindAllProductDto,
   FindByIdProductDto,
   UpdateProductDto,
-} from '../../validations/product-validation';
-import DatabaseBaseRepository from './_database-base-repository';
-import QueryProductRepository from './queries/query-product-repository';
+} from '@/validations/product-validation';
+import DatabaseBaseRepository from '@/repositories/database/_database-base-repository';
+import QueryProductRepository from '@/repositories/database/queries/query-product-repository';
 
 export default class ProductRepository
   extends DatabaseBaseRepository

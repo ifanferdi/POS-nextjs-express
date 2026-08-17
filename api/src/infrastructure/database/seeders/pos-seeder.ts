@@ -2,18 +2,18 @@ import { faker } from '@faker-js/faker';
 import axios from 'axios';
 import _ from 'lodash';
 import Progress from 'ts-progress';
-import { OrderStatus } from '../../../domain/entities/enums/order.enum';
-import { PaymentMethod, PaymentStatus } from '../../../domain/entities/enums/payment.enum';
-import { ICategory } from '../../../domain/entities/models/category';
-import { IProduct, IProductHasCategory } from '../../../domain/entities/models/product';
-import { Seeder } from '../../../domain/infrastructures/database.interface';
-import { calculateRounding } from '../../../helpers/common.helper';
-import { PrismaClient, Product } from '../prisma/generated/client';
+import { OrderStatus } from '@/domain/entities/enums/order.enum';
+import { PaymentMethod, PaymentStatus } from '@/domain/entities/enums/payment.enum';
+import { ICategory } from '@/domain/entities/models/category';
+import { IProduct, IProductHasCategory } from '@/domain/entities/models/product';
+import { Seeder } from '@/domain/infrastructures/database.interface';
+import { calculateRounding } from '@/helpers/common.helper';
+import { PrismaClient, Product } from '@/infrastructure/database/prisma/generated/client';
 import {
   OrderCreateManyInput,
   OrderItemCreateManyInput,
   PaymentCreateManyInput,
-} from '../prisma/generated/models';
+} from '@/infrastructure/database/prisma/generated/models';
 
 const TOTAL_PRODUCTS = 500_000;
 const TOTAL_ORDERS = 250_000;

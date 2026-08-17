@@ -1,14 +1,14 @@
 import _ from 'lodash';
-import { Repository } from '../../domain/repositories/database.interface';
-import { Prisma } from '../../infrastructure/database/prisma/generated/client';
-import { RoleCreateInput } from '../../infrastructure/database/prisma/generated/models/Role';
+import { Repository } from '@/domain/repositories/database.interface';
+import { Prisma } from '@/infrastructure/database/prisma/generated/client';
+import { RoleCreateInput } from '@/infrastructure/database/prisma/generated/models/Role';
 import {
   CreateRoleDto,
   FindAllRoleDto,
   FindByIdRoleDto,
   UpdateRoleDto,
-} from '../../validations/role-validation';
-import DatabaseBaseRepository from './_database-base-repository';
+} from '@/validations/role-validation';
+import DatabaseBaseRepository from '@/repositories/database/_database-base-repository';
 
 export default class RoleRepository
   extends DatabaseBaseRepository

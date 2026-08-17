@@ -1,7 +1,7 @@
-import config from '../../config/config';
-import { IUser } from '../../domain/entities/models/user';
-import { Repositories } from '../../domain/repositories/repositories.interface';
-import { UseCases } from '../../domain/use-cases/use-case.interface';
+import config from '@/config/config';
+import { IUser } from '@/domain/entities/models/user';
+import { Repositories } from '@/domain/repositories/repositories.interface';
+import { UseCases } from '@/domain/use-cases/use-case.interface';
 
 const EXCHANGE = config.rabbitmq.exchange;
 const PARAMS_EVENT_A = { exchange: EXCHANGE, key: 'ts_user' };

@@ -1,7 +1,7 @@
-import { UserRelation } from '../../domain/entities/enums/user.enum';
-import { CheckValidPermissionDto } from '../../validations/permission-validation';
-import BaseUseCase from '../_base-use-case';
-import FindByIdUser from '../user/find-by-id-user';
+import { UserRelation } from '@/domain/entities/enums/user.enum';
+import { CheckValidPermissionDto } from '@/validations/permission-validation';
+import BaseUseCase from '@/use-cases/_base-use-case';
+import FindByIdUser from '@/use-cases/user/find-by-id-user';
 
 export default class CheckValidPermission extends BaseUseCase {
   private findByIdUser = new FindByIdUser(this.repositories);

@@ -1,12 +1,12 @@
-import { Repository } from '../../domain/repositories/database.interface';
-import { Prisma } from '../../infrastructure/database/prisma/generated/client';
+import { Repository } from '@/domain/repositories/database.interface';
+import { Prisma } from '@/infrastructure/database/prisma/generated/client';
 import {
   CreatePermissionDto,
   FindAllPermissionDto,
   FindByIdPermissionDto,
   UpdatePermissionDto,
-} from '../../validations/permission-validation';
-import DatabaseBaseRepository from './_database-base-repository';
+} from '@/validations/permission-validation';
+import DatabaseBaseRepository from '@/repositories/database/_database-base-repository';
 
 export default class PermissionRepository
   extends DatabaseBaseRepository

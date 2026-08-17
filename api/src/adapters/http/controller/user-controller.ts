@@ -1,15 +1,15 @@
 import e from 'express';
 import asyncHandler from 'express-async-handler';
-import config from '../../../config/config';
-import { HttpStatusCode } from '../../../constants/http-status.constant';
-import { FileType } from '../../../domain/entities/types/storage.types';
+import config from '@/config/config';
+import { HttpStatusCode } from '@/constants/http-status.constant';
+import { FileType } from '@/domain/entities/types/storage.types';
 import {
   extractUserId,
   handleNumberOrArrayRequest,
   handleOrderByRequest,
-} from '../../../helpers/common.helper';
-import uploadFile from '../../../helpers/multer.helper';
-import { BaseFindById } from '../../../validations/base-validation';
+} from '@/helpers/common.helper';
+import uploadFile from '@/helpers/multer.helper';
+import { BaseFindById } from '@/validations/base-validation';
 import {
   ChangePasswordDto,
   ChangePasswordSchema,
@@ -22,8 +22,8 @@ import {
   ProfileImageSchema,
   UpdateUserProfileDto,
   UpdateUserProfileSchema,
-} from '../../../validations/user-validation';
-import BaseController from './_base-controller';
+} from '@/validations/user-validation';
+import BaseController from '@/adapters/http/controller/_base-controller';
 
 export default class UserController extends BaseController {
   findAll = asyncHandler(async (req: e.Request & Record<string, any>, res: e.Response) => {

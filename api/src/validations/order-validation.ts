@@ -1,8 +1,8 @@
 import { z } from 'zod';
-import { OrderRelation, OrderStatus } from '../domain/entities/enums/order.enum';
-import { PaymentMethod } from '../domain/entities/enums/payment.enum';
-import { ORDER_FIELD } from '../domain/entities/models/order';
-import { BaseFindById, BasePagination, NumberSchema, StringSchema } from './base-validation';
+import { OrderRelation, OrderStatus } from '@/domain/entities/enums/order.enum';
+import { PaymentMethod } from '@/domain/entities/enums/payment.enum';
+import { ORDER_FIELD } from '@/domain/entities/models/order';
+import { BaseFindById, BasePagination, NumberSchema, StringSchema } from '@/validations/base-validation';
 
 const Relations = z.array(z.nativeEnum(OrderRelation).optional()).optional();
 const columns = z.array(z.nativeEnum(ORDER_FIELD)).optional();

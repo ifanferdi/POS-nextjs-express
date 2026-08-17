@@ -10,8 +10,8 @@ import {
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import * as mime from 'mime-types';
 import path from 'node:path';
-import config from '../../config/config';
-import { ErrorBadRequest } from '../../helpers/error.helper';
+import config from '@/config/config';
+import { ErrorBadRequest } from '@/helpers/error.helper';
 
 const BUCKET_NAME = config.storage.s3.bucket;
 const { region, accessKeyId, secretAccessKey, endpoint, forcePathStyle } = config.storage.s3;

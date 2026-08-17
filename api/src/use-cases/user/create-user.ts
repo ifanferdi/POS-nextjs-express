@@ -1,7 +1,7 @@
-import { ErrorBadRequest } from '../../helpers/error.helper';
-import * as password from '../../helpers/password.helper';
-import { CreateUserDto, CreateUserProfileDto } from '../../validations/user-validation';
-import BaseUseCase from '../_base-use-case';
+import { ErrorBadRequest } from '@/helpers/error.helper';
+import * as password from '@/helpers/password.helper';
+import { CreateUserDto, CreateUserProfileDto } from '@/validations/user-validation';
+import BaseUseCase from '@/use-cases/_base-use-case';
 
 export default class CreateUser extends BaseUseCase {
   async execute(payload: CreateUserDto | CreateUserProfileDto) {

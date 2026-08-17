@@ -1,10 +1,10 @@
 import _ from 'lodash';
-import { Repositories } from '../../domain/repositories/repositories.interface';
+import { Repositories } from '@/domain/repositories/repositories.interface';
 import {
   RoleAssignPermissionDto,
   SyncByPermissionIdsDto,
   SyncByPermissionsNameDto,
-} from '../../validations/role-validation';
+} from '@/validations/role-validation';
 
 export default class RoleAssignPermission {
   constructor(private repositories: Repositories) {}

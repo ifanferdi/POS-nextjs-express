@@ -1,8 +1,8 @@
 import { z } from 'zod';
-import { PaymentMethod, PaymentStatus } from '../domain/entities/enums/payment.enum';
-import { UserRelation } from '../domain/entities/enums/user.enum';
-import { PAYMENT_FIELD } from '../domain/entities/models/payment';
-import { BaseFindById, BasePagination, NumberSchema, StringSchema } from './base-validation';
+import { PaymentMethod, PaymentStatus } from '@/domain/entities/enums/payment.enum';
+import { UserRelation } from '@/domain/entities/enums/user.enum';
+import { PAYMENT_FIELD } from '@/domain/entities/models/payment';
+import { BaseFindById, BasePagination, NumberSchema, StringSchema } from '@/validations/base-validation';
 
 const Relations = z.array(z.nativeEnum(UserRelation).optional()).optional();
 

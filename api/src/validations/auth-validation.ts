@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { NumberSchema, Password, StringSchema, Username } from './base-validation';
+import { NumberSchema, Password, StringSchema, Username } from '@/validations/base-validation';
 
 export const SignInAuthSchema = z.object({
   username: Username,

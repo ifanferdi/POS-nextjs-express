@@ -1,8 +1,8 @@
-import { RoleRelation } from '../../../domain/entities/enums/role.enum';
-import { ROLE_FIELD, ROLE_FIELDS } from '../../../domain/entities/models/role';
-import { USER_SELECT_FIELDS_PRISMA } from '../../../domain/entities/models/user';
-import { Prisma } from '../../../infrastructure/database/prisma/generated/client';
-import { FindAllRoleDto, FindByIdRoleDto } from '../../../validations/role-validation';
+import { RoleRelation } from '@/domain/entities/enums/role.enum';
+import { ROLE_FIELD, ROLE_FIELDS } from '@/domain/entities/models/role';
+import { USER_SELECT_FIELDS_PRISMA } from '@/domain/entities/models/user';
+import { Prisma } from '@/infrastructure/database/prisma/generated/client';
+import { FindAllRoleDto, FindByIdRoleDto } from '@/validations/role-validation';
 
 export default class QueryRoleRepository {
   handleInclude(relation?: FindAllRoleDto['with'] | FindByIdRoleDto['with']) {

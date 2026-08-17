@@ -1,6 +1,6 @@
-import paginate from '../../helpers/paginate.helper';
-import { FindAllPermissionDto } from '../../validations/permission-validation';
-import BaseUseCase from '../_base-use-case';
+import paginate from '@/helpers/paginate.helper';
+import { FindAllPermissionDto } from '@/validations/permission-validation';
+import BaseUseCase from '@/use-cases/_base-use-case';
 
 export default class FindAllPermission extends BaseUseCase {
   async execute(params: FindAllPermissionDto) {

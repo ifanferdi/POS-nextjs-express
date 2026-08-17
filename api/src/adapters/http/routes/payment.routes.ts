@@ -1,6 +1,6 @@
 import express from 'express';
-import Authorization from '../../../use-cases/auth/authorization';
-import PaymentController from '../controller/payment-controller';
+import Authorization from '@/use-cases/auth/authorization';
+import PaymentController from '@/adapters/http/controller/payment-controller';
 
 export default function PaymentRoutes(controller: PaymentController, auth: Authorization) {
   const router = express.Router();

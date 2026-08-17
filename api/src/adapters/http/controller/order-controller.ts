@@ -1,12 +1,12 @@
 import e from 'express';
 import asyncHandler from 'express-async-handler';
-import { HttpStatusCode } from '../../../constants/http-status.constant';
+import { HttpStatusCode } from '@/constants/http-status.constant';
 import {
   extractUserId,
   handleNumberOrArrayRequest,
   handleOrderByRequest,
-} from '../../../helpers/common.helper';
-import { BaseFindById } from '../../../validations/base-validation';
+} from '@/helpers/common.helper';
+import { BaseFindById } from '@/validations/base-validation';
 import {
   CreateOrderDto,
   CreateOrderSchema,
@@ -16,8 +16,8 @@ import {
   FindByIdOrderSchema,
   UpdateOrderStatusDto,
   UpdateOrderStatusSchema,
-} from '../../../validations/order-validation';
-import BaseController from './_base-controller';
+} from '@/validations/order-validation';
+import BaseController from '@/adapters/http/controller/_base-controller';
 
 export default class OrderController extends BaseController {
   findAll = asyncHandler(async (req: e.Request & Record<string, any>, res: e.Response) => {

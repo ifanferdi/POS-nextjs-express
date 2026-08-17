@@ -1,6 +1,6 @@
-import { UserRelation } from '../../domain/entities/enums/user.enum';
-import { BaseFindById } from '../../validations/base-validation';
-import BaseUseCase from '../_base-use-case';
+import { UserRelation } from '@/domain/entities/enums/user.enum';
+import { BaseFindById } from '@/validations/base-validation';
+import BaseUseCase from '@/use-cases/_base-use-case';
 
 export default class DeleteUser extends BaseUseCase {
   execute({ id }: BaseFindById, options?: { isPermanently: boolean }) {

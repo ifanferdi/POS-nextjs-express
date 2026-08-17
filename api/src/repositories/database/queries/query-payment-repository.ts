@@ -1,6 +1,6 @@
-import { Prisma } from '../../../infrastructure/database/prisma/generated/client';
-import { PaymentScalarFieldEnum } from '../../../infrastructure/database/prisma/generated/internal/prismaNamespace';
-import { FindAllPaymentDto, FindByIdPaymentDto } from '../../../validations/payment-validation';
+import { Prisma } from '@/infrastructure/database/prisma/generated/client';
+import { PaymentScalarFieldEnum } from '@/infrastructure/database/prisma/generated/internal/prismaNamespace';
+import { FindAllPaymentDto, FindByIdPaymentDto } from '@/validations/payment-validation';
 
 type PAYMENT_FIELD = (typeof PaymentScalarFieldEnum)[keyof typeof PaymentScalarFieldEnum];
 

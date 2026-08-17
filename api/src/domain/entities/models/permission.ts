@@ -1,6 +1,6 @@
-import { Permission } from '../../../infrastructure/database/prisma/generated/client';
-import { PermissionScalarFieldEnum } from '../../../infrastructure/database/prisma/generated/internal/prismaNamespace';
-import { IRole, IRoleHasPermission } from './role';
+import { Permission } from '@/infrastructure/database/prisma/generated/client';
+import { PermissionScalarFieldEnum } from '@/infrastructure/database/prisma/generated/internal/prismaNamespace';
+import { IRole, IRoleHasPermission } from '@/domain/entities/models/role';
 
 export interface IPermission extends Permission {
   id: number;

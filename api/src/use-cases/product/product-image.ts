@@ -1,5 +1,5 @@
-import { reformatStorageKey } from '../../helpers/common.helper';
-import BaseUseCase from '../_base-use-case';
+import { reformatStorageKey } from '@/helpers/common.helper';
+import BaseUseCase from '@/use-cases/_base-use-case';
 
 export default class ProductImage extends BaseUseCase {
   async execute(image: Express.Multer.File) {

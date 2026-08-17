@@ -1,5 +1,5 @@
 import axios, { AxiosInstance } from 'axios';
-import config from '../../config/config';
+import config from '@/config/config';
 
 export default abstract class ApiBaseRepository {
   constructor(

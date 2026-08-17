@@ -1,7 +1,7 @@
-import { CategoryRelation } from '../../../domain/entities/enums/category.enum';
-import { CATEGORY_FIELD, CATEGORY_FIELDS } from '../../../domain/entities/models/category';
-import { Prisma } from '../../../infrastructure/database/prisma/generated/client';
-import { FindAllCategoryDto, FindByIdCategoryDto } from '../../../validations/category-validation';
+import { CategoryRelation } from '@/domain/entities/enums/category.enum';
+import { CATEGORY_FIELD, CATEGORY_FIELDS } from '@/domain/entities/models/category';
+import { Prisma } from '@/infrastructure/database/prisma/generated/client';
+import { FindAllCategoryDto, FindByIdCategoryDto } from '@/validations/category-validation';
 
 export default class QueryCategoryRepository {
   handleInclude(relation: FindAllCategoryDto['with'] & FindByIdCategoryDto['with']) {

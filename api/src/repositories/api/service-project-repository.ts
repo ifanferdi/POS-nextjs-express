@@ -1,5 +1,5 @@
-import axiosHelper from '../../helpers/axios.helper';
-import ApiBaseRepository from './_api-base-repository';
+import axiosHelper from '@/helpers/axios.helper';
+import ApiBaseRepository from '@/repositories/api/_api-base-repository';
 
 export default class ServiceProjectRepository extends ApiBaseRepository {
   findAll(params: Record<string, any>) {

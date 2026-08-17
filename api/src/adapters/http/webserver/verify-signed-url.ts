@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 import e from 'express';
-import config from '../../../config/config';
-import { HttpStatusCode } from '../../../constants/http-status.constant';
+import config from '@/config/config';
+import { HttpStatusCode } from '@/constants/http-status.constant';
 
 export function verifySignedUrl(
   req: e.Request & Record<string, any>,

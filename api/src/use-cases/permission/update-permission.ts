@@ -1,7 +1,7 @@
-import { ErrorBadRequest } from '../../helpers/error.helper';
-import { UpdatePermissionDto } from '../../validations/permission-validation';
-import BaseUseCase from '../_base-use-case';
-import ResetCachePermission from './reset-cache-permission';
+import { ErrorBadRequest } from '@/helpers/error.helper';
+import { UpdatePermissionDto } from '@/validations/permission-validation';
+import BaseUseCase from '@/use-cases/_base-use-case';
+import ResetCachePermission from '@/use-cases/permission/reset-cache-permission';
 
 export default class UpdatePermission extends BaseUseCase {
   async execute(payload: UpdatePermissionDto) {

@@ -1,7 +1,7 @@
 import e from 'express';
 import asyncHandler from 'express-async-handler';
-import { HttpStatusCode } from '../../../constants/http-status.constant';
-import { handleNumberOrArrayRequest, handleOrderByRequest } from '../../../helpers/common.helper';
+import { HttpStatusCode } from '@/constants/http-status.constant';
+import { handleNumberOrArrayRequest, handleOrderByRequest } from '@/helpers/common.helper';
 import {
   CreatePaymentDto,
   CreatePaymentSchema,
@@ -9,8 +9,8 @@ import {
   FindAllPaymentSchema,
   FindByIdPaymentDto,
   FindByIdPaymentSchema,
-} from '../../../validations/payment-validation';
-import BaseController from './_base-controller';
+} from '@/validations/payment-validation';
+import BaseController from '@/adapters/http/controller/_base-controller';
 
 export default class PaymentController extends BaseController {
   findAll = asyncHandler(async (req: e.Request & Record<string, any>, res: e.Response) => {

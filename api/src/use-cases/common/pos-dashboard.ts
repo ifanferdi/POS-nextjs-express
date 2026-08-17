@@ -1,5 +1,5 @@
-import { OrderRelation, OrderStatus } from '../../domain/entities/enums/order.enum';
-import BaseUseCase from '../_base-use-case';
+import { OrderRelation, OrderStatus } from '@/domain/entities/enums/order.enum';
+import BaseUseCase from '@/use-cases/_base-use-case';
 
 export default class PosDashboard extends BaseUseCase {
   async execute() {

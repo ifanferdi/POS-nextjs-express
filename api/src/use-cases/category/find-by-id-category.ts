@@ -1,6 +1,6 @@
-import { ErrorNotFound } from '../../helpers/error.helper';
-import { FindByIdCategoryDto } from '../../validations/category-validation';
-import BaseUseCase from '../_base-use-case';
+import { ErrorNotFound } from '@/helpers/error.helper';
+import { FindByIdCategoryDto } from '@/validations/category-validation';
+import BaseUseCase from '@/use-cases/_base-use-case';
 
 export default class FindByIdCategory extends BaseUseCase {
   async execute(params: FindByIdCategoryDto) {

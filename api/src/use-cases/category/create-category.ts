@@ -1,6 +1,6 @@
-import { ErrorBadRequest } from '../../helpers/error.helper';
-import { CreateCategoryDto } from '../../validations/category-validation';
-import BaseUseCase from '../_base-use-case';
+import { ErrorBadRequest } from '@/helpers/error.helper';
+import { CreateCategoryDto } from '@/validations/category-validation';
+import BaseUseCase from '@/use-cases/_base-use-case';
 
 export default class CreateCategory extends BaseUseCase {
   async execute(payload: CreateCategoryDto) {
