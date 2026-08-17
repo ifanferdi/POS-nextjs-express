@@ -1,6 +1,6 @@
 import { ActionSkeleton, HeaderTable, Skeleton } from '@/components/shared/table-server';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
-import { headers } from './user-table';
+import { headers } from '@/app/(protected)/users/_components/user-table';
 
 export function UserTableSkeleton({ rows = 10 }: { rows?: number }) {
   return (

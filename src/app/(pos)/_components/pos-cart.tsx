@@ -7,7 +7,7 @@ import { formatCurrency } from '@/lib/helper';
 import { InfoIcon, MinusIcon, PlusIcon, ShoppingBagIcon, Trash2Icon } from 'lucide-react';
 import Image from 'next/image';
 import { useState } from 'react';
-import { PosLastOrder } from './pos-view';
+import { PosLastOrder } from '@/app/(pos)/_components/pos-view';
 
 interface PosCartProps {
   onCheckoutSuccess: (result: PosLastOrder) => void;

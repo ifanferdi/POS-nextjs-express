@@ -28,7 +28,7 @@ import { InfoIcon } from 'lucide-react';
 import { useEffect, useTransition } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { toast } from 'sonner';
-import { PosLastOrder } from './pos-view';
+import { PosLastOrder } from '@/app/(pos)/_components/pos-view';
 
 const PAYMENT_LABELS: Record<PaymentMethod, string> = {
   [PaymentMethod.CASH]: 'Cash',

@@ -5,7 +5,7 @@ import { PosProductGrid } from '@/app/(pos)/_components/pos-product-grid';
 import { CategoryOption, Order, Product } from '@/domain';
 import { CartItem, useCartStore } from '@/hooks/pos-cart-store';
 import { useState } from 'react';
-import { PosReceipt } from './pos-receipt';
+import { PosReceipt } from '@/app/(pos)/_components/pos-receipt';
 
 export interface PosLastOrder {
   order: Order;

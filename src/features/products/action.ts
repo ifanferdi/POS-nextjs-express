@@ -8,7 +8,7 @@ import {
   UpdateProductSchema,
 } from '@/features/products/schema';
 import { revalidatePath } from 'next/cache';
-import * as api from './api';
+import * as api from '@/features/products/api';
 
 export async function createProductAction(
   input: CreateProductInput,

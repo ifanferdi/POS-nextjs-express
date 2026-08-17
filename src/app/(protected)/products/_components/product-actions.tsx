@@ -24,7 +24,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
-import { ProductFormDialog } from './product-form-dialog';
+import { ProductFormDialog } from '@/app/(protected)/products/_components/product-form-dialog';
 
 interface ProductActionsProps {
   product: Product;

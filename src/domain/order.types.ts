@@ -1,5 +1,5 @@
-import { Product } from './product.types';
-import { User } from './user.types';
+import { Product } from '@/domain/product.types';
+import { User } from '@/domain/user.types';
 
 export enum OrderStatus {
   PENDING = 'pending',

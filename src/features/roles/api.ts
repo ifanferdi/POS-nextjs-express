@@ -1,6 +1,6 @@
 import { PaginatedResponse, Role } from '@/domain';
 import { createServerApiClient } from '@/lib/api-server';
-import { GetAllRoleParams } from './schema';
+import { GetAllRoleParams } from '@/features/roles/schema';
 
 export async function getAllRoles<T = Role>(params: GetAllRoleParams) {
   const api = await createServerApiClient();

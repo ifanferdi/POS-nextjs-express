@@ -9,7 +9,7 @@ import {
   UpdateUserSchema,
 } from '@/features/users/schema';
 import { revalidatePath } from 'next/cache';
-import * as api from './api';
+import * as api from '@/features/users/api';
 
 export async function createUserAction(input: CreateUserInput): Promise<ActionResult<User>> {
   const validate = CreateUserSchema.safeParse(input);

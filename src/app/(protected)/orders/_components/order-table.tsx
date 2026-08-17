@@ -6,7 +6,7 @@ import { getAllOrders } from '@/features/orders/api';
 import { GetAllOrderParams } from '@/features/orders/schema';
 import { formatCurrency } from '@/lib/helper';
 import moment from 'moment';
-import { OrderActions } from './order-actions';
+import { OrderActions } from '@/app/(protected)/orders/_components/order-actions';
 
 export const headers = [
   '#',

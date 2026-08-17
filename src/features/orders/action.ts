@@ -8,7 +8,7 @@ import {
   UpdateOrderSchema,
 } from '@/features/orders/schema';
 import { revalidatePath } from 'next/cache';
-import * as api from './api';
+import * as api from '@/features/orders/api';
 
 export async function createOrderAction(input: CreateOrderInput): Promise<ActionResult<Order>> {
   const validate = CreateOrderSchema.safeParse(input);

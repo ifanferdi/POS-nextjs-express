@@ -1,6 +1,6 @@
 import type { VariantProps } from 'class-variance-authority';
 import React from 'react';
-import { Button as ButtonComponent, buttonVariants } from '../ui/button';
+import { Button as ButtonComponent, buttonVariants } from '@/components/ui/button';
 
 const buttonClass = 'h-10 min-w-24 px-3';
 

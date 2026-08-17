@@ -1,6 +1,6 @@
 import { ActionSkeleton, HeaderTable, Skeleton } from '@/components/shared/table-server';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
-import { headers } from './order-table';
+import { headers } from '@/app/(protected)/orders/_components/order-table';
 
 export function OrderTableSkeleton({ rows = 10 }: { rows?: number }) {
   return (

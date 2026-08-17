@@ -1,6 +1,6 @@
 import { ActionSkeleton, HeaderTable, Skeleton } from '@/components/shared/table-server';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
-import { headers } from './category-table';
+import { headers } from '@/app/(protected)/categories/_components/category-table';
 
 export function CategoryTableSkeleton({ rows = 10 }: { rows?: number }) {
   return (

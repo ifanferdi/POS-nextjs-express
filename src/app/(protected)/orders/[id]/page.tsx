@@ -19,7 +19,7 @@ import moment from 'moment';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { type ReactNode } from 'react';
-import { OrderActions } from '../_components/order-actions';
+import { OrderActions } from '@/app/(protected)/orders/_components/order-actions';
 
 const PAYMENT_STATUS_STYLES: Record<PaymentStatus, string> = {
   [PaymentStatus.PENDING]: 'bg-warning/10 text-warning',

@@ -8,7 +8,7 @@ import {
   UpdateCategorySchema,
 } from '@/features/categories/schema';
 import { revalidatePath } from 'next/cache';
-import * as api from './api';
+import * as api from '@/features/categories/api';
 
 export async function createCategoryAction(
   input: CreateCategoryInput,

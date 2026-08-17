@@ -1,7 +1,7 @@
 import { api as configApi } from '@/config/config';
 import { User, UserRelation } from '@/domain';
 import axios from 'axios';
-import { LoginResponseDto, RefreshTokenResponseDto } from './dto';
+import { LoginResponseDto, RefreshTokenResponseDto } from '@/features/auth/dto';
 
 /**
  * "Repository" khusus auth — SENGAJA pakai axios plain (bukan createServerApiClient()),

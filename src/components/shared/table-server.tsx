@@ -11,7 +11,7 @@ import { icons } from '@/config/config';
 import { stringEllipsis } from '@/lib/helper';
 import Link from 'next/link';
 import { ReactNode } from 'react';
-import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 export function HeaderTable({ headers }: { headers: string[] }) {
   return (
