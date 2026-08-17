@@ -23,9 +23,15 @@ export default class RolePermissionSeeder implements Seeder {
         ),
       ),
     );
+    console.info('✅ Seed Roles');
   }
 
   private async seedPermission() {
-    return this.prisma.permission.createManyAndReturn({ data: permissionFactory });
+    const permission = await this.prisma.permission.createManyAndReturn({
+      data: permissionFactory,
+    });
+
+    console.info('✅ Seed Permissions');
+    return permission;
   }
 }

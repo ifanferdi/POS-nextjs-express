@@ -9,3 +9,4 @@
 .env*
 AGENTS.md
 PRD.md
+/sql/

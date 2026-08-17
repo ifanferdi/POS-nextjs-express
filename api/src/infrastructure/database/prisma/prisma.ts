@@ -1,5 +1,5 @@
 import { PrismaPg } from '@prisma/adapter-pg';
-import { PoolConfig } from 'pg';
+import { Pool, PoolConfig } from 'pg';
 import config from '../../../config/config';
 import { PrismaClient } from './generated/client';
 
@@ -9,7 +9,7 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
-const prismaOptions: PoolConfig = connectionString
+const prismaConfig: PoolConfig = connectionString
   ? { connectionString }
   : {
       database: config.database.name,
@@ -20,7 +20,7 @@ const prismaOptions: PoolConfig = connectionString
       ssl: config.database.ssl,
     };
 
-const adapter = new PrismaPg(prismaOptions);
+const adapter = new PrismaPg(new Pool({ max: 3, ...prismaConfig }));
 const prisma =
   globalForPrisma.prisma ??
   new PrismaClient({

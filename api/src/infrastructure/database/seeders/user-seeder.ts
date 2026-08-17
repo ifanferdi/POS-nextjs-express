@@ -1,9 +1,9 @@
 import { faker } from '@faker-js/faker';
 import _ from 'lodash';
+import { Gender } from '../../../domain/entities/enums/user.enum';
 import { Seeder } from '../../../domain/infrastructures/database.interface';
 import { calculateAge } from '../../../helpers/common.helper';
 import * as argon2 from '../../../helpers/password.helper';
-import { Gender } from '../../../domain/entities/enums/user.enum';
 import { PrismaClient } from '../prisma/generated/client';
 
 export default class UserSeeder implements Seeder {
@@ -17,7 +17,7 @@ export default class UserSeeder implements Seeder {
 
   private async seedUser() {
     const users = await this.factoryUser(this.TOTAL_USER);
-    return Promise.all(
+    Promise.all(
       users.map(
         async (user) =>
           await this.prisma.user.create({
@@ -28,6 +28,8 @@ export default class UserSeeder implements Seeder {
           }),
       ),
     );
+
+    console.info('✅ Seed Users');
   }
 
   private async factoryUser(nUser: number = 1) {
