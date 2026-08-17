@@ -20,7 +20,8 @@ import {
 } from 'lucide-react';
 
 export const app = {
-  name: process.env.APP_NAME ?? 'POS App',
+  name: process.env.APP_NAME ?? 'POS Apps',
+  description: process.env.APP_SUBTITLE ?? 'Point Of Sale Apps',
   env: process.env.NODE_ENV ?? 'development',
   url: process.env.APP_URL ?? 'http://localhost:3000',
 };

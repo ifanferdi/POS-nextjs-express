@@ -1,6 +1,7 @@
 import '@/app/globals.css';
 import { ThemeProvider } from '@/components/theme-provider';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { app } from '@/config/config';
 import { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import React from 'react';
@@ -12,8 +13,8 @@ const font = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'Next.js Boilerplate',
-  description: 'User Role Management',
+  title: app.name,
+  description: app.description,
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
