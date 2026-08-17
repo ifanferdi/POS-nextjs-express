@@ -1,6 +1,7 @@
 import { UserRelation } from '../../domain/entities/enums/user.enum';
 import { StoreOrderDto } from '../../domain/entities/models/order';
 import { IUser } from '../../domain/entities/models/user';
+import { calculateRounding } from '../../helpers/common.helper';
 import { ErrorBadRequest } from '../../helpers/error.helper';
 import { CreateOrderDto } from '../../validations/order-validation';
 import BaseUseCase from '../_base-use-case';
@@ -47,6 +48,8 @@ export default class CreateOrder extends BaseUseCase {
     const tax = 0;
     const discount = 0;
     const total = subtotal + tax - discount;
+    const { rounding, total: totalRounding } = calculateRounding(total);
+    const amount = payload.amount ?? 0;
 
     const storeInput: StoreOrderDto = {
       customerId: payload.customerId,
@@ -59,7 +62,13 @@ export default class CreateOrder extends BaseUseCase {
       notes: payload.notes,
       items: computedItems,
       meta,
-      paymentReference: payload.paymentReference,
+      payment: {
+        amount,
+        change: total - amount,
+        rounding,
+        total: totalRounding,
+        reference: payload.paymentReference,
+      },
     };
 
     return this.repositories.orderRepository.store(storeInput);

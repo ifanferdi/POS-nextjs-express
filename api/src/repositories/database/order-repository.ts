@@ -58,7 +58,7 @@ export default class OrderRepository
   }
 
   store(data: StoreOrderDto) {
-    const { amount = 0, items, total, paymentReference, paymentMethod, meta, ...orderData } = data;
+    const { payment, subtotal, items, total, paymentMethod, ...orderData } = data;
 
     return this.prisma.$transaction(async (tx) => {
       const order = await tx.order.create({
@@ -66,7 +66,6 @@ export default class OrderRepository
           ...orderData,
           orderNumber: generateOrderNumber(),
           paymentMethod,
-          meta,
           orderItems: { create: items },
         },
         include: { orderItems: { include: { product: true } } },
@@ -74,11 +73,10 @@ export default class OrderRepository
 
       await tx.payment.create({
         data: {
+          ...payment,
           orderId: order.id,
-          amount: amount,
-          change: total - amount,
+          subtotal,
           method: paymentMethod,
-          reference: paymentReference,
           status: PaymentStatus.COMPLETED,
         },
       });
@@ -104,7 +102,11 @@ export default class OrderRepository
 
       return tx.order.findUnique({
         where: { id: order.id },
-        include: { orderItems: { include: { product: true } }, payment: true },
+        include: {
+          orderItems: { include: { product: true } },
+          payment: true,
+          user: { include: { profile: true } },
+        },
       }) as Promise<Record<string, any>>;
     });
   }

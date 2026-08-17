@@ -31,8 +31,6 @@ export interface StoreOrderDto {
   discount: number;
   total: number;
   paymentMethod: PaymentMethod;
-  paymentReference?: string;
-  amount?: number;
   notes?: string;
   meta?: Record<string, any>;
   items: {
@@ -42,6 +40,13 @@ export interface StoreOrderDto {
     totalPrice: number;
     meta?: Record<string, any>;
   }[];
+  payment: {
+    rounding?: number;
+    total: number;
+    amount: number;
+    change?: number;
+    reference?: string;
+  };
 }
 
 export const ORDER_FIELD = OrderScalarFieldEnum;

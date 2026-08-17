@@ -1,4 +1,5 @@
 import { IProduct } from '../../domain/entities/models/product';
+import { isLink } from '../../helpers/common.helper';
 import paginate from '../../helpers/paginate.helper';
 import { FindAllProductDto } from '../../validations/product-validation';
 import BaseUseCase from '../_base-use-case';
@@ -27,6 +28,8 @@ export default class FindAllProduct extends BaseUseCase {
 
   private async handleProductImageUrl(product: IProduct) {
     if (product.imagePath)
-      product.imageUrl = await this.repositories.storageRepository?.getUrl(product.imagePath);
+      product.imageUrl = isLink(product.imagePath)
+        ? product.imagePath
+        : await this.repositories.storageRepository?.getUrl(product.imagePath);
   }
 }

@@ -3,8 +3,11 @@ import { Request } from 'express';
 import _ from 'lodash';
 import moment from 'moment';
 import ms, { StringValue } from 'ms';
+import z from 'zod';
 import config from '../config/config';
 import AppError from './error.helper';
+
+export const isLink = (string: string) => z.string().url().safeParse(string).success;
 
 export const reformatStorageKey = (str: string) =>
   str
@@ -47,3 +50,20 @@ export const handleNumberOrArrayRequest = (value?: string | string[]) => {
   return Array.isArray(value) ? value.map((val: string) => Number(val)) : Number(value);
 };
 export const calculateAge = (dateOfBirth: Date) => moment().diff(moment(dateOfBirth), 'years');
+
+/**
+ * Hitung pembulatan ke kelipatan terdekat (default: 100)
+ * Contoh: 20.921 → { rounding: 79, total: 21.000 }
+ */
+export function calculateRounding(
+  subtotal: number,
+  roundTo: number = 100,
+): { rounding: number; total: number } {
+  const total = Math.ceil(subtotal / roundTo) * roundTo;
+  const rounding = total - subtotal;
+
+  return {
+    rounding: Number(rounding.toFixed(2)),
+    total: Number(total.toFixed(2)),
+  };
+}
