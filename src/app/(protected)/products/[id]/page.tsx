@@ -45,13 +45,14 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="flex items-start gap-4">
               <div className="flex size-20 items-center justify-center overflow-hidden rounded-xl bg-muted">
-                {product.imagePath ? (
+                {product.imageUrl ? (
                   <Image
-                    src={product.imagePath}
+                    src={product.imageUrl}
                     alt={product.name}
                     className="size-full object-cover"
                     width={200}
                     height={200}
+                    loading="eager"
                   />
                 ) : (
                   <ImageIcon className="size-8 text-muted-foreground" />

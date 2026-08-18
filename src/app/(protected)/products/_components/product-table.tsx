@@ -1,5 +1,5 @@
 import { ProductActions } from '@/app/(protected)/products/_components/product-actions';
-import {  TablePagination } from '@/components/shared/table';
+import { TablePagination } from '@/components/shared/table';
 import { DataTable, EmptyTable, TooltipedCell } from '@/components/shared/table-server';
 import { Badge } from '@/components/ui/badge';
 import { CategoryOption, Product } from '@/domain';

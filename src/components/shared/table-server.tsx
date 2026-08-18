@@ -7,11 +7,11 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { icons } from '@/config/config';
 import { stringEllipsis } from '@/lib/helper';
 import Link from 'next/link';
 import { ReactNode } from 'react';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 export function HeaderTable({ headers }: { headers: string[] }) {
   return (
@@ -79,23 +79,17 @@ export function DataTable<T>({
 }
 
 function TableCellByType({
-  key,
   content,
   type,
   url,
 }: {
-  key: string;
   content: ReactNode;
   type?: 'custom' | 'default' | 'link';
   url?: string;
 }) {
   switch (type) {
     case 'custom':
-      return (
-        <TableCell key={key} className="text-muted-foreground">
-          {content}
-        </TableCell>
-      );
+      return <TableCell className="text-muted-foreground">{content}</TableCell>;
     case 'link':
       return (
         <TableCell>
@@ -105,7 +99,7 @@ function TableCellByType({
         </TableCell>
       );
     default:
-      return <TableCell key={key}>{content}</TableCell>;
+      return <TableCell>{content}</TableCell>;
   }
 }
 

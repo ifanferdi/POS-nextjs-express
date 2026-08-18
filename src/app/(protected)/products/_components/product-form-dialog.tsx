@@ -18,7 +18,7 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -36,14 +36,35 @@ import {
   CreateProductInput,
   CreateProductSchema,
   UpdateProductInput,
-  UpdateProductSchema,
 } from '@/features/products/schema';
+import { generatePresignUrlAction } from '@/features/uploads/api';
+import { ImageFileSchema, PresignUrlInput, PresignUrlSchema } from '@/features/uploads/schema';
 import { zodResolver } from '@hookform/resolvers/zod';
+import axios from 'axios';
 import _ from 'lodash';
 import { ChevronDown, PlusIcon, XIcon } from 'lucide-react';
-import { useMemo, useRef, useState, useTransition } from 'react';
-import { Controller, useForm, UseFormReturn } from 'react-hook-form';
+import Image from 'next/image';
+import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
+import { Controller, useForm, UseFormRegisterReturn, UseFormReturn } from 'react-hook-form';
 import { toast } from 'sonner';
+
+async function uploadImageToS3(file: File) {
+  const input: PresignUrlInput = {
+    filename: file.name,
+    fileType: 'image',
+    contentType: file.type as PresignUrlInput['contentType'],
+    fileSize: file.size,
+  };
+  PresignUrlSchema.parse(input);
+
+  const presign = await generatePresignUrlAction(input);
+  await axios.put(presign.presignUrl, file, { headers: { 'Content-Type': file.type } });
+
+  return presign.key;
+}
+
+type ProductFormValues = (CreateProductInput | UpdateProductInput) & { imageFile?: FileList };
+const ProductFormSchema = CreateProductSchema.extend({ imageFile: ImageFileSchema });
 
 interface ProductFormDialogProps {
   mode: 'create' | 'edit';
@@ -67,7 +88,7 @@ export function ProductFormDialog(props: ProductFormDialogProps) {
           <DialogCreateButton text="Add New Product" />
         </DialogTrigger>
       )}
-      <DialogContent className="md:max-w-lg">
+      <DialogContent className="md:max-w-lg max-h-[calc(100vh-4rem)] flex flex-col p-0 gap-0">
         {isEditMode && product ? (
           <ProductForm
             mode="edit"
@@ -93,6 +114,7 @@ function ProductForm(props: ProductFormProps) {
   const { mode, product, categories, onClose } = props;
   const [isPending, startTransition] = useTransition();
   const isCreateMode = mode === 'create';
+  const [previewUrl, setPreviewUrl] = useState<string | null>(product?.imageUrl ?? null);
 
   const defaultValues = {
     name: isCreateMode ? '' : product!.name,
@@ -101,43 +123,86 @@ function ProductForm(props: ProductFormProps) {
     cost: isCreateMode ? '' : (product!.cost ?? ''),
     sku: isCreateMode ? '' : (product!.sku ?? ''),
     barcode: isCreateMode ? '' : (product!.barcode ?? ''),
-    // imagePath: isCreateMode ? '' : product!.imagePath,
+    imagePath: isCreateMode ? '' : product!.imagePath,
     isActive: isCreateMode ? true : product!.isActive,
     stock: isCreateMode ? '' : product!.stock,
     categoryIds: isCreateMode ? [] : _.map(product!.categories, 'id'),
   };
 
-  const form = useForm<CreateProductInput | UpdateProductInput>({
-    resolver: zodResolver(isCreateMode ? CreateProductSchema : UpdateProductSchema),
+  const form = useForm<ProductFormValues>({
+    resolver: zodResolver(ProductFormSchema),
     mode: 'onSubmit',
     reValidateMode: 'onSubmit',
-    defaultValues: defaultValues as CreateProductInput | UpdateProductInput,
+    defaultValues: defaultValues as ProductFormValues,
   });
 
-  const onSubmit = (input: CreateProductInput | UpdateProductInput) =>
-    startTransition(async () => {
-      const result = isCreateMode
-        ? await createProductAction(input)
-        : await updateProductAction(product!.id, input);
+  const imageField = form.register('imageFile', {
+    onChange: (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file) setPreviewUrl(URL.createObjectURL(file));
+    },
+  });
 
-      if (!result.success) {
-        toast.error(result.error ?? 'Something went wrong.');
-        return;
+  useEffect(() => {
+    if (previewUrl?.startsWith('blob:')) return () => URL.revokeObjectURL(previewUrl);
+  }, [previewUrl]);
+
+  const onSubmit = (input: ProductFormValues) =>
+    startTransition(async () => {
+      try {
+        const { imageFile, ...rest } = input;
+        const imagePath = imageFile?.[0]
+          ? await uploadImageToS3(imageFile[0])
+          : (rest.imagePath ?? null);
+        const payload = { ...rest, imagePath } as CreateProductInput | UpdateProductInput;
+
+        const result = isCreateMode
+          ? await createProductAction(payload)
+          : await updateProductAction(product!.id, payload);
+
+        if (!result.success) {
+          toast.error(result.error ?? 'Something went wrong.');
+          return;
+        }
+        toast.success(
+          isCreateMode ? 'Create new product successfully!' : 'Update product successfully',
+        );
+        form.reset();
+        onClose();
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : 'Failed to upload image.');
       }
-      toast.success(
-        isCreateMode ? 'Create new product successfully!' : 'Update product successfully',
-      );
-      form.reset();
-      onClose();
     });
 
+  function handleImageClear() {
+    form.setValue('imageFile', undefined);
+    form.setValue('imagePath', '');
+    form.clearErrors('imageFile');
+    setPreviewUrl(null);
+  }
+
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-      <DialogHeader>
+    <form
+      onSubmit={(e) => {
+        console.log(form.getValues());
+        form.handleSubmit(onSubmit)(e);
+      }}
+      className="flex flex-col flex-1 min-h-0"
+    >
+      <DialogHeader className="px-6 py-4 border-b shrink-0">
         <DialogTitle>{isCreateMode ? 'Add New Product' : 'Edit Product'}</DialogTitle>
       </DialogHeader>
-      <ProductFormFields form={form} categories={categories} isPending={isPending} />
-      <DialogFooter>
+      <div className="overflow-y-auto flex-1 px-6 py-4">
+        <ProductFormFields
+          form={form}
+          categories={categories}
+          isPending={isPending}
+          previewUrl={previewUrl}
+          imageField={imageField}
+          onImageClear={handleImageClear}
+        />
+      </div>
+      <DialogFooter className="mx-0 mb-0 px-6 py-4 border-t shrink-0">
         <Button type="submit" disabled={isPending}>
           Save Changes
         </Button>
@@ -152,12 +217,17 @@ function ProductForm(props: ProductFormProps) {
 }
 
 interface ProductFormFieldsProps {
-  form: UseFormReturn<CreateProductInput | UpdateProductInput>;
+  form: UseFormReturn<ProductFormValues>;
   categories: CategoryOption[];
   isPending: boolean;
+  previewUrl: string | null;
+  imageField: UseFormRegisterReturn;
+  onImageClear: () => void;
 }
 function ProductFormFields(props: ProductFormFieldsProps) {
-  const { form, categories, isPending } = props;
+  const { form, categories, isPending, previewUrl, imageField, onImageClear } = props;
+  const { formState } = form;
+  const imageError = formState.errors.imageFile;
   return (
     <FieldGroup>
       <Controller
@@ -171,6 +241,24 @@ function ProductFormFields(props: ProductFormFieldsProps) {
               id="name"
               aria-invalid={fieldState.invalid}
               placeholder="Product Name"
+              disabled={isPending}
+            />
+            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+          </Field>
+        )}
+      />
+      <Controller
+        name="description"
+        control={form.control}
+        render={({ field, fieldState }) => (
+          <Field data-invalid={fieldState.invalid}>
+            <FieldLabel htmlFor="description">Description</FieldLabel>
+            <Textarea
+              {...field}
+              value={field.value ?? ''}
+              id="description"
+              aria-invalid={fieldState.invalid}
+              placeholder="Description"
               disabled={isPending}
             />
             {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
@@ -326,6 +414,17 @@ function ProductFormFields(props: ProductFormFieldsProps) {
           </Field>
         )}
       />
+      <Field data-invalid={!!imageError}>
+        <FieldLabel htmlFor="image">Image</FieldLabel>
+        <ProductImageInput
+          previewUrl={previewUrl}
+          imageField={imageField}
+          onClear={onImageClear}
+          disabled={isPending}
+        />
+        {imageError && <FieldError errors={[imageError]} />}
+        <FieldDescription className="text-[11px]">PNG or JPG, max 15 MB.</FieldDescription>
+      </Field>
       <Controller
         name="isActive"
         control={form.control}
@@ -353,6 +452,53 @@ function ProductFormFields(props: ProductFormFieldsProps) {
         )}
       />
     </FieldGroup>
+  );
+}
+
+function ProductImageInput({
+  previewUrl,
+  imageField,
+  onClear,
+  disabled,
+}: {
+  previewUrl: string | null;
+  imageField: UseFormRegisterReturn;
+  onClear: () => void;
+  disabled?: boolean;
+}) {
+  if (previewUrl) {
+    return (
+      <div className="relative w-fit">
+        <a href={previewUrl} target="_blank" rel="noopener noreferrer">
+          <Image
+            src={previewUrl}
+            width={500}
+            height={500}
+            alt="Product preview"
+            className="size-32 rounded-lg border border-border/60 object-cover"
+          />
+        </a>
+        <button
+          type="button"
+          onClick={onClear}
+          disabled={disabled}
+          aria-label="Remove image"
+          className="absolute -right-2 -top-2 rounded-full border border-border/60 bg-background p-1 text-muted-foreground transition hover:text-foreground disabled:opacity-50"
+        >
+          <XIcon className="size-3.5" />
+        </button>
+      </div>
+    );
+  }
+  return (
+    <Input
+      type="file"
+      id="image"
+      accept="image/png,image/jpeg"
+      {...imageField}
+      disabled={disabled}
+      className="cursor-pointer"
+    />
   );
 }
 

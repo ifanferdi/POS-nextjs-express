@@ -57,3 +57,27 @@ export const icons = {
   category: BoxesIcon,
   order: ShoppingCartIcon,
 };
+
+export const files = {
+  defaultMaxSize: 15 * 1024 * 1024, // 10MB
+  image: {
+    types: ['image/png', 'image/jpeg', 'image/jpg'],
+    enum: ['image/png', 'image/jpeg', 'image/jpg'] as const,
+    size: 15 * 1024 * 1024, // 15MB
+  },
+  video: {
+    types: ['video/mp4'],
+    enum: ['video/mp4'] as const,
+    size: 50 * 1024 * 1024, // 50MB
+  },
+  pdf: {
+    types: ['application/pdf'],
+    enum: ['application/pdf'] as const,
+    size: 15 * 1024 * 1024, // 15MB
+  },
+  ppt: {
+    types: ['application/vnd.openxmlformats-officedocument.presentationml.presentation'],
+    enum: ['application/vnd.openxmlformats-officedocument.presentationml.presentation'] as const,
+    size: 15 * 1024 * 1024, // 15MB
+  },
+};
