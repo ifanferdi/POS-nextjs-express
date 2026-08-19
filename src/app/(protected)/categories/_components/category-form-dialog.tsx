@@ -49,7 +49,7 @@ export function CategoryFormDialog(props: CategoryFormDialogProps) {
           <DialogCreateButton text="Add New Category" />
         </DialogTrigger>
       )}
-      <DialogContent className="md:max-w-lg">
+      <DialogContent className="lg:max-w-xl max-h-[calc(100vh-4rem)] flex flex-col p-0 gap-0">
         {isEditMode && category ? (
           <CategoryForm mode="edit" category={category} onClose={() => setOpen(false)} />
         ) : (

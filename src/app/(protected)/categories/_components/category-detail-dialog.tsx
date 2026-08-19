@@ -1,8 +1,5 @@
 'use client';
 
-import { BoxesIcon } from 'lucide-react';
-import moment from 'moment';
-import { type ReactNode, useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -13,6 +10,9 @@ import {
 } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
 import { Category } from '@/domain';
+import { BoxesIcon } from 'lucide-react';
+import moment from 'moment';
+import { type ReactNode, useState } from 'react';
 
 export function CategoryDetailDialog({
   category,
@@ -32,7 +32,7 @@ export function CategoryDetailDialog({
           </button>
         )}
       </DialogTrigger>
-      <DialogContent className="md:max-w-lg">
+      <DialogContent className="lg:max-w-xl max-h-[calc(100vh-4rem)] flex flex-col p-0 gap-0">
         <DialogHeader>
           <div className="flex items-center gap-3">
             <div className="flex size-12 items-center justify-center rounded-xl bg-primary/10 text-primary">

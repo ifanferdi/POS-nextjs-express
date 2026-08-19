@@ -59,7 +59,7 @@ export function UserFormDialog(props: UserFormDialogProps) {
           <DialogCreateButton text="Add New User" />
         </DialogTrigger>
       )}
-      <DialogContent className="md:max-w-lg">
+      <DialogContent className="lg:max-w-xl max-h-[calc(100vh-4rem)] flex flex-col p-0 gap-0">
         {isEditMode && user ? (
           <UserForm mode="edit" user={user} roles={roles} onClose={() => setOpen(false)} />
         ) : (
