@@ -1,11 +1,27 @@
 export default {
-  storageSecret: process.env.STORAGE_SECRET || '',
-  expiredTime: 60 * 60, // 24 jam
-  maxSize: 15 * 1024 * 1024, // 10MB
-  acceptedImageTypes: ['image/png', 'image/jpeg', 'image/jpg'],
-  acceptedVideoTypes: ['video/mp4'],
-  acceptedPdfTypes: ['application/pdf'],
-  acceptedPptTypes: ['application/vnd.openxmlformats-officedocument.presentationml.presentation'],
+  storageSecret: process.env.STORAGE_SECRET || 'secret',
+  expiredTime: 60 * 60, // 24
+  defaultMaxSize: 15 * 1024 * 1024, // 10MB
+  image: {
+    types: ['image/png', 'image/jpeg', 'image/jpg'],
+    enum: ['image/png', 'image/jpeg', 'image/jpg'] as const,
+    size: 15 * 1024 * 1024, // 15MB
+  },
+  video: {
+    types: ['video/mp4'],
+    enum: ['video/mp4'] as const,
+    size: 50 * 1024 * 1024, // 50MB
+  },
+  pdf: {
+    types: ['application/pdf'],
+    enum: ['application/pdf'] as const,
+    size: 15 * 1024 * 1024, // 15MB
+  },
+  ppt: {
+    types: ['application/vnd.openxmlformats-officedocument.presentationml.presentation'],
+    enum: ['application/vnd.openxmlformats-officedocument.presentationml.presentation'] as const,
+    size: 15 * 1024 * 1024, // 15MB
+  },
   tempDir: 'tmp',
   localDir: 'storage/public',
   s3: {

@@ -28,8 +28,6 @@ export default class QueryCategoryRepository {
         : { equals: params.name, mode: 'insensitive' };
     if (params.search) where.name = { contains: params.search, mode: 'insensitive' };
 
-    console.log({ where });
-
     return where;
   }
 

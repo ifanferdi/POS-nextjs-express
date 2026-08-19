@@ -1,3 +1,5 @@
+import config from '@/config/config';
+import { ErrorBadRequest } from '@/helpers/error.helper';
 import {
   CopyObjectCommand,
   DeleteObjectCommand,
@@ -5,13 +7,12 @@ import {
   GetObjectCommandInput,
   HeadObjectCommand,
   PutObjectCommand,
+  PutObjectCommandInput,
   S3Client,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import * as mime from 'mime-types';
 import path from 'node:path';
-import config from '@/config/config';
-import { ErrorBadRequest } from '@/helpers/error.helper';
 
 const BUCKET_NAME = config.storage.s3.bucket;
 const { region, accessKeyId, secretAccessKey, endpoint, forcePathStyle } = config.storage.s3;
@@ -80,7 +81,7 @@ export default class S3StorageRepository {
     }
   }
 
-  async getUrl(path: string) {
+  async getUrl(path: string, expiresIn = config.storage.expiredTime) {
     const options: GetObjectCommandInput = { Bucket: BUCKET_NAME, Key: path };
     // if (path.includes('.pdf')) {
     //   options.ResponseContentDisposition = 'inline'; // override
@@ -88,7 +89,20 @@ export default class S3StorageRepository {
     // }
 
     return await getSignedUrl(this.getClient(), new GetObjectCommand(options), {
-      expiresIn: config.storage.expiredTime,
+      expiresIn /** minutes */,
+    });
+  }
+
+  async getPresignUrl(key: string, size: number, expiresIn = config.storage.expiredTime) {
+    const command: PutObjectCommandInput = {
+      Bucket: BUCKET_NAME,
+      Key: key,
+      ContentType: mime.contentType(path.basename(key)) || undefined,
+      ContentLength: size,
+    };
+
+    return await getSignedUrl(this.getClient(), new PutObjectCommand(command), {
+      expiresIn /** minutes */,
     });
   }
 }

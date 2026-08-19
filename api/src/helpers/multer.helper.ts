@@ -4,10 +4,10 @@ import config from '@/config/config';
 import { ALL_FILE_TYPES, FileType } from '@/domain/entities/types/storage.types';
 import { ErrorBadRequest } from '@/helpers/error.helper';
 
-const ACCEPTED_IMAGE_TYPES = config.storage.acceptedImageTypes;
-const ACCEPTED_VIDEO_TYPES = config.storage.acceptedVideoTypes;
-const ACCEPTED_PDF_TYPES = config.storage.acceptedPdfTypes;
-const ACCEPTED_PPT_TYPES = config.storage.acceptedPptTypes;
+const ACCEPTED_IMAGE_TYPES = config.storage.image.types;
+const ACCEPTED_VIDEO_TYPES = config.storage.video.types;
+const ACCEPTED_PDF_TYPES = config.storage.pdf.types;
+const ACCEPTED_PPT_TYPES = config.storage.ppt.types;
 
 export default function uploadFile(
   maxSize: number | undefined,

@@ -1,7 +1,6 @@
-import { Express } from 'express';
+import AppController from '@/adapters/http/controller/app-controller';
 import AuthController from '@/adapters/http/controller/auth-controller';
 import CategoryController from '@/adapters/http/controller/category-controller';
-import DashboardController from '@/adapters/http/controller/dashboard-controller';
 import OrderController from '@/adapters/http/controller/order-controller';
 import PaymentController from '@/adapters/http/controller/payment-controller';
 import PermissionController from '@/adapters/http/controller/permission-controller';
@@ -9,7 +8,6 @@ import ProductController from '@/adapters/http/controller/product-controller';
 import RoleController from '@/adapters/http/controller/role-controller';
 import UserController from '@/adapters/http/controller/user-controller';
 import express from '@/adapters/http/webserver/express';
-import config from '@/config/config';
 import { Controllers } from '@/domain/adapters/controller.interface';
 import { Repositories } from '@/domain/repositories/repositories.interface';
 import { UseCases } from '@/domain/use-cases/use-case.interface';
@@ -22,7 +20,6 @@ import PermissionRepository from '@/repositories/database/permission-repository'
 import ProductRepository from '@/repositories/database/product-repository';
 import RoleRepository from '@/repositories/database/role-repository';
 import UserRepository from '@/repositories/database/user-repository';
-import LocalStorageRepository from '@/repositories/filesystem/local-storage-repository';
 import S3StorageRepository from '@/repositories/filesystem/s3-storage-repository';
 import RedisRepository from '@/repositories/redis/redis-repository';
 import SendOtp from '@/use-cases/auth/2FA/send-otp';
@@ -37,7 +34,6 @@ import DeleteCategory from '@/use-cases/category/delete-category';
 import FindAllCategory from '@/use-cases/category/find-all-category';
 import FindByIdCategory from '@/use-cases/category/find-by-id-category';
 import UpdateCategory from '@/use-cases/category/update-category';
-import Dashboard from '@/use-cases/common/dashboard';
 import PosDashboard from '@/use-cases/common/pos-dashboard';
 import CancelOrder from '@/use-cases/order/cancel-order';
 import CreateOrder from '@/use-cases/order/create-order';
@@ -74,6 +70,8 @@ import FindByIdUser from '@/use-cases/user/find-by-id-user';
 import ProfileImage from '@/use-cases/user/profile-image';
 import RestoreUser from '@/use-cases/user/restore-user';
 import UpdateUser from '@/use-cases/user/update-user';
+import { Express } from 'express';
+import GeneratePresignUrl from './use-cases/common/upload-presign-url';
 
 export default async function bootstrap(app: Express) {
   const repositories = await setupRepositories();
@@ -85,7 +83,7 @@ export default async function bootstrap(app: Express) {
 
 function setupControllers(useCases: UseCases): Controllers {
   return {
-    dashboardController: new DashboardController(useCases),
+    appController: new AppController(useCases),
     userController: new UserController(useCases),
     authController: new AuthController(useCases),
     permissionController: new PermissionController(useCases),
@@ -109,17 +107,14 @@ async function setupRepositories(): Promise<Repositories> {
     orderRepository: new OrderRepository(prisma),
     paymentRepository: new PaymentRepository(prisma),
     redisRepository: new RedisRepository(redisClient),
-    storageRepository:
-      config.filesystem.toLowerCase() === 'local'
-        ? new LocalStorageRepository()
-        : new S3StorageRepository(),
+    storageRepository: new S3StorageRepository(),
   };
 }
 
 function setupUseCases(repositories: Repositories): UseCases {
   return {
     commonUseCase: {
-      dashboard: new Dashboard(repositories),
+      generatePresignUrl: new GeneratePresignUrl(repositories),
       posDashboard: new PosDashboard(repositories),
     },
     userUseCase: {

@@ -1,7 +1,7 @@
-import { PrismaPg } from '@prisma/adapter-pg';
-import { Pool, PoolConfig } from 'pg';
 import config from '@/config/config';
 import { PrismaClient } from '@/infrastructure/database/prisma/generated/client';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { Pool, PoolConfig } from 'pg';
 
 const connectionString = config.database.url;
 
@@ -25,7 +25,7 @@ const prisma =
   globalForPrisma.prisma ??
   new PrismaClient({
     adapter,
-    log: config.app.env === 'production' ? ['error'] : ['query', 'info', 'warn', 'error'],
+    log: (true ?? config.app.env === 'production') ? ['error'] : ['query', 'info', 'warn', 'error'],
   });
 
 if (process.env.NODE_ENV !== 'production') {

@@ -1,5 +1,4 @@
-import e from 'express';
-import asyncHandler from 'express-async-handler';
+import BaseController from '@/adapters/http/controller/_base-controller';
 import config from '@/config/config';
 import { HttpStatusCode } from '@/constants/http-status.constant';
 import { FileType } from '@/domain/entities/types/storage.types';
@@ -16,7 +15,8 @@ import {
   UpdateProductDto,
   UpdateProductSchema,
 } from '@/validations/product-validation';
-import BaseController from '@/adapters/http/controller/_base-controller';
+import e from 'express';
+import asyncHandler from 'express-async-handler';
 
 export default class ProductController extends BaseController {
   findAll = asyncHandler(async (req: e.Request & Record<string, any>, res: e.Response) => {
@@ -130,7 +130,7 @@ export default class ProductController extends BaseController {
     res.send({ message: 'Success.' });
   });
 
-  upload = uploadFile(config.storage.maxSize, [FileType.IMAGE]).single('image');
+  upload = uploadFile(config.storage.defaultMaxSize, [FileType.IMAGE]).single('image');
 
   uploadImage = asyncHandler(async (req: e.Request, res: e.Response) => {
     const imagePath = await this.useCases.productUseCase.productImage.execute(

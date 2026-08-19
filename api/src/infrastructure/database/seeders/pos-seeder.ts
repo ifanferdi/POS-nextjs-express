@@ -1,7 +1,3 @@
-import { faker } from '@faker-js/faker';
-import axios from 'axios';
-import _ from 'lodash';
-import Progress from 'ts-progress';
 import { OrderStatus } from '@/domain/entities/enums/order.enum';
 import { PaymentMethod, PaymentStatus } from '@/domain/entities/enums/payment.enum';
 import { ICategory } from '@/domain/entities/models/category';
@@ -14,6 +10,10 @@ import {
   OrderItemCreateManyInput,
   PaymentCreateManyInput,
 } from '@/infrastructure/database/prisma/generated/models';
+import { faker } from '@faker-js/faker';
+import axios from 'axios';
+import _ from 'lodash';
+import Progress from 'ts-progress';
 
 const TOTAL_PRODUCTS = 500_000;
 const TOTAL_ORDERS = 250_000;
@@ -96,7 +96,7 @@ export default class PosSeeder implements Seeder {
     let productCategoriesProgress = Progress.create({
       updateFrequency: 150,
       total: products.length,
-      title: `Seed Products Has Categories ${products.length}`,
+      title: `Seed Products Has Categories: ${products.length}`,
       pattern:
         'Seeding: {bar.white.red.40} {percent} | Remaining: {remaining} | Elapsed: {elapsed}',
     });
@@ -106,7 +106,7 @@ export default class PosSeeder implements Seeder {
       const data = Array.from(
         { length: Math.min(CHUNK, products.length - chunk) },
         (__: unknown, i: number) => {
-          const product = products[i];
+          const product = products[chunk + i];
           _.sampleSize(categories, faker.number.int({ min: 1, max: 5 })).map((category) =>
             productHasCategories.push({ productId: product.id, categoryId: category.id }),
           );
@@ -148,7 +148,7 @@ export default class PosSeeder implements Seeder {
     let progress = Progress.create({
       updateFrequency: 150,
       total: TOTAL_ORDERS,
-      title: `Seed Orders and Payments ${TOTAL_ORDERS}`,
+      title: `Seed Orders and Payments: ${TOTAL_ORDERS}`,
       pattern:
         'Seeding: {bar.white.red.40} {percent} | Remaining: {remaining} | Elapsed: {elapsed}',
     });

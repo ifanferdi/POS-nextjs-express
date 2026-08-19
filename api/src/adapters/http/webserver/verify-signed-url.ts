@@ -1,7 +1,7 @@
-import crypto from 'crypto';
-import e from 'express';
 import config from '@/config/config';
 import { HttpStatusCode } from '@/constants/http-status.constant';
+import crypto from 'crypto';
+import e from 'express';
 
 export function verifySignedUrl(
   req: e.Request & Record<string, any>,
@@ -20,7 +20,7 @@ export function verifySignedUrl(
   }
 
   const expectedSig = crypto
-    .createHmac('sha256', config.storage.storageSecret!)
+    .createHmac('sha256', config.storage.storageSecret)
     .update(`${filePath}:${expires}`)
     .digest('hex');
 

@@ -1,7 +1,7 @@
-import Dashboard from '@/use-cases/common/dashboard';
 import PosDashboard from '@/use-cases/common/pos-dashboard';
+import GeneratePresignUrl from '@/use-cases/common/upload-presign-url';
 
 export interface CommonUseCase {
-  dashboard: Dashboard;
   posDashboard: PosDashboard;
+  generatePresignUrl: GeneratePresignUrl;
 }

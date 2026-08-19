@@ -1,11 +1,10 @@
+import CategoryRepository from '@/repositories/database/category-repository';
 import OrderRepository from '@/repositories/database/order-repository';
 import PaymentRepository from '@/repositories/database/payment-repository';
 import PermissionRepository from '@/repositories/database/permission-repository';
-import CategoryRepository from '@/repositories/database/category-repository';
 import ProductRepository from '@/repositories/database/product-repository';
 import RoleRepository from '@/repositories/database/role-repository';
 import UserRepository from '@/repositories/database/user-repository';
-import LocalFilesystem from '@/repositories/filesystem/local-storage-repository';
 import S3Filesystem from '@/repositories/filesystem/s3-storage-repository';
 import { NodemailerRepository } from '@/repositories/nodemailer/nodemailer-repository';
 import RabbitmqRepository from '@/repositories/rabbitmq/rabbitmq-repository';
@@ -24,6 +23,6 @@ export interface Repositories extends ToolsRepository {
 interface ToolsRepository {
   rabbitmqRepository?: RabbitmqRepository;
   redisRepository?: RedisRepository;
-  storageRepository?: S3Filesystem | LocalFilesystem;
+  storageRepository?: S3Filesystem;
   nodemailerRepository?: NodemailerRepository;
 }
