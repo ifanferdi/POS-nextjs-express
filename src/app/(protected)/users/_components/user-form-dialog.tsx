@@ -323,7 +323,7 @@ function UserFormFields(props: UserFormFieldsProps) {
               disabled={isPending}
             >
               <SelectTrigger id="isActive" aria-invalid={fieldState.invalid} className="w-full">
-                <SelectValue placeholder="Select Status" />
+                  <SelectValue placeholder="Select Status" />
               </SelectTrigger>
               <SelectContent position="item-aligned">
                 {options.activeOptions.map((o) => (

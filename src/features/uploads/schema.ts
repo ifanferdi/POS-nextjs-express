@@ -14,11 +14,11 @@ export const ImageFileSchema = z
   .optional()
   .refine(
     (list) => !list || list.length === 0 || files.image.types.includes(list[0]?.type ?? ''),
-    'Only PNG or JPG images are allowed.',
+    'Hanya gambar PNG atau JPG yang diperbolehkan.',
   )
   .refine(
     (list) => !list || list.length === 0 || (list[0]?.size ?? 0) <= files.image.size,
-    'Image must be smaller than 15 MB.',
+    'Ukuran gambar maksimal 15 MB.',
   );
 
 export const PresignUrlResponseSchema = z.object({

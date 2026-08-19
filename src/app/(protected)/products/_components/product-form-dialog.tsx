@@ -166,7 +166,7 @@ function ProductForm(props: ProductFormProps) {
           return;
         }
         toast.success(
-          isCreateMode ? 'Create new product successfully!' : 'Update product successfully',
+          isCreateMode ? 'Product created successfully!' : 'Product updated successfully',
         );
         form.reset();
         onClose();
@@ -232,13 +232,13 @@ function ProductFormFields(props: ProductFormFieldsProps) {
         control={form.control}
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor="name">Product Name</FieldLabel>
+            <FieldLabel htmlFor="name">Nama Produk</FieldLabel>
             <Input
               {...field}
               id="name"
               autoFocus={autoFocus}
               aria-invalid={fieldState.invalid}
-              placeholder="Product Name"
+              placeholder="Nama Produk"
               disabled={isPending}
             />
             {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
@@ -271,7 +271,7 @@ function ProductFormFields(props: ProductFormFieldsProps) {
           control={form.control}
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor="price">Price</FieldLabel>
+              <FieldLabel htmlFor="price">Selling Price</FieldLabel>
               <Input
                 {...field}
                 onChange={(e) =>
@@ -292,7 +292,7 @@ function ProductFormFields(props: ProductFormFieldsProps) {
           control={form.control}
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor="cost">Cost</FieldLabel>
+              <FieldLabel htmlFor="cost">Cost Price</FieldLabel>
               <Input
                 {...field}
                 onChange={(e) =>
@@ -315,7 +315,7 @@ function ProductFormFields(props: ProductFormFieldsProps) {
           control={form.control}
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor="sku">Stock Keeping Unit (SKU)</FieldLabel>
+              <FieldLabel htmlFor="sku">SKU</FieldLabel>
               <Input
                 {...field}
                 id="sku"
@@ -333,13 +333,13 @@ function ProductFormFields(props: ProductFormFieldsProps) {
           control={form.control}
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor="barcode">Barcode</FieldLabel>
+              <FieldLabel htmlFor="barcode">Kode Barcode</FieldLabel>
               <Input
                 {...field}
                 value={field.value ?? ''}
                 id="barcode"
                 aria-invalid={fieldState.invalid}
-                placeholder="Barcode"
+                placeholder="Kode Barcode"
                 disabled={isPending}
               />
               {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
@@ -433,7 +433,7 @@ function ProductFormFields(props: ProductFormFieldsProps) {
           disabled={isPending}
         />
         {imageError && <FieldError errors={[imageError]} />}
-        <FieldDescription className="text-[11px]">PNG or JPG, max 15 MB.</FieldDescription>
+        <FieldDescription className="text-[11px]">PNG atau JPG, maks 15 MB.</FieldDescription>
       </Field>
     </FieldGroup>
   );
@@ -536,7 +536,7 @@ function CategoryMultiSelect({
       setAdded((prev) => [...prev, result.data!]);
       onChange([...value, result.data!.id]);
       setQuery('');
-      toast.success(`Category "${result.data!.name}" created.`);
+      toast.success(`Category "${result.data!.name}" created successfully.`);
     });
   }
 

@@ -1,5 +1,7 @@
 'use client';
 
+import { CategoryDetailDialog } from '@/app/(protected)/categories/_components/category-detail-dialog';
+import { CategoryFormDialog } from '@/app/(protected)/categories/_components/category-form-dialog';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -16,8 +18,6 @@ import { EyeIcon, PencilIcon, TrashIcon } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
-import { CategoryDetailDialog } from '@/app/(protected)/categories/_components/category-detail-dialog';
-import { CategoryFormDialog } from '@/app/(protected)/categories/_components/category-form-dialog';
 
 export function CategoryActions({ category }: { category: Category }) {
   const router = useRouter();

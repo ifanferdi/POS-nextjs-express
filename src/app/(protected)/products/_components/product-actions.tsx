@@ -1,5 +1,6 @@
 'use client';
 
+import { ProductFormDialog } from '@/app/(protected)/products/_components/product-form-dialog';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -24,7 +25,6 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
-import { ProductFormDialog } from '@/app/(protected)/products/_components/product-form-dialog';
 
 interface ProductActionsProps {
   product: Product;
