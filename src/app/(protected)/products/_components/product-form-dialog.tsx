@@ -39,10 +39,11 @@ import {
 } from '@/features/products/schema';
 import { generatePresignUrlAction } from '@/features/uploads/api';
 import { ImageFileSchema, PresignUrlInput, PresignUrlSchema } from '@/features/uploads/schema';
+import { cn } from '@/lib/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
 import axios from 'axios';
 import _ from 'lodash';
-import { ChevronDown, PlusIcon, XIcon } from 'lucide-react';
+import { ChevronDown, Loader2Icon, PlusIcon, XIcon } from 'lucide-react';
 import Image from 'next/image';
 import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { Controller, useForm, UseFormRegisterReturn, UseFormReturn } from 'react-hook-form';
@@ -88,7 +89,7 @@ export function ProductFormDialog(props: ProductFormDialogProps) {
           <DialogCreateButton text="Add New Product" />
         </DialogTrigger>
       )}
-      <DialogContent className="md:max-w-lg max-h-[calc(100vh-4rem)] flex flex-col p-0 gap-0">
+      <DialogContent className="lg:max-w-xl max-h-[calc(100vh-4rem)] flex flex-col p-0 gap-0">
         {isEditMode && product ? (
           <ProductForm
             mode="edit"
@@ -182,13 +183,7 @@ function ProductForm(props: ProductFormProps) {
   }
 
   return (
-    <form
-      onSubmit={(e) => {
-        console.log(form.getValues());
-        form.handleSubmit(onSubmit)(e);
-      }}
-      className="flex flex-col flex-1 min-h-0"
-    >
+    <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0">
       <DialogHeader className="px-6 py-4 border-b shrink-0">
         <DialogTitle>{isCreateMode ? 'Add New Product' : 'Edit Product'}</DialogTitle>
       </DialogHeader>
@@ -200,6 +195,7 @@ function ProductForm(props: ProductFormProps) {
           previewUrl={previewUrl}
           imageField={imageField}
           onImageClear={handleImageClear}
+          autoFocus={isCreateMode}
         />
       </div>
       <DialogFooter className="mx-0 mb-0 px-6 py-4 border-t shrink-0">
@@ -223,13 +219,14 @@ interface ProductFormFieldsProps {
   previewUrl: string | null;
   imageField: UseFormRegisterReturn;
   onImageClear: () => void;
+  autoFocus?: boolean;
 }
 function ProductFormFields(props: ProductFormFieldsProps) {
-  const { form, categories, isPending, previewUrl, imageField, onImageClear } = props;
+  const { form, categories, isPending, previewUrl, imageField, onImageClear, autoFocus } = props;
   const { formState } = form;
   const imageError = formState.errors.imageFile;
   return (
-    <FieldGroup>
+    <FieldGroup className="gap-4">
       <Controller
         name="name"
         control={form.control}
@@ -239,6 +236,7 @@ function ProductFormFields(props: ProductFormFieldsProps) {
             <Input
               {...field}
               id="name"
+              autoFocus={autoFocus}
               aria-invalid={fieldState.invalid}
               placeholder="Product Name"
               disabled={isPending}
@@ -257,27 +255,11 @@ function ProductFormFields(props: ProductFormFieldsProps) {
               {...field}
               value={field.value ?? ''}
               id="description"
+              rows={4}
               aria-invalid={fieldState.invalid}
               placeholder="Description"
               disabled={isPending}
-            />
-            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-          </Field>
-        )}
-      />
-      <Controller
-        name="description"
-        control={form.control}
-        render={({ field, fieldState }) => (
-          <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor="description">Description</FieldLabel>
-            <Textarea
-              {...field}
-              value={field.value ?? ''}
-              id="description"
-              aria-invalid={fieldState.invalid}
-              placeholder="Description"
-              disabled={isPending}
+              // className="min-h-0"
             />
             {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
           </Field>
@@ -333,7 +315,7 @@ function ProductFormFields(props: ProductFormFieldsProps) {
           control={form.control}
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor="sku">Stock Keeping Unit</FieldLabel>
+              <FieldLabel htmlFor="sku">Stock Keeping Unit (SKU)</FieldLabel>
               <Input
                 {...field}
                 id="sku"
@@ -346,6 +328,26 @@ function ProductFormFields(props: ProductFormFieldsProps) {
             </Field>
           )}
         />
+        <Controller
+          name="barcode"
+          control={form.control}
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel htmlFor="barcode">Barcode</FieldLabel>
+              <Input
+                {...field}
+                value={field.value ?? ''}
+                id="barcode"
+                aria-invalid={fieldState.invalid}
+                placeholder="Barcode"
+                disabled={isPending}
+              />
+              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            </Field>
+          )}
+        />
+      </div>
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <Controller
           name="stock"
           control={form.control}
@@ -367,25 +369,33 @@ function ProductFormFields(props: ProductFormFieldsProps) {
             </Field>
           )}
         />
+        <Controller
+          name="isActive"
+          control={form.control}
+          render={({ field, fieldState }) => (
+            <Field data-invalid={fieldState.invalid}>
+              <FieldLabel htmlFor="isActive">Status</FieldLabel>
+              <Select
+                value={String(field.value)}
+                onValueChange={(v) => field.onChange(v === 'true')}
+                disabled={isPending}
+              >
+                <SelectTrigger id="isActive" aria-invalid={fieldState.invalid} className="w-full">
+                  <SelectValue placeholder="Select Status" />
+                </SelectTrigger>
+                <SelectContent position="item-aligned">
+                  {options.activeOptions.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>
+                      {o.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+            </Field>
+          )}
+        />
       </div>
-      <Controller
-        name="barcode"
-        control={form.control}
-        render={({ field, fieldState }) => (
-          <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor="barcode">Barcode</FieldLabel>
-            <Input
-              {...field}
-              value={field.value ?? ''}
-              id="barcode"
-              aria-invalid={fieldState.invalid}
-              placeholder="Barcode"
-              disabled={isPending}
-            />
-            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-          </Field>
-        )}
-      />
       <Controller
         name="categoryIds"
         control={form.control}
@@ -425,32 +435,6 @@ function ProductFormFields(props: ProductFormFieldsProps) {
         {imageError && <FieldError errors={[imageError]} />}
         <FieldDescription className="text-[11px]">PNG or JPG, max 15 MB.</FieldDescription>
       </Field>
-      <Controller
-        name="isActive"
-        control={form.control}
-        render={({ field, fieldState }) => (
-          <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor="isActive">Status</FieldLabel>
-            <Select
-              value={String(field.value)}
-              onValueChange={(v) => field.onChange(v === 'true')}
-              disabled={isPending}
-            >
-              <SelectTrigger id="isActive" aria-invalid={fieldState.invalid} className="w-full">
-                <SelectValue placeholder="Select Status" />
-              </SelectTrigger>
-              <SelectContent position="item-aligned">
-                {options.activeOptions.map((o) => (
-                  <SelectItem key={o.value} value={o.value}>
-                    {o.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-          </Field>
-        )}
-      />
     </FieldGroup>
   );
 }
@@ -466,27 +450,40 @@ function ProductImageInput({
   onClear: () => void;
   disabled?: boolean;
 }) {
+  const [isLoading, setIsLoading] = useState(true);
+
   if (previewUrl) {
     return (
-      <div className="relative w-fit">
-        <a href={previewUrl} target="_blank" rel="noopener noreferrer">
-          <Image
-            src={previewUrl}
-            width={500}
-            height={500}
-            alt="Product preview"
-            className="size-32 rounded-lg border border-border/60 object-cover"
-          />
-        </a>
-        <button
-          type="button"
-          onClick={onClear}
-          disabled={disabled}
-          aria-label="Remove image"
-          className="absolute -right-2 -top-2 rounded-full border border-border/60 bg-background p-1 text-muted-foreground transition hover:text-foreground disabled:opacity-50"
-        >
-          <XIcon className="size-3.5" />
-        </button>
+      <div key={previewUrl}>
+        <div className="relative size-44">
+          {isLoading && (
+            <div className="flex size-44 items-center justify-center rounded-lg border border-border/60 bg-muted">
+              <Loader2Icon className="size-5 animate-spin text-muted-foreground" />
+            </div>
+          )}
+          <a href={previewUrl} target="_blank" rel="noopener noreferrer">
+            <Image
+              src={previewUrl}
+              width={500}
+              height={500}
+              alt="Product preview"
+              onLoad={() => setIsLoading(false)}
+              className={cn(
+                'size-44 rounded-lg border border-border/60 object-cover transition-opacity',
+                isLoading ? 'opacity-0' : 'opacity-100',
+              )}
+            />
+          </a>
+          <button
+            type="button"
+            onClick={onClear}
+            disabled={disabled}
+            aria-label="Remove image"
+            className="absolute right-2 top-2 rounded-full border border-border/60 bg-background/90 p-1 text-muted-foreground transition opacity-50 hover:opacity-100 hover:text-foreground disabled:opacity-50"
+          >
+            <XIcon className="size-3.5" />
+          </button>
+        </div>
       </div>
     );
   }
