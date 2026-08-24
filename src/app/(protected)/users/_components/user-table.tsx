@@ -71,7 +71,7 @@ function UserTable(props: UserTableProps) {
           key: 'status',
           type: 'custom',
           content: user.isActive ? (
-            <Badge className="bg-success/10 text-success hover:bg-success/15">
+            <Badge className="bg-success/15 text-success hover:bg-success/30">
               <span className="size-1.5 rounded-full bg-success" />
               Active
             </Badge>

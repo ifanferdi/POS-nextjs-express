@@ -31,6 +31,7 @@ import {
 } from '@/features/users/schema';
 import { formatDate } from '@/lib/helper';
 import { zodResolver } from '@hookform/resolvers/zod';
+import moment from 'moment';
 import { useState, useTransition } from 'react';
 import { Controller, useForm, UseFormReturn } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -82,8 +83,8 @@ function UserForm(props: UserFormProps) {
   const isCreateMode = mode === 'create';
   const defaultValues = {
     username: isCreateMode ? '' : user!.username,
-    password: '',
-    confirmPassword: '',
+    password: undefined,
+    confirmPassword: undefined,
     isActive: isCreateMode ? true : user!.isActive,
     roleId: isCreateMode ? undefined : user!.roleId,
     profile: {
@@ -103,6 +104,7 @@ function UserForm(props: UserFormProps) {
 
   function onSubmit(input: CreateUserInput | UpdateUserInput) {
     startTransition(async () => {
+      input.profile.dateOfBirth = moment(input.profile.dateOfBirth).format('YYYY-MM-DD');
       const result = isCreateMode
         ? await createUserAction(input as CreateUserInput)
         : await updateUserAction(user!.id, input);
@@ -117,12 +119,14 @@ function UserForm(props: UserFormProps) {
   }
 
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-      <DialogHeader>
+    <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0">
+      <DialogHeader className="px-6 py-4 border-b shrink-0">
         <DialogTitle>{isCreateMode ? 'Add New User' : 'Edit User'}</DialogTitle>
       </DialogHeader>
-      <UserFormFields form={form} roles={roles} isEditMode={false} isPending={isPending} />
-      <DialogFooter>
+      <div className="overflow-y-auto flex-1 px-6 py-4">
+        <UserFormFields form={form} roles={roles} isEditMode={false} isPending={isPending} />
+      </div>
+      <DialogFooter className="mx-0 mb-0 px-6 py-4 border-t shrink-0">
         <Button type="submit" disabled={isPending}>
           Save changes
         </Button>
@@ -323,7 +327,7 @@ function UserFormFields(props: UserFormFieldsProps) {
               disabled={isPending}
             >
               <SelectTrigger id="isActive" aria-invalid={fieldState.invalid} className="w-full">
-                  <SelectValue placeholder="Select Status" />
+                <SelectValue placeholder="Select Status" />
               </SelectTrigger>
               <SelectContent position="item-aligned">
                 {options.activeOptions.map((o) => (

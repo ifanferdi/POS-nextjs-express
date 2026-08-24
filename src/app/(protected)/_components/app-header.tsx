@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { logoutAction } from '@/features/auth/action';
-import { CalculatorIcon, LogOut } from 'lucide-react';
+import { LogOut, ShoppingCart } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTransition } from 'react';
@@ -35,11 +35,11 @@ export function AppHeader({ username }: { username?: string }) {
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-border/60 bg-background/80 px-4 backdrop-blur-sm">
       {!isPosPage && <SidebarTrigger />}
-      <div className="ml-auto flex items-center gap-1.5 h-full">
+      <div className="ml-auto flex items-center h-full">
         {!isPosPage && (
-          <Button asChild variant="default" size="sm" className="gap-2">
+          <Button asChild variant="default" size="sm" className="gap-2 mr-3 h-10">
             <Link href="/pos">
-              <CalculatorIcon className="size-4" />
+              <ShoppingCart className="size-4" />
               <span className="hidden sm:inline">POS</span>
             </Link>
           </Button>
@@ -62,7 +62,12 @@ export function AppHeader({ username }: { username?: string }) {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem variant="destructive" onClick={handleLogout} disabled={isPending}>
+            <DropdownMenuItem
+              variant="destructive"
+              onClick={handleLogout}
+              disabled={isPending}
+              className="cursor-pointer"
+            >
               <LogOut />
               <span>Logout</span>
             </DropdownMenuItem>

@@ -6,13 +6,12 @@ export interface PaginatedResponse<T> {
   data: T[];
 }
 
-interface BaseResponse {
+export interface ApiResponse {
   message: string;
+  stack?: string;
 }
 export interface ActionResult<T> {
   success: boolean;
   error?: string;
   data?: T;
 }
-
-export interface ApiResponse extends BaseResponse {}

@@ -2,10 +2,11 @@ import { ProductRelation } from '@/domain';
 import {
   BasePagination,
   booleanSchema,
+  nameSchema,
   numberSchema,
   optionalNumberSchema,
   optionalStringSchema,
-  stringSchema,
+  requiredStringSchema,
 } from '@/lib/base.schema';
 import { z } from 'zod';
 
@@ -13,14 +14,16 @@ const Relation = z.array(z.enum(ProductRelation)).optional();
 
 export const GetAllProductSchema = BasePagination.extend({
   isActive: z.boolean().optional(),
-  barcode: z.union([stringSchema, z.array(stringSchema)]).optional(),
-  sku: z.union([stringSchema, z.array(stringSchema)]).optional(),
+  barcode: z
+    .union([requiredStringSchema('barcode'), z.array(requiredStringSchema('barcode'))])
+    .optional(),
+  sku: z.union([requiredStringSchema('sku'), z.array(requiredStringSchema('sku'))]).optional(),
   categoryId: z.union([numberSchema, z.array(optionalNumberSchema)]).optional(),
   with: Relation,
 });
 
 const BaseProductSchema = z.object({
-  name: stringSchema,
+  name: nameSchema,
   description: optionalStringSchema,
   price: numberSchema,
   cost: optionalNumberSchema,

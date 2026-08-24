@@ -15,9 +15,9 @@ import {
   SidebarRail,
   SidebarSeparator,
 } from '@/components/ui/sidebar';
-import { icons } from '@/config/config';
+import { app, icons } from '@/config/config';
 import { getInitials } from '@/lib/helper';
-import { ShieldCheck } from 'lucide-react';
+import { Store } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -45,10 +45,12 @@ export function AppSidebar({ username }: AppSidebarProps) {
             <SidebarMenuButton size="lg" asChild>
               <Link href="/users">
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-linear-to-br from-primary to-primary/70 text-primary-foreground shadow-sm">
-                  <ShieldCheck className="size-4" />
+                  <Store className="size-4" />
                 </div>
                 <div className="flex flex-col gap-0.5 leading-none">
-                  <span className="font-semibold tracking-tight">User Management</span>
+                  <span className="font-semibold tracking-tight" suppressHydrationWarning>
+                    {app.name}
+                  </span>
                   <span className="text-xs text-muted-foreground">Admin Panel</span>
                 </div>
               </Link>

@@ -1,6 +1,7 @@
 import { CategoryRelation } from '@/domain';
 import {
   BasePagination,
+  nameSchema,
   numberSchema,
   optionalNumberSchema,
   stringSchema,
@@ -15,7 +16,7 @@ export const GetAllCategorySchema = BasePagination.extend({
 });
 
 const BaseCategorySchema = z.object({
-  name: stringSchema.max(255),
+  name: nameSchema.max(255),
   description: stringSchema.max(1000).optional(),
 });
 

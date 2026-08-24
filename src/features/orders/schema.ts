@@ -4,7 +4,7 @@ import {
   idSchema,
   numberSchema,
   optionalStringSchema,
-  stringSchema,
+  requiredStringSchema,
 } from '@/lib/base.schema';
 import { z } from 'zod';
 
@@ -30,7 +30,7 @@ const BaseOrderSchema = z
     notes: optionalStringSchema,
     items: z.array(OrderItemSchema).min(1),
     paymentMethod: z.enum(PaymentMethod),
-    paymentReference: stringSchema.max(255).optional(),
+    paymentReference: requiredStringSchema('Payment Reference').max(255).optional(),
     amount: numberSchema.optional(),
   })
   .superRefine((data, ctx) => {

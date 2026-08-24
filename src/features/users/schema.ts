@@ -3,11 +3,10 @@ import {
   BasePagination,
   booleanSchema,
   idSchema,
-  nameSchema,
   numberSchema,
   optionalStringSchema,
   passwordSchema,
-  stringSchema,
+  requiredStringSchema,
   usernameSchema,
 } from '@/lib/base.schema';
 import { calculateAge } from '@/lib/helper';
@@ -19,16 +18,16 @@ export const GetAllUserSchema = BasePagination.extend({
   isActive: booleanSchema.optional(),
   roleId: z.union([numberSchema, z.array(numberSchema)]).optional(),
   username: optionalStringSchema,
-  usernames: z.array(stringSchema).optional(),
-  role: z.union([stringSchema, z.array(stringSchema)]).optional(),
+  usernames: z.array(requiredStringSchema('Usernames')).optional(),
+  role: z.union([requiredStringSchema('Role'), z.array(requiredStringSchema('Role'))]).optional(),
   with: Relation,
 });
 
 const ProfileSchema = z
   .object({
-    fullName: nameSchema,
-    placeOfBirth: stringSchema,
-    dateOfBirth: stringSchema,
+    fullName: requiredStringSchema('Full Name'),
+    placeOfBirth: requiredStringSchema('Place Of Birth'),
+    dateOfBirth: requiredStringSchema('Date Of Birth'),
     gender: z.enum(Gender),
   })
   .transform((profile) => ({
@@ -45,7 +44,7 @@ const BaseUserSchema = z.object({
 });
 
 export const CreateUserSchema = BaseUserSchema.extend({
-  password: passwordSchema,
+  password: passwordSchema.min(1, 'Password cannot be empty.'),
 }).refine((data) => data.password === data.confirmPassword, {
   message: 'Password and Confirm Password do not match.',
   path: ['confirmPassword'],
@@ -58,9 +57,7 @@ export const UpdateUserSchema = BaseUserSchema.extend({
   path: ['confirmPassword'],
 });
 
-const booleanFromString = z
-  .enum(['true', 'false'])
-  .transform((v) => v === 'true');
+const booleanFromString = z.enum(['true', 'false']).transform((v) => v === 'true');
 
 export const GetUserSearchParamsSchema = z.object({
   page: z.coerce.number().optional(),

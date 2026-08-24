@@ -37,17 +37,12 @@ export async function createServerApiClient() {
       // JWT expired — redirect ke login (refresh token juga sudah expired/fail)
       if (error.response?.data?.message === 'jwt expired') redirect('/login');
 
-      if (error.response?.status === 401) throw new Error('UNAUTHORIZED');
-      if (error.response?.status === 403) throw new Error('FORBIDDEN');
-      if (error.response?.status === 404) throw new Error('NOT FOUND');
-
-      // Error lain - lempang kembali dengan message dari backend kalau ada
       const message =
         (error.response?.data as { message?: string })?.message ??
         error.message ??
         'INTERNAL_SERVER_ERROR';
 
-      // throw new Error(message);
+      throw new Error(message);
     },
   );
 

@@ -17,7 +17,7 @@ export default async function PosLayout({ children }: { children: React.ReactNod
   return (
     <div className="flex h-screen flex-col">
       <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-border/60 bg-background/80 px-4 backdrop-blur-sm print:hidden">
-        <Button variant="ghost" size="sm" asChild className="gap-2">
+        <Button variant="ghost" size="sm" asChild className="gap-2 h-full">
           <Link href="/orders" aria-label="Back to Admin Panel">
             <ArrowLeftIcon className="size-4" />
             <span className="hidden text-sm font-medium sm:inline">Admin Panel</span>

@@ -2,12 +2,14 @@ import { z } from 'zod';
 
 export const numberSchema = z.number();
 export const stringSchema = z.string().trim();
+export const requiredStringSchema = (string = 'Column') =>
+  z.string().trim().min(1, `${string} cannot be empty`);
 export const idSchema = numberSchema.min(1);
-export const nameSchema = stringSchema.max(255);
+export const nameSchema = requiredStringSchema('Name').max(255);
 export const emailSchema = z.email().trim();
-export const usernameSchema = stringSchema.min(3).max(20);
+export const usernameSchema = requiredStringSchema('Username').min(3).max(20);
 export const passwordSchema = stringSchema.min(8).max(16);
-export const optionalStringSchema = z.string().trim().optional();
+export const optionalStringSchema = stringSchema.optional();
 export const optionalNumberSchema = numberSchema.optional();
 export const booleanSchema = z.boolean();
 

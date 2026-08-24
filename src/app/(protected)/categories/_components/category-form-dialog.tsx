@@ -100,12 +100,14 @@ function CategoryForm(props: CategoryFormProps) {
     });
 
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-      <DialogHeader>
+    <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0">
+      <DialogHeader className="px-6 py-4 border-b shrink-0">
         <DialogTitle>{isCreateMode ? 'Add New Category' : 'Edit Category'}</DialogTitle>
       </DialogHeader>
-      <CategoryFormFields form={form} isPending={isPending} />
-      <DialogFooter>
+      <div className="overflow-y-auto flex-1 px-6 py-4">
+        <CategoryFormFields form={form} isPending={isPending} />
+      </div>
+      <DialogFooter className="mx-0 mb-0 px-6 py-4 border-t shrink-0">
         <Button type="submit" disabled={isPending}>
           Save Changes
         </Button>
