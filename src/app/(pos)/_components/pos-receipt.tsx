@@ -43,11 +43,11 @@ export function PosReceipt({ lastOrder, onNewTransaction }: PosReceiptProps) {
             <div className="border-y border-dashed border-border/60 py-3 text-xs">
               <ReceiptRow label="No. Order" value={order.orderNumber} />
               <ReceiptRow
-                label="Waktu"
+                label="Date"
                 value={moment(order.createdAt).format('DD MMM YYYY, HH:mm')}
               />
               <ReceiptRow
-                label="Pembayaran"
+                label="Payment"
                 value={order.paymentMethod ? capitalize(order.paymentMethod) : '-'}
               />
             </div>
@@ -71,9 +71,9 @@ export function PosReceipt({ lastOrder, onNewTransaction }: PosReceiptProps) {
             <div className="space-y-1 border-t border-dashed border-border/60 pt-3 text-xs">
               <div className="border-b border-border/60 pb-3">
                 <ReceiptRow label="Subtotal" value={formatCurrency(order.subtotal)} />
-                <ReceiptRow label="Pajak" value={formatCurrency(order.tax)} />
+                <ReceiptRow label="Tax" value={formatCurrency(order.tax)} />
                 {order.discount > 0 && (
-                  <ReceiptRow label="Diskon" value={`- ${formatCurrency(order.discount)}`} />
+                  <ReceiptRow label="Discount" value={`- ${formatCurrency(order.discount)}`} />
                 )}
               </div>
               <div className="flex justify-between pt-2 text-sm font-bold">
@@ -84,20 +84,20 @@ export function PosReceipt({ lastOrder, onNewTransaction }: PosReceiptProps) {
 
             {isCash && (
               <div className="space-y-1 text-xs">
-                <ReceiptRow label="Tunai" value={formatCurrency(order.payment?.amount ?? 0)} />
-                <ReceiptRow label="Kembalian" value={formatCurrency(order.payment?.change ?? 0)} />
+                <ReceiptRow label="Cash" value={formatCurrency(order.payment?.amount ?? 0)} />
+                <ReceiptRow label="Change" value={formatCurrency(order.payment?.change ?? 0)} />
               </div>
             )}
 
             {order.notes && (
               <div className="border-t border-dashed border-border/60 pt-3 text-xs">
-                <p className="font-medium">Catatan</p>
+                <p className="font-medium">Notes</p>
                 <p className="mt-0.5 text-muted-foreground">{order.notes}</p>
               </div>
             )}
 
             <p className="pt-3 border-t border-border/60 text-center text-xs text-muted-foreground">
-              Terima Kasih!
+              Thank you!
             </p>
           </div>
         </div>
@@ -105,7 +105,7 @@ export function PosReceipt({ lastOrder, onNewTransaction }: PosReceiptProps) {
         <DialogFooter>
           <Button onClick={() => window.print()} className="flex-1 gap-2">
             <PrinterIcon className="size-4" />
-            Cetak Invoice
+            Print Invoice
           </Button>
           <Button
             variant="outline"
@@ -113,7 +113,7 @@ export function PosReceipt({ lastOrder, onNewTransaction }: PosReceiptProps) {
             className="gap-2"
           >
             <RotateCcwIcon className="size-4" />
-            Transaksi Baru
+            New Transaction
           </Button>
         </DialogFooter>
       </DialogContent>

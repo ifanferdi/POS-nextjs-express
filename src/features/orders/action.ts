@@ -1,6 +1,7 @@
 'use server';
 
 import { ActionResult, Order } from '@/domain';
+import * as api from '@/features/orders/api';
 import {
   CreateOrderInput,
   CreateOrderSchema,
@@ -8,11 +9,10 @@ import {
   UpdateOrderSchema,
 } from '@/features/orders/schema';
 import { revalidatePath } from 'next/cache';
-import * as api from '@/features/orders/api';
 
 export async function createOrderAction(input: CreateOrderInput): Promise<ActionResult<Order>> {
   const validate = CreateOrderSchema.safeParse(input);
-  if (!validate.success) return { success: false, error: 'Input tidak valid.' };
+  if (!validate.success) return { success: false, error: 'Invalid input.' };
 
   try {
     const response = await api.createOrder(validate.data);
@@ -22,7 +22,7 @@ export async function createOrderAction(input: CreateOrderInput): Promise<Action
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Gagal membuat order.',
+      error: error instanceof Error ? error.message : 'Failed to create order.',
     };
   }
 }
@@ -32,7 +32,7 @@ export async function updateOrderAction(
   input: UpdateOrderInput,
 ): Promise<ActionResult<Order>> {
   const validate = UpdateOrderSchema.safeParse(input);
-  if (!validate.success) return { success: false, error: 'Input tidak valid.' };
+  if (!validate.success) return { success: false, error: 'Invalid input.' };
 
   try {
     await api.updateOrder(id, validate.data);
@@ -42,7 +42,7 @@ export async function updateOrderAction(
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Gagal mengubah order.',
+      error: error instanceof Error ? error.message : 'Failed to update order.',
     };
   }
 }
@@ -56,7 +56,7 @@ export async function deleteOrderAction(id: number): Promise<ActionResult<Order>
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Gagal menghapus order.',
+      error: error instanceof Error ? error.message : 'Failed to delete order.',
     };
   }
 }

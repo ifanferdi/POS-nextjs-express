@@ -126,7 +126,7 @@ export function PosProductGrid({
             className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground not-focus-visible"
           />
           <Input
-            placeholder="Cari produk..."
+            placeholder="Search products..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             className="px-8"
@@ -165,7 +165,7 @@ export function PosProductGrid({
             <SearchIcon className="pointer-events-none absolute left-2.5 size-3.5 text-muted-foreground" />
             <Input
               ref={catInputRef}
-              placeholder={expandSearchCategory ? 'Kategori...' : ''}
+              placeholder={expandSearchCategory ? 'Category...' : ''}
               value={categoryQuery}
               onChange={(e) => setCategoryQuery(e.target.value)}
               onClick={(e) => e.stopPropagation()}
@@ -183,7 +183,7 @@ export function PosProductGrid({
                 }}
                 onMouseDown={(e) => e.stopPropagation()}
                 className="absolute right-1 flex size-6 items-center justify-center text-muted-foreground transition hover:text-foreground h-full"
-                aria-label="Tutup pencarian kategori"
+                aria-label="Close category search"
               >
                 <XIcon className="size-3.5" />
               </button>
@@ -284,7 +284,7 @@ function useLodingOnScroll(
               setTotal(newTotal);
             })
             .catch((err) => {
-              toast.error(err instanceof Error ? err.message : 'Gagal memuat produk.');
+              toast.error(err instanceof Error ? err.message : 'Failed to load products.');
             })
             .finally(() => setIsLoadingMore(false));
         }

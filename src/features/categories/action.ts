@@ -1,6 +1,7 @@
 'use server';
 
 import { ActionResult, Category } from '@/domain';
+import * as api from '@/features/categories/api';
 import {
   CreateCategoryInput,
   CreateCategorySchema,
@@ -8,13 +9,12 @@ import {
   UpdateCategorySchema,
 } from '@/features/categories/schema';
 import { revalidatePath } from 'next/cache';
-import * as api from '@/features/categories/api';
 
 export async function createCategoryAction(
   input: CreateCategoryInput,
 ): Promise<ActionResult<Category>> {
   const validate = CreateCategorySchema.safeParse(input);
-  if (!validate.success) return { success: false, error: 'Input tidak valid.' };
+  if (!validate.success) return { success: false, error: 'Invalid input.' };
 
   try {
     const { category: data } = await api.createCategory(validate.data);
@@ -24,7 +24,7 @@ export async function createCategoryAction(
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Gagal membuat Category.',
+      error: error instanceof Error ? error.message : 'Failed to create category.',
     };
   }
 }
@@ -34,7 +34,7 @@ export async function updateCategoryAction(
   input: UpdateCategoryInput,
 ): Promise<ActionResult<Category>> {
   const validate = UpdateCategorySchema.safeParse(input);
-  if (!validate.success) return { success: false, error: 'Input tidak valid.' };
+  if (!validate.success) return { success: false, error: 'Invalid input.' };
 
   try {
     await api.updateCategory(id, validate.data);
@@ -44,7 +44,7 @@ export async function updateCategoryAction(
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Gagal mengubah Category.',
+      error: error instanceof Error ? error.message : 'Failed to change Category.',
     };
   }
 }
@@ -58,7 +58,7 @@ export async function deleteCategoryAction(id: number): Promise<ActionResult<Cat
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Gagal menghapus Category.',
+      error: error instanceof Error ? error.message : 'Failed to delete Category.',
     };
   }
 }

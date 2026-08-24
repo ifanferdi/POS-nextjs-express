@@ -1,5 +1,6 @@
 'use client';
 
+import { PosLastOrder } from '@/app/(pos)/_components/pos-view';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -28,7 +29,6 @@ import { InfoIcon } from 'lucide-react';
 import { useEffect, useTransition } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { toast } from 'sonner';
-import { PosLastOrder } from '@/app/(pos)/_components/pos-view';
 
 const PAYMENT_LABELS: Record<PaymentMethod, string> = {
   [PaymentMethod.CASH]: 'Cash',
@@ -74,7 +74,7 @@ export function PosCheckoutDialog({
     startTransition(async () => {
       const snapshot: CartItem[] = useCartStore.getState().items;
       if (snapshot.length === 0) {
-        toast.error('Keranjang kosong.');
+        toast.error('Cart is empty.');
         onOpenChange(false);
         return;
       }
@@ -88,7 +88,7 @@ export function PosCheckoutDialog({
       });
 
       if (!result.success || !result.data) {
-        toast.error(result.error ?? 'Gagal membuat order.');
+        toast.error(result.error ?? 'Failed to create order.');
         return;
       }
 
@@ -98,7 +98,7 @@ export function PosCheckoutDialog({
 
       form.reset();
       onOpenChange(false);
-      toast.success(`Order ${result.data.orderNumber} berhasil dibuat.`);
+      toast.success(`Order ${result.data.orderNumber} created successfully.`);
     });
   }
 
@@ -120,12 +120,12 @@ export function PosCheckoutDialog({
               <span className="tabular-nums text-muted-foreground">{formatCurrency(subtotal)}</span>
             </div>
             <div className="flex items-center justify-between text-xs">
-              <span className="text-muted-foreground">Pembulatan</span>
+              <span className="text-muted-foreground">Rounding</span>
               <span className="tabular-nums text-muted-foreground">{formatCurrency(rounding)}</span>
             </div>
             <div className="border border-border/60 my-2" />
             <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Total Pembayaran</span>
+              <span className="text-muted-foreground">Total Payment</span>
               <span className="font-semibold tabular-nums">{formatCurrency(total)}</span>
             </div>
           </div>
@@ -136,7 +136,7 @@ export function PosCheckoutDialog({
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="paymentMethod">Metode Pembayaran</FieldLabel>
+                  <FieldLabel htmlFor="paymentMethod">Payment Method</FieldLabel>
                   <Select
                     value={field.value}
                     onValueChange={(v) => field.onChange(v as PaymentMethod)}
@@ -147,7 +147,7 @@ export function PosCheckoutDialog({
                       aria-invalid={fieldState.invalid}
                       className="w-full"
                     >
-                      <SelectValue placeholder="Pilih metode" />
+                      <SelectValue placeholder="Select method" />
                     </SelectTrigger>
                     <SelectContent position="item-aligned">
                       {PAYMENT_METHOD_VALUES.map((m) => (
@@ -168,24 +168,29 @@ export function PosCheckoutDialog({
                 control={form.control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor="amountTendered">Uang Diterima</FieldLabel>
+                    <FieldLabel htmlFor="amountTendered">Amount Received</FieldLabel>
                     <Input
                       id="amountTendered"
-                      type="number"
-                      min={0}
-                      step={100}
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      placeholder="Rp. 100.000"
                       disabled={isPending}
                       aria-invalid={fieldState.invalid}
-                      value={field.value === 0 ? '' : field.value}
+                      value={
+                        !field.value
+                          ? ''
+                          : `Rp. ${field.value.toLocaleString('id-ID')}`
+                      }
                       onFocus={(e) => e.target.select()}
                       onChange={(e) => {
-                        const val = e.target.value;
-                        field.onChange(val === '' ? 0 : Number(val));
+                        const raw = e.target.value.replace(/\D/g, '');
+                        field.onChange(raw === '' ? 0 : Number(raw));
                       }}
                     />
                     {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                     <p className="text-xs text-muted-foreground">
-                      Kembalian: <span className="font-medium">{formatCurrency(change)}</span>
+                      Change: <span className="font-medium">{formatCurrency(change)}</span>
                     </p>
                   </Field>
                 )}
@@ -196,14 +201,14 @@ export function PosCheckoutDialog({
                 control={form.control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor="paymentReference">Referensi Pembayaran</FieldLabel>
+                    <FieldLabel htmlFor="paymentReference">Payment Reference</FieldLabel>
                     <Input
                       {...field}
                       id="paymentReference"
                       disabled={isPending}
                       aria-invalid={fieldState.invalid}
                       value={field.value}
-                      placeholder="ID Transaksi / No. Rekening / No. Kartu"
+                      placeholder="Transaction ID / Account No. / Card No."
                     />
                     {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                   </Field>
@@ -216,10 +221,10 @@ export function PosCheckoutDialog({
               control={form.control}
               render={({ field }) => (
                 <Field>
-                  <FieldLabel htmlFor="notes">Catatan</FieldLabel>
+                  <FieldLabel htmlFor="notes">Notes</FieldLabel>
                   <Textarea
                     id="notes"
-                    placeholder="(opsional)"
+                    placeholder="(optional)"
                     disabled={isPending}
                     value={field.value ?? ''}
                     onChange={field.onChange}
@@ -231,7 +236,7 @@ export function PosCheckoutDialog({
 
           <div className="flex gap-1.5 items-center rounded-lg bg-muted/40 p-3 text-xs text-muted-foreground">
             <InfoIcon className="size-3.5" />
-            <span> Sudah termasuk pajak.</span>
+            <span> Tax included.</span>
           </div>
 
           <DialogFooter>
@@ -241,10 +246,10 @@ export function PosCheckoutDialog({
               onClick={() => onOpenChange(false)}
               disabled={isPending}
             >
-              Batal
+              Cancel
             </Button>
             <Button type="submit" disabled={isPending}>
-              {isPending ? 'Memproses...' : 'Proses Checkout'}
+              {isPending ? 'Processing...' : 'Process Checkout'}
             </Button>
           </DialogFooter>
         </form>

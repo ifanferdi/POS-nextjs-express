@@ -40,7 +40,7 @@ export function ProductCard({
         <p className="text-sm font-semibold text-primary" suppressHydrationWarning>
           {formatCurrency(product.price)}
         </p>
-        <p className="text-xs text-muted-foreground">Stok: {product.stock}</p>
+        <p className="text-xs text-muted-foreground">Stock: {product.stock}</p>
 
         {!added ? (
           <Button
@@ -59,7 +59,7 @@ export function ProductCard({
             }
             className="mt-1 w-full"
           >
-            + Tambah
+            + Add
           </Button>
         ) : (
           <div className="mt-1 flex items-center gap-1">
@@ -67,7 +67,7 @@ export function ProductCard({
               type="button"
               onClick={() => remove(product.id)}
               className="flex size-7 shrink-0 items-center justify-center rounded-md border border-border/60 text-muted-foreground transition hover:bg-muted hover:text-destructive"
-              aria-label="Hapus dari keranjang"
+              aria-label="Remove from cart"
             >
               <XIcon className="size-3.5" />
             </button>
@@ -76,7 +76,7 @@ export function ProductCard({
                 type="button"
                 onClick={() => dec(product.id)}
                 className="flex size-7 items-center justify-center text-muted-foreground transition hover:bg-muted"
-                aria-label="Kurangi"
+                aria-label="Decrease"
               >
                 <MinusIcon className="size-3.5" />
               </button>
@@ -85,7 +85,7 @@ export function ProductCard({
                 type="button"
                 onClick={() => inc(product.id)}
                 className="flex size-7 items-center justify-center text-muted-foreground transition hover:bg-muted"
-                aria-label="Tambah"
+                aria-label="Increase"
               >
                 <PlusIcon className="size-3.5" />
               </button>

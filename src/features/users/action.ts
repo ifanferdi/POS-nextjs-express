@@ -2,6 +2,7 @@
 
 import { ActionResult } from '@/domain';
 import { User } from '@/domain/user.types';
+import * as api from '@/features/users/api';
 import {
   CreateUserInput,
   CreateUserSchema,
@@ -9,11 +10,10 @@ import {
   UpdateUserSchema,
 } from '@/features/users/schema';
 import { revalidatePath } from 'next/cache';
-import * as api from '@/features/users/api';
 
 export async function createUserAction(input: CreateUserInput): Promise<ActionResult<User>> {
   const validate = CreateUserSchema.safeParse(input);
-  if (!validate.success) return { success: false, error: 'Input tidak valid.' };
+  if (!validate.success) return { success: false, error: 'Invalid input.' };
 
   try {
     await api.createUser(validate.data);
@@ -23,7 +23,7 @@ export async function createUserAction(input: CreateUserInput): Promise<ActionRe
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Gagal membuat user.',
+      error: error instanceof Error ? error.message : 'Failed to create user.',
     };
   }
 }
@@ -33,7 +33,7 @@ export async function updateUserAction(
   input: UpdateUserInput,
 ): Promise<ActionResult<User>> {
   const validate = UpdateUserSchema.safeParse(input);
-  if (!validate.success) return { success: false, error: 'Input tidak valid.' };
+  if (!validate.success) return { success: false, error: 'Invalid input.' };
 
   try {
     await api.updateUser(id, validate.data);
@@ -43,7 +43,7 @@ export async function updateUserAction(
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Gagal mengubah user.',
+      error: error instanceof Error ? error.message : 'Failed to change user.',
     };
   }
 }
@@ -57,7 +57,7 @@ export async function deleteUserAction(id: number): Promise<ActionResult<User>> 
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Gagal menghapus user.',
+      error: error instanceof Error ? error.message : 'Failed to delete user.',
     };
   }
 }

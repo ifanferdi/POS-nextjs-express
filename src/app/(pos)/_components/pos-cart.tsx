@@ -1,13 +1,13 @@
 'use client';
 
 import { PosCheckoutDialog } from '@/app/(pos)/_components/pos-checkout-dialog';
+import { PosLastOrder } from '@/app/(pos)/_components/pos-view';
 import { Button } from '@/components/ui/button';
 import { cartSubtotal, useCartStore } from '@/hooks/pos-cart-store';
 import { formatCurrency } from '@/lib/helper';
 import { InfoIcon, MinusIcon, PlusIcon, ShoppingBagIcon, Trash2Icon } from 'lucide-react';
 import Image from 'next/image';
 import { useState } from 'react';
-import { PosLastOrder } from '@/app/(pos)/_components/pos-view';
 
 interface PosCartProps {
   onCheckoutSuccess: (result: PosLastOrder) => void;
@@ -26,7 +26,7 @@ export function PosCart({ onCheckoutSuccess }: PosCartProps) {
     <div className="flex h-full min-h-0 flex-col rounded-xl border border-border/60 bg-card">
       <div className="flex items-center gap-2 border-b border-border/60 px-4 py-3">
         <ShoppingBagIcon className="size-4 text-muted-foreground" />
-        <h3 className="text-sm font-semibold tracking-tight">Keranjang</h3>
+        <h3 className="text-sm font-semibold tracking-tight">Cart</h3>
         {items.length > 0 && (
           <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
             {items.length} item
@@ -38,7 +38,7 @@ export function PosCart({ onCheckoutSuccess }: PosCartProps) {
         {items.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center gap-2 py-10 text-center">
             <ShoppingBagIcon className="size-8 text-muted-foreground/50" />
-            <p className="text-sm text-muted-foreground">Belum ada item</p>
+            <p className="text-sm text-muted-foreground">No items yet</p>
           </div>
         ) : (
           <ul className="space-y-2">
@@ -53,6 +53,7 @@ export function PosCart({ onCheckoutSuccess }: PosCartProps) {
                       src={item.imageUrl}
                       alt={item.name}
                       className="size-full object-cover"
+                      loading="lazy"
                       height={200}
                       width={200}
                     />
@@ -75,7 +76,7 @@ export function PosCart({ onCheckoutSuccess }: PosCartProps) {
                     </button>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {formatCurrency(item.price)} · Stok: {item.stock}
+                    {formatCurrency(item.price)} · Stock: {item.stock}
                   </p>
                   <div className="mt-auto flex items-center justify-between gap-2">
                     <div className="flex items-center gap-1">
@@ -113,10 +114,10 @@ export function PosCart({ onCheckoutSuccess }: PosCartProps) {
       <div className="border-t border-border/60 p-4">
         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
           <InfoIcon className="size-3.5" />
-          <span>Sudah termasuk pajak.</span>
+          <span>Tax included.</span>
         </div>
         <div className="mt-2 flex items-center justify-between">
-          <span className="text-sm font-medium text-muted-foreground">Estimasi</span>
+          <span className="text-sm font-medium text-muted-foreground">Subtotal Estimate</span>
           <span className="text-lg font-semibold tabular-nums" suppressHydrationWarning>
             {formatCurrency(subtotal)}
           </span>

@@ -23,8 +23,8 @@ export function PosView({ products, totalProducts, categories }: PosViewProps) {
   const [lastOrder, setLastOrder] = useState<PosLastOrder | null>(null);
   const addItem = useCartStore((s) => s.add);
 
-  // ponytail: saat struk tampil & cashier tambah produk → mulai transaksi baru otomatis.
-  // Disinkronkan di add site (bukan useEffect) supaya setState tidak di effect body.
+  // ponytail: when receipt is shown & cashier adds product → auto-start new transaction.
+  // Synced at add site (not useEffect) so setState is not in effect body.
   function handleAdd(item: Omit<CartItem, 'quantity'>, quantity?: number) {
     if (lastOrder) setLastOrder(null);
     addItem(item, quantity);

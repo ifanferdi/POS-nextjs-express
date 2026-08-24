@@ -1,6 +1,7 @@
 'use server';
 
 import { ActionResult, Product, ProductRelation } from '@/domain';
+import * as api from '@/features/products/api';
 import {
   CreateProductInput,
   CreateProductSchema,
@@ -8,13 +9,12 @@ import {
   UpdateProductSchema,
 } from '@/features/products/schema';
 import { revalidatePath } from 'next/cache';
-import * as api from '@/features/products/api';
 
 export async function createProductAction(
   input: CreateProductInput,
 ): Promise<ActionResult<Product>> {
   const validate = CreateProductSchema.safeParse(input);
-  if (!validate.success) return { success: false, error: 'Input tidak valid.' };
+  if (!validate.success) return { success: false, error: 'Invalid input.' };
 
   try {
     await api.createProduct(validate.data);
@@ -24,7 +24,7 @@ export async function createProductAction(
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Gagal membuat product.',
+      error: error instanceof Error ? error.message : 'Failed to create product.',
     };
   }
 }
@@ -34,7 +34,7 @@ export async function updateProductAction(
   input: UpdateProductInput,
 ): Promise<ActionResult<Product>> {
   const validate = UpdateProductSchema.safeParse(input);
-  if (!validate.success) return { success: false, error: 'Input tidak valid.' };
+  if (!validate.success) return { success: false, error: 'Invalid input.' };
 
   try {
     await api.updateProduct(id, validate.data);
@@ -44,7 +44,7 @@ export async function updateProductAction(
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Gagal mengubah product.',
+      error: error instanceof Error ? error.message : 'Failed to change product.',
     };
   }
 }
@@ -58,7 +58,7 @@ export async function deleteProductAction(id: number): Promise<ActionResult<Prod
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Gagal menghapus product.',
+      error: error instanceof Error ? error.message : 'Failed to delete product.',
     };
   }
 }
@@ -79,6 +79,6 @@ export async function fetchProductsAction(limit: number): Promise<{
     });
     return { products, total };
   } catch (error) {
-    throw new Error(error instanceof Error ? error.message : 'Gagal memuat produk.');
+    throw new Error(error instanceof Error ? error.message : 'Failed to load product.');
   }
 }
