@@ -6,15 +6,20 @@ import {
   UpdateOrderInput,
 } from '@/features/orders/schema';
 import { createServerApiClient } from '@/lib/api-server';
+import { defaultPaginatedResponse } from '@/lib/helper';
 
 interface OrderApiResponse extends ApiResponse {
   order: Order;
 }
 
 export async function getAllOrders<T = Order>(params: GetAllOrderParams) {
-  const api = await createServerApiClient();
-  const response = await api.get<PaginatedResponse<T>>('/v1/orders', { params });
-  return response.data;
+  try {
+    const api = await createServerApiClient();
+    const response = await api.get<PaginatedResponse<T>>('/v1/orders', { params });
+    return response.data;
+  } catch {
+    return defaultPaginatedResponse;
+  }
 }
 
 export async function getOrderById<T = Order>(id: number, relation?: OrderRelationParams) {

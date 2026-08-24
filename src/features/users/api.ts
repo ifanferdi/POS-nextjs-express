@@ -6,15 +6,20 @@ import {
   UserRelationParams,
 } from '@/features/users/schema';
 import { createServerApiClient } from '@/lib/api-server';
+import { defaultPaginatedResponse } from '@/lib/helper';
 
 interface UserApiResponse extends ApiResponse {
   user: User;
 }
 
 export async function getAllUser<T = User>(params: GetAllUserParams) {
-  const api = await createServerApiClient();
-  const response = await api.get<PaginatedResponse<T>>('/v1/users', { params });
-  return response.data;
+  try {
+    const api = await createServerApiClient();
+    const response = await api.get<PaginatedResponse<T>>('/v1/users', { params });
+    return response.data;
+  } catch {
+    return defaultPaginatedResponse;
+  }
 }
 
 export async function getUserById<T = User>(id: number, relation?: UserRelationParams) {

@@ -6,15 +6,20 @@ import {
   UpdateCategoryInput,
 } from '@/features/categories/schema';
 import { createServerApiClient } from '@/lib/api-server';
+import { defaultPaginatedResponse } from '@/lib/helper';
 
 interface CategoryApiResponse extends ApiResponse {
   category: Category;
 }
 
 export async function getAllCategories<T = Category>(params: GetAllCategoryParams) {
-  const api = await createServerApiClient();
-  const response = await api.get<PaginatedResponse<T>>('/v1/categories', { params });
-  return response.data;
+  try {
+    const api = await createServerApiClient();
+    const response = await api.get<PaginatedResponse<T>>('/v1/categories', { params });
+    return response.data;
+  } catch {
+    return defaultPaginatedResponse;
+  }
 }
 
 export async function getCategoryById<T = Category>(id: number, relation?: CategoryRelationParams) {

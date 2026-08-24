@@ -23,7 +23,7 @@ export async function createServerApiClient() {
       'Content-Type': 'application/json',
       ...(session?.accessToken && { Authorization: `Bearer ${session.accessToken.trim()}` }),
     },
-    timeout: 10_000,
+    timeout: 30_000,
   });
 
   /**
@@ -32,10 +32,10 @@ export async function createServerApiClient() {
    */
   instance.interceptors.response.use(
     (response) => response,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async (error: Record<string, any>) => {
       // JWT expired — redirect ke login (refresh token juga sudah expired/fail)
       if (error.response?.data?.message === 'jwt expired') redirect('/login');
-      console.log(error.response);
 
       if (error.response?.status === 401) throw new Error('UNAUTHORIZED');
       if (error.response?.status === 403) throw new Error('FORBIDDEN');
@@ -47,7 +47,7 @@ export async function createServerApiClient() {
         error.message ??
         'INTERNAL_SERVER_ERROR';
 
-      throw new Error(message);
+      // throw new Error(message);
     },
   );
 

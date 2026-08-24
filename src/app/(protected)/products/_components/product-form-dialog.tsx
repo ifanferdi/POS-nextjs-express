@@ -232,13 +232,13 @@ function ProductFormFields(props: ProductFormFieldsProps) {
         control={form.control}
         render={({ field, fieldState }) => (
           <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor="name">Nama Produk</FieldLabel>
+            <FieldLabel htmlFor="name">Product Name</FieldLabel>
             <Input
               {...field}
               id="name"
               autoFocus={autoFocus}
               aria-invalid={fieldState.invalid}
-              placeholder="Nama Produk"
+              placeholder="Product Name"
               disabled={isPending}
             />
             {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
@@ -333,13 +333,13 @@ function ProductFormFields(props: ProductFormFieldsProps) {
           control={form.control}
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor="barcode">Kode Barcode</FieldLabel>
+              <FieldLabel htmlFor="barcode">Barcode</FieldLabel>
               <Input
                 {...field}
                 value={field.value ?? ''}
                 id="barcode"
                 aria-invalid={fieldState.invalid}
-                placeholder="Kode Barcode"
+                placeholder="Barcode"
                 disabled={isPending}
               />
               {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
@@ -433,7 +433,7 @@ function ProductFormFields(props: ProductFormFieldsProps) {
           disabled={isPending}
         />
         {imageError && <FieldError errors={[imageError]} />}
-        <FieldDescription className="text-[11px]">PNG atau JPG, maks 15 MB.</FieldDescription>
+        <FieldDescription className="text-[11px]">PNG or JPG, max 15 MB.</FieldDescription>
       </Field>
     </FieldGroup>
   );
@@ -466,6 +466,7 @@ function ProductImageInput({
               src={previewUrl}
               width={500}
               height={500}
+              loading="lazy"
               alt="Product preview"
               onLoad={() => setIsLoading(false)}
               className={cn(

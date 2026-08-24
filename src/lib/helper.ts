@@ -11,6 +11,13 @@ export const formatCurrency = (n: number, decimalDigits = 2) =>
     currency: 'IDR',
     maximumFractionDigits: decimalDigits,
   }).format(n);
+export const defaultPaginatedResponse = {
+  page: 1,
+  limit: 10,
+  total: 0,
+  totalPages: 0,
+  data: [],
+};
 
 export function getInitials(name: string) {
   return name

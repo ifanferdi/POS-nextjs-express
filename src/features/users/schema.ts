@@ -58,7 +58,19 @@ export const UpdateUserSchema = BaseUserSchema.extend({
   path: ['confirmPassword'],
 });
 
+const booleanFromString = z
+  .enum(['true', 'false'])
+  .transform((v) => v === 'true');
+
+export const GetUserSearchParamsSchema = z.object({
+  page: z.coerce.number().optional(),
+  q: z.string().trim().optional(),
+  roleId: z.coerce.number().optional(),
+  isActive: booleanFromString.optional(),
+});
+
 export type UserRelationParams = z.infer<typeof Relation>;
 export type GetAllUserParams = z.infer<typeof GetAllUserSchema>;
+export type GetUserSearchParams = z.infer<typeof GetUserSearchParamsSchema>;
 export type CreateUserInput = z.input<typeof CreateUserSchema>;
 export type UpdateUserInput = z.input<typeof UpdateUserSchema>;

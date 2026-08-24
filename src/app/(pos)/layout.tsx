@@ -1,11 +1,11 @@
-import { ThemeToggle } from '@/components/theme-toggle';
+import { auth } from '@/auth';
 import { Button } from '@/components/ui/button';
 import { app } from '@/config/config';
-import { auth } from '@/auth';
 import { ArrowLeftIcon } from 'lucide-react';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import React from 'react';
+import { AppHeader } from '../(protected)/_components/app-header';
 
 export default async function PosLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -27,8 +27,7 @@ export default async function PosLayout({ children }: { children: React.ReactNod
           {app.name}
         </span>
         <div className="ml-auto flex items-center gap-2">
-          <span className="hidden text-sm font-medium sm:inline">{username}</span>
-          <ThemeToggle />
+          <AppHeader username={username} />
         </div>
       </header>
       <main className="flex-1 overflow-hidden">{children}</main>

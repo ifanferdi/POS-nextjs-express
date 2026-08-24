@@ -9,6 +9,7 @@ export function ThemeToggle() {
 
   return (
     <Button
+      className="h-full w-10"
       variant="ghost"
       size="icon-sm"
       aria-label="Toggle theme"

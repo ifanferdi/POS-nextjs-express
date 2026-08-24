@@ -90,14 +90,14 @@ export const PosCheckoutFormSchema = z
     const paymentMethod = data.paymentMethod;
     const paymentReference = data.paymentReference;
 
-    if (paymentMethod === PaymentMethod.CASH && tendered) {
-      if (tendered < data.subtotal) {
+    if (paymentMethod === PaymentMethod.CASH) {
+      if (tendered && tendered < data.subtotal)
         ctx.addIssue({
           code: 'custom',
           path: ['amountTendered'],
-          message: 'Uang diterima tidak boleh kurang dari subtotal.',
+          message: 'Amount tendered cannot less than subtotal.',
         });
-      }
+
       if (!tendered)
         ctx.addIssue({
           path: ['amountTendered'],
@@ -112,7 +112,6 @@ export const PosCheckoutFormSchema = z
           message: 'Payment reference is not allowed for cash payments!',
         });
     }
-
     if ([PaymentMethod.TRANSFER, PaymentMethod.CARD].includes(paymentMethod)) {
       if (tendered)
         ctx.addIssue({

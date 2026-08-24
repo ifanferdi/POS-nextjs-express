@@ -6,15 +6,20 @@ import {
   UpdateProductInput,
 } from '@/features/products/schema';
 import { createServerApiClient } from '@/lib/api-server';
+import { defaultPaginatedResponse } from '@/lib/helper';
 
 interface ProductApiResponse extends ApiResponse {
   product: Product;
 }
 
 export async function getAllProducts<T = Product>(params: GetAllProductParams) {
-  const api = await createServerApiClient();
-  const response = await api.get<PaginatedResponse<T>>('/v1/products', { params });
-  return response.data;
+  try {
+    const api = await createServerApiClient();
+    const response = await api.get<PaginatedResponse<T>>('/v1/products', { params });
+    return response.data;
+  } catch {
+    return defaultPaginatedResponse;
+  }
 }
 
 export async function getProductById<T = Product>(id: number, relation?: ProductRelationParams) {

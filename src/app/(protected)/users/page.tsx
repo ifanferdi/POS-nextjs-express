@@ -3,11 +3,13 @@ import { UserFormDialog } from '@/app/(protected)/users/_components/user-form-di
 import { UserSearch } from '@/app/(protected)/users/_components/user-search';
 import { UserTableSection } from '@/app/(protected)/users/_components/user-table';
 import { UserTableSkeleton } from '@/app/(protected)/users/_components/user-table-skeleton';
+import { ParamsError } from '@/components/shared/error';
 import { Skeleton } from '@/components/ui/skeleton';
 import { RoleOption, UserRelation } from '@/domain';
 import { getAllRoles } from '@/features/roles/api';
-import { GetAllUserParams } from '@/features/users/schema';
+import { GetAllUserParams, GetAllUserSchema } from '@/features/users/schema';
 import { Suspense } from 'react';
+import z from 'zod';
 
 interface UsersPageProps {
   searchParams: Promise<{
@@ -32,6 +34,8 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
     with: [UserRelation.PROFILE, UserRelation.ROLE],
   };
 
+  const result = GetAllUserSchema.safeParse(params);
+
   const { data: roles } = await getAllRoles<RoleOption>({
     limit: -1,
     columns: ['id', 'name'],
@@ -40,6 +44,7 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
 
   return (
     <div className="space-y-6">
+      {!result.success && <ParamsError errors={z.flattenError(result.error).fieldErrors} />}
       <div className="flex items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Users</h1>
