@@ -2,6 +2,7 @@ import { auth as authConfig } from '@/config/config';
 import { loginRequest, refreshTokenRequest } from '@/features/auth/api';
 import { RefreshTokenResponseDto } from '@/features/auth/dto';
 import { LoginSchema } from '@/features/auth/schema';
+import axios from 'axios';
 import NextAuth from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
 
@@ -53,6 +54,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         return token;
       } catch (error) {
+        if (axios.isAxiosError(error)) {
+          // console.log('refresh token');
+          // console.log({ status: error.response?.status, ...error.response?.data });
+        }
+
         // Refresh gagal (refresh token expired/invalid) → tandai token error
         // Bisa dicek di Server Component untuk force redirect ke /login
         return { ...token, error: 'RefreshTokenError' };
@@ -93,7 +99,8 @@ function handleSignIn(): import('@auth/core/providers').Provider {
 
         return login;
       } catch (error) {
-        console.log(error);
+        if (axios.isAxiosError(error))
+          console.log({ status: error.response?.status, ...error.response?.data });
         // authorize() return null → NextAuth tampilkan error di halaman login
         // Lihat: https://authjs.dev/getting-started/authentication/credentials
         return null;

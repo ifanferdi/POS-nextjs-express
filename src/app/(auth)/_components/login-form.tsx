@@ -1,21 +1,22 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
+import { app as config } from '@/config/config';
 import { loginAction } from '@/features/auth/action';
 import { LoginInput, LoginSchema } from '@/features/auth/schema';
-import { ShieldCheck } from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Eye, EyeOff, Loader2, LogIn, Store, User } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useTransition } from 'react';
+import { useState, useTransition } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
 export function LoginForm() {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [showPassword, setShowPassword] = useState(false);
 
   const form = useForm<LoginInput>({
     resolver: zodResolver(LoginSchema),
@@ -39,77 +40,94 @@ export function LoginForm() {
   }
 
   return (
-    <Card className="w-full max-w-sm border-border/60 shadow-sm">
-      <CardHeader className="space-y-3">
-        <div className="flex items-center gap-2.5">
-          <div className="flex size-9 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-            <ShieldCheck className="size-5" />
-          </div>
-          <div>
-            <h2 className="text-lg font-semibold leading-none tracking-tight">Welcome back</h2>
-            <p className="mt-1 text-sm text-muted-foreground">Sign in to your account</p>
-          </div>
+    <div className="w-full max-w-sm space-y-8">
+      <div className="space-y-3">
+        <div className="flex size-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/25">
+          <Store className="size-6" />
         </div>
-      </CardHeader>
-      <form id="form-login" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <CardContent>
-          <FieldGroup>
-            <Controller
-              name="username"
-              control={form.control}
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="username">Username</FieldLabel>
+        <div className="space-y-2">
+          <h1 className="text-3xl font-bold tracking-tight">Welcome back</h1>
+          <p className="text-sm text-muted-foreground" suppressHydrationWarning>
+            Sign in to your {config.name} dashboard to manage sales, inventory & team.
+          </p>
+        </div>
+      </div>
+
+      <form id="form-login" onSubmit={form.handleSubmit(onSubmit)}>
+        <FieldGroup>
+          <Controller
+            name="username"
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor="username">Username</FieldLabel>
+                <div className="relative">
+                  <User className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
                     {...field}
                     id="username"
                     aria-invalid={fieldState.invalid}
                     placeholder="Enter your username"
                     autoComplete="off"
+                    className="h-11 pl-9"
                     disabled={isPending}
                   />
-                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                </Field>
-              )}
-            />
-            <Controller
-              name="password"
-              control={form.control}
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="password">Password</FieldLabel>
+                </div>
+                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+              </Field>
+            )}
+          />
+          <Controller
+            name="password"
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor="password">Password</FieldLabel>
+                <div className="relative">
                   <Input
                     {...field}
                     id="password"
-                    type="password"
+                    type={showPassword ? 'text' : 'password'}
                     aria-invalid={fieldState.invalid}
                     placeholder="Enter your password"
                     autoComplete="off"
+                    className="h-11 pr-10"
                     disabled={isPending}
                   />
-                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                </Field>
-              )}
-            />
-          </FieldGroup>
-        </CardContent>
-        <CardFooter>
-          <Field orientation="vertical" className="w-full">
-            <Button type="submit" className="w-full" disabled={isPending}>
-              {isPending ? 'Signing in...' : 'Sign in'}
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => form.reset()}
-              disabled={isPending}
-              className="w-full"
-            >
-              Reset
-            </Button>
-          </Field>
-        </CardFooter>
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
+                    tabIndex={-1}
+                  >
+                    {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                  </button>
+                </div>
+                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+              </Field>
+            )}
+          />
+
+          <Button type="submit" size="lg" className="w-full" disabled={isPending}>
+            {isPending ? (
+              <>
+                <Loader2 className="size-4 animate-spin" />
+                Signing in...
+              </>
+            ) : (
+              <>
+                Sign in to dashboard
+                <LogIn className="size-4" />
+              </>
+            )}
+          </Button>
+        </FieldGroup>
       </form>
-    </Card>
+
+      <p className="text-center text-xs text-muted-foreground">
+        Protected area — authorized cashiers only.
+      </p>
+    </div>
   );
 }
