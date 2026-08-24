@@ -1,14 +1,14 @@
 import { PaymentStatus } from '@/domain/entities/enums/payment.enum';
 import { Repository } from '@/domain/repositories/database.interface';
 import { Prisma } from '@/infrastructure/database/prisma/generated/client';
+import DatabaseBaseRepository from '@/repositories/database/_database-base-repository';
+import QueryPaymentRepository from '@/repositories/database/queries/query-payment-repository';
 import {
   CreatePaymentDto,
   FindAllPaymentDto,
   FindByIdPaymentDto,
   FindOnePaymentDto,
 } from '@/validations/payment-validation';
-import DatabaseBaseRepository from '@/repositories/database/_database-base-repository';
-import QueryPaymentRepository from '@/repositories/database/queries/query-payment-repository';
 
 export default class PaymentRepository
   extends DatabaseBaseRepository

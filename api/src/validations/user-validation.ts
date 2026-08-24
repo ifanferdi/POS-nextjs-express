@@ -1,11 +1,9 @@
-import { z } from 'zod';
-import { UserRelation } from '@/domain/entities/enums/user.enum';
+import { Gender, UserRelation } from '@/domain/entities/enums/user.enum';
 import { USER_FIELD } from '@/domain/entities/models/user';
 import { JwtData } from '@/domain/entities/types/auth.types';
 import { SoftDeleteFields } from '@/domain/entities/types/database.types';
 import { calculateAge } from '@/helpers/common.helper';
 import AppError from '@/helpers/error.helper';
-import { Gender } from '@/domain/entities/enums/user.enum';
 import {
   BaseFindById,
   BasePagination,
@@ -15,6 +13,7 @@ import {
   StringSchema,
   Username,
 } from '@/validations/base-validation';
+import { z } from 'zod';
 
 // User Validation
 const Relations = z.array(z.nativeEnum(UserRelation).optional()).optional();
@@ -83,8 +82,8 @@ export const FindAllProfileSchema = BasePagination(USER_FIELD)
   });
 const BaseProfileSchema = z.object({
   userId: z.number().optional(),
-  fullName: StringSchema.max(255),
-  placeOfBirth: StringSchema.max(255),
+  fullName: StringSchema.min(1, 'FullName cannot be empty.').max(255),
+  placeOfBirth: StringSchema.min(1, 'PlaceOfBirth cannot be empty.').max(255),
   dateOfBirth: DateSchema,
   gender: z.nativeEnum(Gender),
   imagePath: StringSchema.optional(),

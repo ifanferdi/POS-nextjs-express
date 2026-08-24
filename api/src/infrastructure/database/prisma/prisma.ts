@@ -25,7 +25,7 @@ const prisma =
   globalForPrisma.prisma ??
   new PrismaClient({
     adapter,
-    log: (true ?? config.app.env === 'production') ? ['error'] : ['query', 'info', 'warn', 'error'],
+    log: config.app.env === 'production' ? ['error'] : ['query', 'info', 'warn', 'error'],
   });
 
 if (process.env.NODE_ENV !== 'production') {

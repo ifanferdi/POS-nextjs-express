@@ -1,8 +1,13 @@
-import _ from 'lodash';
-import { z } from 'zod';
 import { RoleRelation } from '@/domain/entities/enums/role.enum';
 import { ROLE_FIELD } from '@/domain/entities/models/role';
-import { BaseFindById, BasePagination, NumberSchema, StringSchema } from '@/validations/base-validation';
+import {
+  BaseFindById,
+  BasePagination,
+  NumberSchema,
+  StringSchema,
+} from '@/validations/base-validation';
+import _ from 'lodash';
+import { z } from 'zod';
 
 const Relations = z.array(z.nativeEnum(RoleRelation)).optional();
 const roleColumns = z.array(z.nativeEnum(ROLE_FIELD)).optional();
@@ -26,7 +31,7 @@ export const FindAllRoleSchema = BasePagination(ROLE_FIELD)
   });
 export const CreateRoleSchema = z.object({
   id: NumberSchema.optional(),
-  name: StringSchema.max(255),
+  name: StringSchema.min(1, 'Name cannot be empty.').max(255),
   permissionIds: z.array(z.number()).optional(),
   permissions: z.array(StringSchema).optional(),
 });

@@ -1,8 +1,13 @@
-import { z } from 'zod';
 import { ProductRelation } from '@/domain/entities/enums/product.enum';
 import { PRODUCT_FIELD } from '@/domain/entities/models/product';
 import { SoftDeleteFields } from '@/domain/entities/types/database.types';
-import { BaseFindById, BasePagination, NumberSchema, StringSchema } from '@/validations/base-validation';
+import {
+  BaseFindById,
+  BasePagination,
+  NumberSchema,
+  StringSchema,
+} from '@/validations/base-validation';
+import { z } from 'zod';
 
 const Relations = z.array(z.nativeEnum(ProductRelation).optional()).optional();
 const columns = z.array(z.nativeEnum(PRODUCT_FIELD)).optional();
@@ -24,7 +29,7 @@ export const FindAllProductSchema = BasePagination(PRODUCT_FIELD)
       });
   });
 export const CreateProductSchema = z.object({
-  name: StringSchema.max(255),
+  name: StringSchema.min(1, 'Name cannot be empty.').max(255),
   description: StringSchema.optional(),
   price: NumberSchema,
   cost: NumberSchema.optional(),

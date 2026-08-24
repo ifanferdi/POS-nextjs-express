@@ -1,7 +1,12 @@
-import { z } from 'zod';
 import { PermissionRelation } from '@/domain/entities/enums/permission.enum';
 import { PERMISSION_FIELD } from '@/domain/entities/models/permission';
-import { BaseFindById, BasePagination, NumberSchema, StringSchema } from '@/validations/base-validation';
+import {
+  BaseFindById,
+  BasePagination,
+  NumberSchema,
+  StringSchema,
+} from '@/validations/base-validation';
+import { z } from 'zod';
 
 // Permission Validation
 const PermissionWithEnum = z.array(z.nativeEnum(PermissionRelation).optional()).optional();
@@ -27,11 +32,16 @@ export const FindAllPermissionSchema = BasePagination(PERMISSION_FIELD)
         message: `ids and notId params cannot be used together!`,
       });
   });
-export const CreatePermissionSchema = z.object({ name: StringSchema.max(255) });
+export const CreatePermissionSchema = z.object({
+  name: StringSchema.min(1, 'Name cannot be empty.').max(255),
+});
 export const UpdatePermissionSchema = CreatePermissionSchema.extend({ id: z.number() });
 export const CheckValidPermissionSchema = z.object({
   userId: z.number(),
-  permissions: z.union([z.array(StringSchema.max(255)), StringSchema.max(255)]),
+  permissions: z.union([
+    z.array(StringSchema.min(1, 'Permissions cannot be empty.').max(255)),
+    StringSchema.min(1, 'Permissions cannot be empty.').max(255),
+  ]),
 });
 
 export const ResetCachePermissionSchema = z

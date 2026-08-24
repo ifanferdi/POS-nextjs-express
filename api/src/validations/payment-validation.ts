@@ -1,8 +1,13 @@
-import { z } from 'zod';
 import { PaymentMethod, PaymentStatus } from '@/domain/entities/enums/payment.enum';
 import { UserRelation } from '@/domain/entities/enums/user.enum';
 import { PAYMENT_FIELD } from '@/domain/entities/models/payment';
-import { BaseFindById, BasePagination, NumberSchema, StringSchema } from '@/validations/base-validation';
+import {
+  BaseFindById,
+  BasePagination,
+  NumberSchema,
+  StringSchema,
+} from '@/validations/base-validation';
+import { z } from 'zod';
 
 const Relations = z.array(z.nativeEnum(UserRelation).optional()).optional();
 
@@ -33,4 +38,9 @@ export const CreatePaymentSchema = z.object({
 export interface FindOnePaymentDto extends z.infer<typeof FindOnePaymentSchema> {}
 export interface FindAllPaymentDto extends z.infer<typeof FindAllPaymentSchema> {}
 export interface FindByIdPaymentDto extends z.infer<typeof FindByIdPaymentSchema> {}
-export interface CreatePaymentDto extends z.infer<typeof CreatePaymentSchema> {}
+export interface CreatePaymentDto extends z.infer<typeof CreatePaymentSchema> {
+  subtotal: number;
+  rounding: number;
+  total: number;
+  change: number;
+}

@@ -1,7 +1,12 @@
-import { z } from 'zod';
 import { CategoryRelation } from '@/domain/entities/enums/category.enum';
 import { CATEGORY_FIELD } from '@/domain/entities/models/category';
-import { BaseFindById, BasePagination, NumberSchema, StringSchema } from '@/validations/base-validation';
+import {
+  BaseFindById,
+  BasePagination,
+  NumberSchema,
+  StringSchema,
+} from '@/validations/base-validation';
+import { z } from 'zod';
 
 const Relations = z.array(z.nativeEnum(CategoryRelation).optional()).optional();
 const columns = z.array(z.nativeEnum(CATEGORY_FIELD)).optional();
@@ -16,7 +21,7 @@ export const FindAllCategorySchema = BasePagination(CATEGORY_FIELD).extend({
   with: Relations,
 });
 export const CreateCategorySchema = z.object({
-  name: StringSchema.max(255),
+  name: StringSchema.min(1, 'Name cannot be empty.').max(255),
   description: StringSchema.optional(),
 });
 export const UpdateCategorySchema = CreateCategorySchema.extend({

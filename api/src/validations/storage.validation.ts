@@ -6,14 +6,14 @@ const imageConfig = config.storage.image;
 const videoConfig = config.storage.video;
 
 const ImageUploadSchema = z.object({
-  filename: StringSchema,
+  filename: StringSchema.min(1, 'Filename cannot be empty.'),
   fileType: z.literal('image'),
   contentType: z.enum(imageConfig.enum),
   fileSize: NumberSchema.max(imageConfig.size),
 });
 
 const VideoUploadSchema = z.object({
-  filename: StringSchema,
+  filename: StringSchema.min(1, 'Filename cannot be empty.'),
   fileType: z.literal('video'),
   contentType: z.enum(videoConfig.enum),
   fileSize: NumberSchema.max(videoConfig.size),

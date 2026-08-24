@@ -1,7 +1,7 @@
 import { OrderStatus } from '@/domain/entities/enums/order.enum';
 import { ErrorConflict, ErrorNotFound } from '@/helpers/error.helper';
-import { CreatePaymentDto } from '@/validations/payment-validation';
 import BaseUseCase from '@/use-cases/_base-use-case';
+import { CreatePaymentDto } from '@/validations/payment-validation';
 
 export default class CreatePayment extends BaseUseCase {
   async execute(payload: CreatePaymentDto) {
@@ -16,7 +16,13 @@ export default class CreatePayment extends BaseUseCase {
     });
     if (existing) throw new ErrorConflict('Pesanan sudah memiliki pembayaran');
 
-    const payment = await this.repositories.paymentRepository.store(payload);
+    const payment = await this.repositories.paymentRepository.store({
+      ...payload,
+      subtotal: order.subtotal,
+      rounding: order.total - order.subtotal,
+      total: order.total,
+      change: payload.amount - order.total,
+    });
 
     if (payload.method === order.paymentMethod) {
       await this.repositories.orderRepository.update({
