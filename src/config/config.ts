@@ -81,3 +81,6 @@ export const files = {
     size: 15 * 1024 * 1024, // 15MB
   },
 };
+
+export const sse = { allowedChannels: ['products', 'users', 'orders', 'pos'] as const };
+export type SseType = (typeof sse.allowedChannels)[number];

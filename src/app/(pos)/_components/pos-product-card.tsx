@@ -1,0 +1,126 @@
+import { Button } from '@/components/ui/button';
+import { Product } from '@/domain';
+import { CartItem, useCartStore } from '@/hooks/pos-cart-store';
+import { formatCurrency } from '@/lib/helper';
+import { cn } from '@/lib/utils';
+import { MinusIcon, PackageIcon, PlusIcon, XIcon } from 'lucide-react';
+import Image from 'next/image';
+import { useState } from 'react';
+
+export function ProductCard({
+  product,
+  items,
+  onAdd,
+}: {
+  product: Product;
+  items: CartItem[];
+  onAdd: (item: Omit<CartItem, 'quantity'>, quantity?: number) => void;
+}) {
+  const add = onAdd;
+  const inc = useCartStore((s) => s.inc);
+  const dec = useCartStore((s) => s.dec);
+  const remove = useCartStore((s) => s.remove);
+
+  const cartItem = items.find((i) => i.productId === product.id);
+  const qty = cartItem?.quantity ?? 0;
+  const added = qty > 0;
+
+  return (
+    <div
+      className={cn(
+        'flex flex-col overflow-hidden rounded-lg border transition-colors',
+        added ? 'border-primary ring-2 ring-primary/20' : 'border-border/60 hover:border-border',
+      )}
+    >
+      <div className="relative aspect-square w-full bg-muted">
+        <ProductImage imageUrl={product.imageUrl} name={product.name} />
+      </div>
+      <div className="flex flex-1 flex-col gap-1 p-2">
+        <p className="line-clamp-1 text-sm font-medium">{product.name}</p>
+        <p className="text-sm font-semibold text-primary" suppressHydrationWarning>
+          {formatCurrency(product.price)}
+        </p>
+        <p className="text-xs text-muted-foreground">Stok: {product.stock}</p>
+
+        {!added ? (
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() =>
+              add({
+                productId: product.id,
+                name: product.name,
+                price: product.price,
+                imagePath: product.imagePath,
+                imageUrl: product.imageUrl,
+                stock: product.stock,
+              })
+            }
+            className="mt-1 w-full"
+          >
+            + Tambah
+          </Button>
+        ) : (
+          <div className="mt-1 flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => remove(product.id)}
+              className="flex size-7 shrink-0 items-center justify-center rounded-md border border-border/60 text-muted-foreground transition hover:bg-muted hover:text-destructive"
+              aria-label="Hapus dari keranjang"
+            >
+              <XIcon className="size-3.5" />
+            </button>
+            <div className="flex flex-1 items-center justify-between rounded-md border border-border/60">
+              <button
+                type="button"
+                onClick={() => dec(product.id)}
+                className="flex size-7 items-center justify-center text-muted-foreground transition hover:bg-muted"
+                aria-label="Kurangi"
+              >
+                <MinusIcon className="size-3.5" />
+              </button>
+              <span className="min-w-6 text-center text-sm font-medium tabular-nums">{qty}</span>
+              <button
+                type="button"
+                onClick={() => inc(product.id)}
+                className="flex size-7 items-center justify-center text-muted-foreground transition hover:bg-muted"
+                aria-label="Tambah"
+              >
+                <PlusIcon className="size-3.5" />
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+interface ProductImageProps {
+  imageUrl: string | null;
+  name: string;
+}
+function ProductImage({ imageUrl, name }: ProductImageProps) {
+  const [isLoading, setIsLoading] = useState(true);
+
+  if (!imageUrl)
+    return (
+      <div className="flex size-full items-center justify-center">
+        <PackageIcon className="size-10 text-muted-foreground/50" />
+      </div>
+    );
+
+  return (
+    <Image
+      src={imageUrl}
+      alt={name}
+      fill // ← otomatis isi container
+      className={`object-cover transition-opacity duration-300 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
+      sizes="(max-width: 768px) 100px, 200px"
+      loading="eager"
+      onLoad={() => setIsLoading(false)}
+      onError={() => setIsLoading(false)}
+    />
+  );
+}

@@ -1,17 +1,17 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Skeleton } from '@/components/ui/skeleton';
 import { CategoryOption, Product } from '@/domain';
 import { fetchProductsAction } from '@/features/products/action';
 import { CartItem, useCartStore } from '@/hooks/pos-cart-store';
-import { formatCurrency } from '@/lib/helper';
+import { useSSE } from '@/hooks/use-sse';
 import { cn } from '@/lib/utils';
-import { MinusIcon, PackageIcon, PlusIcon, SearchIcon, XIcon } from 'lucide-react';
-import Image from 'next/image';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import _ from 'lodash';
+import { SearchIcon, XIcon } from 'lucide-react';
+import { Dispatch, RefObject, SetStateAction, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
+import { ProductCard } from './pos-product-card';
+import { SkeletonCard } from './pos-product-grid-skeleton';
 
 const PAGE_SIZE = 15;
 
@@ -43,6 +43,22 @@ export function PosProductGrid({
   const catInputRef = useRef<HTMLInputElement>(null);
   const catExpanded = !catForceCollapsed && expandSearchCategory;
   const items = useCartStore((s) => s.items);
+
+  useSSE<Product>({
+    events: ['product.create', 'product.update', 'product.delete'],
+    onEvent: ({ action, data }) => {
+      if (['create', 'update', 'delete'].includes(action))
+        setProducts((products) =>
+          products.map((product) => {
+            const currentProduct = _.find(data, { id: product.id });
+            if (currentProduct && product.id === currentProduct.id)
+              return { ...product, stock: currentProduct.stock };
+
+            return product;
+          }),
+        );
+    },
+  });
 
   const filteredCategories = useMemo(() => {
     const q = categoryQuery.trim().toLowerCase();
@@ -89,39 +105,17 @@ export function PosProductGrid({
     setCategoryQuery('');
   }
 
-  // ponytail: load-more via IntersectionObserver sentinel.
-  // Paginasi pakai cumulative limit (15→30→45...) — tiap fetch re-load early items,
-  // simple tapi boros bandwidth saat backend throughput besar.
-  // Upgrade path: pakai page-offset pagination (page=N, limit=15) kalau backend load berat.
-  // setState di observer callback = subscribe external system → lolos react-hooks rule.
   const hasMore = products.length < total;
-  useEffect(() => {
-    if (isLoadingMore || !hasMore) return;
-
-    const sentinel = sentinelRef.current;
-    const root = scrollRef.current;
-    if (!sentinel || !root) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0]?.isIntersecting) {
-          setIsLoadingMore(true);
-          fetchProductsAction(products.length + PAGE_SIZE)
-            .then(({ products: newProducts, total: newTotal }) => {
-              setProducts(newProducts);
-              setTotal(newTotal);
-            })
-            .catch((err) => {
-              toast.error(err instanceof Error ? err.message : 'Gagal memuat produk.');
-            })
-            .finally(() => setIsLoadingMore(false));
-        }
-      },
-      { root, rootMargin: '100px' },
-    );
-    observer.observe(sentinel);
-    return () => observer.disconnect();
-  }, [products.length, isLoadingMore, hasMore]);
+  useLodingOnScroll(
+    isLoadingMore,
+    hasMore,
+    sentinelRef,
+    scrollRef,
+    setIsLoadingMore,
+    products,
+    setProducts,
+    setTotal,
+  );
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-3">
@@ -166,7 +160,7 @@ export function PosProductGrid({
             }}
             role="button"
             tabIndex={-1}
-            aria-label="Cari kategori"
+            aria-label="Find category"
           >
             <SearchIcon className="pointer-events-none absolute left-2.5 size-3.5 text-muted-foreground" />
             <Input
@@ -197,7 +191,7 @@ export function PosProductGrid({
           </div>
           <div className="flex flex-1 gap-1.5 overflow-x-auto">
             <CategoryPill active={selectedCategories.size === 0} onClick={handleAll}>
-              Semua
+              All
             </CategoryPill>
             {filteredCategories.map((c) => (
               <CategoryPill
@@ -214,9 +208,7 @@ export function PosProductGrid({
 
       <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto">
         {filtered.length === 0 && !isLoadingMore ? (
-          <div className="py-10 text-center text-sm text-muted-foreground">
-            Tidak ada produk ditemukan.
-          </div>
+          <div className="py-10 text-center text-sm text-muted-foreground">No products.</div>
         ) : (
           <>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
@@ -230,142 +222,10 @@ export function PosProductGrid({
             </div>
             {hasMore && (
               <div ref={sentinelRef} className="py-4 text-center text-xs text-muted-foreground">
-                {isLoadingMore ? 'Memuat lebih banyak…' : 'Gulir untuk lebih'}
+                {isLoadingMore ? 'Load more...' : 'Scroll to load more'}
               </div>
             )}
           </>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function SkeletonCard() {
-  return (
-    <div className="flex flex-col overflow-hidden rounded-lg border border-border/60">
-      <Skeleton className="aspect-square w-full rounded-none" />
-      <div className="flex flex-1 flex-col gap-1.5 p-2">
-        <Skeleton className="h-3.5 w-3/4" />
-        <Skeleton className="h-3.5 w-1/2" />
-        <Skeleton className="h-3 w-1/3" />
-        <Skeleton className="mt-1 h-7 w-full" />
-      </div>
-    </div>
-  );
-}
-
-interface ProductImageProps {
-  imageUrl: string | null;
-  name: string;
-}
-function ProductImage({ imageUrl, name }: ProductImageProps) {
-  const [isLoading, setIsLoading] = useState(true);
-
-  if (!imageUrl)
-    return (
-      <div className="flex size-full items-center justify-center">
-        <PackageIcon className="size-10 text-muted-foreground/50" />
-      </div>
-    );
-
-  return (
-    <Image
-      src={imageUrl}
-      alt={name}
-      fill // ← otomatis isi container
-      className={`object-cover transition-opacity duration-300 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
-      sizes="(max-width: 768px) 100px, 200px"
-      loading="lazy"
-      onLoad={() => setIsLoading(false)}
-      onError={() => setIsLoading(false)}
-    />
-  );
-}
-
-function ProductCard({
-  product,
-  items,
-  onAdd,
-}: {
-  product: Product;
-  items: CartItem[];
-  onAdd: (item: Omit<CartItem, 'quantity'>, quantity?: number) => void;
-}) {
-  const add = onAdd;
-  const inc = useCartStore((s) => s.inc);
-  const dec = useCartStore((s) => s.dec);
-  const remove = useCartStore((s) => s.remove);
-
-  const cartItem = items.find((i) => i.productId === product.id);
-  const qty = cartItem?.quantity ?? 0;
-  const added = qty > 0;
-
-  return (
-    <div
-      className={cn(
-        'flex flex-col overflow-hidden rounded-lg border transition-colors',
-        added ? 'border-primary ring-2 ring-primary/20' : 'border-border/60 hover:border-border',
-      )}
-    >
-      <div className="relative aspect-square w-full bg-muted">
-        <ProductImage imageUrl={product.imageUrl} name={product.name} />
-      </div>
-      <div className="flex flex-1 flex-col gap-1 p-2">
-        <p className="line-clamp-1 text-sm font-medium">{product.name}</p>
-        <p className="text-sm font-semibold text-primary" suppressHydrationWarning>
-          {formatCurrency(product.price)}
-        </p>
-        <p className="text-xs text-muted-foreground">Stok: {product.stock}</p>
-
-        {!added ? (
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            onClick={() =>
-              add({
-                productId: product.id,
-                name: product.name,
-                price: product.price,
-                imagePath: product.imagePath,
-                imageUrl: product.imageUrl,
-                stock: product.stock,
-              })
-            }
-            className="mt-1 w-full"
-          >
-            + Tambah
-          </Button>
-        ) : (
-          <div className="mt-1 flex items-center gap-1">
-            <button
-              type="button"
-              onClick={() => remove(product.id)}
-              className="flex size-7 shrink-0 items-center justify-center rounded-md border border-border/60 text-muted-foreground transition hover:bg-muted hover:text-destructive"
-              aria-label="Hapus dari keranjang"
-            >
-              <XIcon className="size-3.5" />
-            </button>
-            <div className="flex flex-1 items-center justify-between rounded-md border border-border/60">
-              <button
-                type="button"
-                onClick={() => dec(product.id)}
-                className="flex size-7 items-center justify-center text-muted-foreground transition hover:bg-muted"
-                aria-label="Kurangi"
-              >
-                <MinusIcon className="size-3.5" />
-              </button>
-              <span className="min-w-6 text-center text-sm font-medium tabular-nums">{qty}</span>
-              <button
-                type="button"
-                onClick={() => inc(product.id)}
-                className="flex size-7 items-center justify-center text-muted-foreground transition hover:bg-muted"
-                aria-label="Tambah"
-              >
-                <PlusIcon className="size-3.5" />
-              </button>
-            </div>
-          </div>
         )}
       </div>
     </div>
@@ -395,4 +255,52 @@ function CategoryPill({
       {children}
     </button>
   );
+}
+
+function useLodingOnScroll(
+  isLoadingMore: boolean,
+  hasMore: boolean,
+  sentinelRef: RefObject<HTMLDivElement | null>,
+  scrollRef: RefObject<HTMLDivElement | null>,
+  setIsLoadingMore: Dispatch<SetStateAction<boolean>>,
+  products: Product[],
+  setProducts: Dispatch<SetStateAction<Product[]>>,
+  setTotal: Dispatch<SetStateAction<number>>,
+) {
+  useEffect(() => {
+    if (isLoadingMore || !hasMore) return;
+
+    const sentinel = sentinelRef.current;
+    const root = scrollRef.current;
+    if (!sentinel || !root) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          setIsLoadingMore(true);
+          fetchProductsAction(products.length + PAGE_SIZE)
+            .then(({ products: newProducts, total: newTotal }) => {
+              setProducts(newProducts);
+              setTotal(newTotal);
+            })
+            .catch((err) => {
+              toast.error(err instanceof Error ? err.message : 'Gagal memuat produk.');
+            })
+            .finally(() => setIsLoadingMore(false));
+        }
+      },
+      { root, rootMargin: '100px' },
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [
+    products.length,
+    isLoadingMore,
+    hasMore,
+    sentinelRef,
+    scrollRef,
+    setIsLoadingMore,
+    setProducts,
+    setTotal,
+  ]);
 }
