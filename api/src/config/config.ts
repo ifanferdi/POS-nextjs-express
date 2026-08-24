@@ -44,6 +44,10 @@ const config = {
   sentry: {
     dsn: process.env.SENTRY_DSN,
   },
+  sse: {
+    channel: process.env.SSE_CHANNEL || 'sse:broadcast',
+    scope: ['broadcast', 'user', 'product', 'role', 'permission', 'category', 'order'] as const,
+  },
 };
 
 export default config;

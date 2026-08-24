@@ -71,6 +71,8 @@ import ProfileImage from '@/use-cases/user/profile-image';
 import RestoreUser from '@/use-cases/user/restore-user';
 import UpdateUser from '@/use-cases/user/update-user';
 import { Express } from 'express';
+import SseController from './adapters/http/controller/sse-controller';
+import { initSSERedisBridge } from './infrastructure/event-stream/sse-redis-bridge';
 import GeneratePresignUrl from './use-cases/common/upload-presign-url';
 
 export default async function bootstrap(app: Express) {
@@ -78,12 +80,15 @@ export default async function bootstrap(app: Express) {
   const useCases = setupUseCases(repositories);
   const controllers = setupControllers(useCases);
 
+  await initSSERedisBridge();
+
   express(app, controllers, useCases);
 }
 
 function setupControllers(useCases: UseCases): Controllers {
   return {
     appController: new AppController(useCases),
+    sseController: new SseController(),
     userController: new UserController(useCases),
     authController: new AuthController(useCases),
     permissionController: new PermissionController(useCases),

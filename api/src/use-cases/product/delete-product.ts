@@ -1,13 +1,23 @@
 import { ProductRelation } from '@/domain/entities/enums/product.enum';
-import { BaseFindById } from '@/validations/base-validation';
+import { publishSSEEvent } from '@/infrastructure/event-stream/sse-redis-bridge';
 import BaseUseCase from '@/use-cases/_base-use-case';
+import { BaseFindById } from '@/validations/base-validation';
 
 export default class DeleteProduct extends BaseUseCase {
-  execute({ id }: BaseFindById, options?: { isPermanently: boolean }) {
-    if (options?.isPermanently)
-      return this.handleDeletePermanently(id);
+  async execute({ id }: BaseFindById, options?: { isPermanently: boolean }) {
+    let destroy;
+    if (options?.isPermanently) destroy = this.handleDeletePermanently(id);
 
-    return this.repositories.productRepository.destroy(id);
+    destroy = this.repositories.productRepository.destroy(id);
+
+    await publishSSEEvent({
+      scope: 'product',
+      entity: 'product',
+      action: 'delete',
+      data: [{ id }],
+    });
+
+    return destroy;
   }
 
   private async handleDeletePermanently(id: number) {

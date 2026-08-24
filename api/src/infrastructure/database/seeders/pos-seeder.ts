@@ -226,5 +226,15 @@ export default class PosSeeder implements Seeder {
     }
 
     progress.done();
+
+    // Sinkronkan sequence ke MAX(id) agar create() berikutnya tidak bentrok
+    // (createMany dengan id eksplisit tidak mengadvances autoincrement sequence)
+    await this.prisma.$executeRaw`
+      SELECT setval(
+        pg_get_serial_sequence('orders', 'id'),
+        (SELECT COALESCE(MAX(id), 0) FROM orders) + 1,
+        false
+      )
+    `;
   }
 }

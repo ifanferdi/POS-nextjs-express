@@ -3,8 +3,9 @@ import { StoreOrderDto } from '@/domain/entities/models/order';
 import { IUser } from '@/domain/entities/models/user';
 import { calculateRounding } from '@/helpers/common.helper';
 import { ErrorBadRequest } from '@/helpers/error.helper';
-import { CreateOrderDto } from '@/validations/order-validation';
+import { publishSSEEvent } from '@/infrastructure/event-stream/sse-redis-bridge';
 import BaseUseCase from '@/use-cases/_base-use-case';
+import { CreateOrderDto } from '@/validations/order-validation';
 
 export default class CreateOrder extends BaseUseCase {
   get now() {
@@ -34,11 +35,7 @@ export default class CreateOrder extends BaseUseCase {
         unitPrice: product.price,
         totalPrice: product.price * item.quantity,
         meta: {
-          name: product.name,
-          sku: product.sku,
-          barcode: product.barcode,
-          price: product.price,
-          cost: product.cost,
+          ...product,
           snapshotAt: this.now,
         },
       };
@@ -71,7 +68,17 @@ export default class CreateOrder extends BaseUseCase {
       },
     };
 
-    return this.repositories.orderRepository.store(storeInput);
+    const order = await this.repositories.orderRepository.store(storeInput);
+
+    await publishSSEEvent({ scope: 'order', entity: 'order', action: 'create', data: [order] });
+    await publishSSEEvent({
+      scope: 'product',
+      entity: 'product',
+      action: 'update',
+      data: order.orderItems.map((orderItem) => orderItem.product),
+    });
+
+    return order;
   }
 
   private async handleMetaData(payload: CreateOrderDto) {

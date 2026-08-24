@@ -1,10 +1,9 @@
-import { createClient } from 'redis';
 import config from '@/config/config';
+import { createClient, RedisClientType } from 'redis';
+const REDIS_URL = config.redis.url;
 
 export default async function RedisConnection() {
-  const REDIS_URL = config.redis.url;
-
-  const redisClient = createClient({ url: REDIS_URL });
+  const redisClient = CreateRedisConnection();
 
   redisClient.on('error', (error: Error) =>
     console.error(`Redis has been disconnected cause: ${error.message}\n`, error.stack),
@@ -17,3 +16,5 @@ export default async function RedisConnection() {
 
   return redisClient;
 }
+
+export const CreateRedisConnection = () => createClient({ url: REDIS_URL }) as RedisClientType;

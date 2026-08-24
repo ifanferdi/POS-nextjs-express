@@ -9,6 +9,7 @@ import UserRoutes from '@/adapters/http/routes/user.routes';
 import { Controllers } from '@/domain/adapters/controller.interface';
 import Authorization from '@/use-cases/auth/authorization';
 import { Express } from 'express';
+import SseRoutes from './sse.route';
 
 export default function Routes(app: Express, controllers: Controllers, auth: Authorization) {
   app.get('/api/v1/dashboard', controllers.appController.index);
@@ -21,4 +22,5 @@ export default function Routes(app: Express, controllers: Controllers, auth: Aut
   app.use('/api/v1/products', ProductRoutes(controllers.productController, auth));
   app.use('/api/v1/orders', OrderRoutes(controllers.orderController, auth));
   app.use('/api/v1/payments', PaymentRoutes(controllers.paymentController, auth));
+  app.use('/api/v1/sse', SseRoutes(controllers.sseController, auth));
 }

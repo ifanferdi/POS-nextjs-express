@@ -1,16 +1,17 @@
 import { OrderStatus } from '@/domain/entities/enums/order.enum';
 import { PaymentStatus } from '@/domain/entities/enums/payment.enum';
-import { StoreOrderDto } from '@/domain/entities/models/order';
+import { IOrder, IOrderItem, IPayment, StoreOrderDto } from '@/domain/entities/models/order';
+import { IUser } from '@/domain/entities/models/user';
 import { Repository } from '@/domain/repositories/database.interface';
 import { generateOrderNumber } from '@/helpers/generate-string';
 import { Prisma } from '@/infrastructure/database/prisma/generated/client';
+import DatabaseBaseRepository from '@/repositories/database/_database-base-repository';
+import QueryOrderRepository from '@/repositories/database/queries/query-order-repository';
 import {
   FindAllOrderDto,
   FindByIdOrderDto,
   UpdateOrderStatusDto,
 } from '@/validations/order-validation';
-import DatabaseBaseRepository from '@/repositories/database/_database-base-repository';
-import QueryOrderRepository from '@/repositories/database/queries/query-order-repository';
 
 export default class OrderRepository
   extends DatabaseBaseRepository
@@ -64,6 +65,8 @@ export default class OrderRepository
       const order = await tx.order.create({
         data: {
           ...orderData,
+          subtotal,
+          total,
           orderNumber: generateOrderNumber(),
           paymentMethod,
           orderItems: { create: items },
@@ -107,7 +110,7 @@ export default class OrderRepository
           payment: true,
           user: { include: { profile: true } },
         },
-      }) as Promise<Record<string, any>>;
+      }) as Promise<IOrder & { user: IUser; orderItems: IOrderItem[]; payment: IPayment }>;
     });
   }
 

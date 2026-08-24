@@ -1,13 +1,23 @@
 import { ErrorBadRequest } from '@/helpers/error.helper';
-import { CreateProductDto } from '@/validations/product-validation';
+import { publishSSEEvent } from '@/infrastructure/event-stream/sse-redis-bridge';
 import BaseUseCase from '@/use-cases/_base-use-case';
+import { CreateProductDto } from '@/validations/product-validation';
 
 export default class CreateProduct extends BaseUseCase {
   async execute(payload: CreateProductDto) {
     if (payload.sku) await this.checkUniqueSku(payload.sku);
     if (payload.barcode) await this.checkUniqueBarcode(payload.barcode);
 
-    return this.repositories.productRepository.store(payload);
+    const product = await this.repositories.productRepository.store(payload);
+
+    await publishSSEEvent({
+      scope: 'product',
+      entity: 'product',
+      action: 'create',
+      data: [product],
+    });
+
+    return product;
   }
 
   private async checkUniqueSku(sku: string) {
