@@ -58,6 +58,7 @@ export function TablePagination({ page, totalPages, total, baseUrl }: TablePagin
               key={item}
               variant={item === page ? 'default' : 'outline'}
               size="icon-sm"
+              className="w-auto px-2"
               onClick={() => goToPage(item)}
               disabled={isPending}
               aria-current={item === page ? 'page' : undefined}

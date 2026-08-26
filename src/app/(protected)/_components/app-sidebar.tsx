@@ -39,7 +39,7 @@ export function AppSidebar({ username }: AppSidebarProps) {
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader className="p-3">
+      <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
@@ -62,7 +62,7 @@ export function AppSidebar({ username }: AppSidebarProps) {
       <SidebarSeparator />
 
       <SidebarContent>
-        <SidebarGroup className="px-3 py-2">
+        <SidebarGroup>
           <SidebarGroupLabel className="px-0">Management</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu className="gap-1">
