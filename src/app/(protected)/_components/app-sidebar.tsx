@@ -22,6 +22,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 const navItems = [
+  { title: 'Dashboard', href: '/dashboard', icon: icons.dashboard },
   { title: 'Users', href: '/users', icon: icons.user },
   { title: 'Categories', href: '/categories', icon: icons.category },
   { title: 'Products', href: '/products', icon: icons.product },
@@ -43,7 +44,7 @@ export function AppSidebar({ username }: AppSidebarProps) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <Link href="/users">
+              <Link href="/dashboard">
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-linear-to-br from-primary to-primary/70 text-primary-foreground shadow-sm">
                   <Store className="size-4" />
                 </div>

@@ -9,7 +9,7 @@ import { redirect } from 'next/navigation';
 export default async function LoginPage() {
   const session = await auth();
 
-  if (session && !session.error) redirect('/users');
+  if (session && !session.error) redirect('/dashboard');
 
   return (
     <div className="grid min-h-screen lg:grid-cols-[46%_54%]">

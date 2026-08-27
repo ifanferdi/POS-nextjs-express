@@ -13,6 +13,7 @@ import {
   BoxesIcon,
   BoxIcon,
   KeyRoundIcon,
+  LayoutDashboardIcon,
   ShieldUserIcon,
   ShoppingCartIcon,
   UserRoundCheckIcon,
@@ -49,6 +50,7 @@ export const options = {
 };
 
 export const icons = {
+  dashboard: LayoutDashboardIcon,
   user: UsersIcon,
   role: ShieldUserIcon,
   permission: KeyRoundIcon,
@@ -80,6 +82,14 @@ export const files = {
     enum: ['application/vnd.openxmlformats-officedocument.presentationml.presentation'] as const,
     size: 15 * 1024 * 1024, // 15MB
   },
+};
+
+export const midtrans = {
+  clientKey: process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY ?? '',
+  snapUrl:
+    process.env.NEXT_PUBLIC_MIDTRANS_ENV === 'production'
+      ? 'https://app.midtrans.com/snap/snap.js'
+      : 'https://app.sandbox.midtrans.com/snap/snap.js',
 };
 
 export const sse = { allowedChannels: ['products', 'users', 'orders', 'pos'] as const };
