@@ -50,7 +50,7 @@ export function DataTable<T>({
     <div className={`overflow-hidden rounded-lg border border-border/60 ${className}`}>
       <Table>
         <TableHeader>
-          <TableRow className="bg-muted/40 hover:bg-muted/40">
+          <TableRow className="bg-muted dark:bg-muted/50">
             {headers.map((header) => (
               <TableHead
                 key={header}
@@ -63,7 +63,7 @@ export function DataTable<T>({
         </TableHeader>
         <TableBody>
           {records.map((record, index) => (
-            <TableRow key={index} className="group">
+            <TableRow key={index} className="group hover:bg-secondary">
               {isNeedNumberColumn && (
                 <TableCell className="text-muted-foreground text-center">{index + 1}</TableCell>
               )}

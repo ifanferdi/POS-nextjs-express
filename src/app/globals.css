@@ -228,3 +228,12 @@
     padding: 0.375rem;
   }
 }
+
+.has-\[\[data-slot\=input-group-control\]\:focus-visible\]\:ring-3 {
+  &:has(*:is([data-slot='input-group-control']:focus-visible)) {
+    --tw-ring-shadow: none;
+    box-shadow:
+      var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow),
+      var(--tw-ring-shadow), var(--tw-shadow);
+  }
+}
