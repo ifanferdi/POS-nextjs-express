@@ -13,6 +13,12 @@ const Relations = z.array(z.nativeEnum(OrderRelation).optional()).optional();
 const columns = z.array(z.nativeEnum(ORDER_FIELD)).optional();
 
 export const FindByIdOrderSchema = BaseFindById.extend({ with: Relations, columns });
+export const FindOneOrderSchema = z.object({
+  id: NumberSchema.optional(),
+  orderNumber: StringSchema.optional(),
+  columns: z.array(z.nativeEnum(ORDER_FIELD)).optional(),
+  with: Relations,
+});
 export const FindAllOrderSchema = BasePagination(ORDER_FIELD)
   .extend({
     status: z.union([z.nativeEnum(OrderStatus), z.array(z.nativeEnum(OrderStatus))]).optional(),
@@ -20,6 +26,7 @@ export const FindAllOrderSchema = BasePagination(ORDER_FIELD)
       .union([z.nativeEnum(PaymentMethod), z.array(z.nativeEnum(PaymentMethod))])
       .optional(),
     customerId: z.union([NumberSchema, z.array(NumberSchema)]).optional(),
+    orderNumber: z.union([StringSchema, z.array(StringSchema)]).optional(),
     userId: z.union([NumberSchema, z.array(NumberSchema)]).optional(),
     with: Relations,
     createdAtDay: z.date().optional(),
@@ -38,8 +45,7 @@ const OrderItemSchema = z.object({
 });
 
 export const CreateOrderSchema = z.object({
-  customerId: NumberSchema.optional(),
-  userId: NumberSchema.optional(),
+  userId: NumberSchema,
   notes: StringSchema.optional(),
   items: z.array(OrderItemSchema).min(1),
   paymentMethod: z.nativeEnum(PaymentMethod),
@@ -54,5 +60,6 @@ export const UpdateOrderStatusSchema = z.object({
 
 export interface FindAllOrderDto extends z.infer<typeof FindAllOrderSchema> {}
 export interface FindByIdOrderDto extends z.infer<typeof FindByIdOrderSchema> {}
+export interface FindOneOrderDto extends z.infer<typeof FindOneOrderSchema> {}
 export interface CreateOrderDto extends z.infer<typeof CreateOrderSchema> {}
 export interface UpdateOrderStatusDto extends z.infer<typeof UpdateOrderStatusSchema> {}

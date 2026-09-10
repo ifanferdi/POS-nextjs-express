@@ -1,5 +1,7 @@
 import { OrderRelation } from '@/domain/entities/enums/order.enum';
+import { PaymentMethod } from '@/domain/entities/enums/payment.enum';
 import { ORDER_FIELD, ORDER_FIELDS } from '@/domain/entities/models/order';
+import { USER_SELECT_FIELDS_PRISMA } from '@/domain/entities/models/user';
 import { Prisma } from '@/infrastructure/database/prisma/generated/client';
 import { FindAllOrderDto, FindByIdOrderDto } from '@/validations/order-validation';
 
@@ -8,10 +10,13 @@ export default class QueryOrderRepository {
     const include: Record<string, any> = {};
 
     if (relation?.includes(OrderRelation.CUSTOMER))
-      include.customer = { select: { id: true, username: true, email: true, profile: true } };
+      include.customer = { select: USER_SELECT_FIELDS_PRISMA };
     if (relation?.includes(OrderRelation.USER))
-      include.user = { select: { id: true, username: true, profile: true } };
-    if (relation?.includes(OrderRelation.ORDER_ITEMS))
+      include.user = { select: USER_SELECT_FIELDS_PRISMA };
+    if (relation?.includes(OrderRelation.USER_PROFILE))
+      include.user = { select: { ...USER_SELECT_FIELDS_PRISMA, profile: true } };
+    if (relation?.includes(OrderRelation.ORDER_ITEMS)) include.orderItems = true;
+    if (relation?.includes(OrderRelation.ORDER_ITEMS_PRODUCT))
       include.orderItems = { include: { product: true } };
     if (relation?.includes(OrderRelation.PAYMENT)) include.payment = true;
 
@@ -29,10 +34,16 @@ export default class QueryOrderRepository {
       where.id = Array.isArray(params.notId) ? { notIn: params.notId } : { not: params.notId };
     if (params.status)
       where.status = Array.isArray(params.status) ? { in: params.status } : params.status;
+    if (params.orderNumber)
+      where.orderNumber = Array.isArray(params.orderNumber)
+        ? { in: params.orderNumber }
+        : params.orderNumber;
     if (params.paymentMethod)
-      where.paymentMethod = Array.isArray(params.paymentMethod)
-        ? { in: params.paymentMethod }
-        : params.paymentMethod;
+      where.payment = {
+        method: Array.isArray(params.paymentMethod)
+          ? { in: params.paymentMethod as PaymentMethod[] }
+          : params.paymentMethod,
+      };
     if (params.customerId)
       where.customerId = Array.isArray(params.customerId)
         ? { in: params.customerId }

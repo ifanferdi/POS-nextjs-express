@@ -44,6 +44,8 @@ export default class QueryCategoryRepository {
 
     if (cols && cols.length > 0) cols.forEach((c) => ((select as any)[c] = true));
 
+    select._count = { select: { productHasCategories: true } };
+
     return select;
   }
 }

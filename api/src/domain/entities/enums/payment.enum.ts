@@ -4,13 +4,18 @@ export enum PaymentRelation {
 
 export enum PaymentMethod {
   CASH = 'cash',
-  CARD = 'card',
-  TRANSFER = 'transfer',
+  QRIS = 'qris',
+  VA_BCA = 'va_bca',
+  VA_BNI = 'va_bni',
+  VA_BRI = 'va_bri',
+  VA_MANDIRI = 'va_mandiri',
 }
 
 export enum PaymentStatus {
   PENDING = 'pending',
-  COMPLETED = 'completed',
+  SUCCESS = 'success',
   FAILED = 'failed',
+  EXPIRED = 'expired',
+  CANCELLED = 'cancelled',
   REFUNDED = 'refunded',
 }

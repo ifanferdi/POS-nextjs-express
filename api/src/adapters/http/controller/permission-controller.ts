@@ -1,5 +1,3 @@
-import e from 'express';
-import asyncHandler from 'express-async-handler';
 import { HttpStatusCode } from '@/constants/http-status.constant';
 import { UseCases } from '@/domain/use-cases/use-case.interface';
 import { handleNumberOrArrayRequest, handleOrderByRequest } from '@/helpers/common.helper';
@@ -14,6 +12,8 @@ import {
   UpdatePermissionDto,
   UpdatePermissionSchema,
 } from '@/validations/permission-validation';
+import e from 'express';
+import asyncHandler from 'express-async-handler';
 
 export default class PermissionController {
   constructor(private useCases: UseCases) {}
@@ -43,7 +43,11 @@ export default class PermissionController {
   });
 
   findOne = asyncHandler(async (req: e.Request, res: e.Response) => {
-    const params = { id: Number(req.params.id), with: req.query.with };
+    const params: FindByIdPermissionDto = {
+      id: Number(req.params.id),
+      with: req.query.with as any,
+      columns: req.query.columns as any,
+    };
     const result = await this.handleFindOne(params as FindByIdPermissionDto);
     res.send(result);
   });

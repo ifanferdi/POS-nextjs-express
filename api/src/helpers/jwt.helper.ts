@@ -1,9 +1,9 @@
-import * as jwt from 'jsonwebtoken';
-import { TokenExpiredError } from 'jsonwebtoken';
-import type { StringValue } from 'ms';
 import config from '@/config/config';
 import { JwtData } from '@/domain/entities/types/auth.types';
 import { ErrorUnauthorized } from '@/helpers/error.helper';
+import * as jwt from 'jsonwebtoken';
+import { TokenExpiredError } from 'jsonwebtoken';
+import type { StringValue } from 'ms';
 
 const SECRET = config.secret;
 const TIMEOUT = config.auth.tokenTimeout;

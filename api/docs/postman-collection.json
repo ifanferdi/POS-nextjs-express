@@ -2,12 +2,12 @@
   "info": {
     "name": "POS API",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "description": "Point of Sale API — Product Categories, Products, Orders, Payments, Dashboard"
+    "description": "Point of Sale API — Auth, Users, Roles, Permissions, Categories, Products, Orders, Payments, Midtrans, Dashboard, SSE"
   },
   "variable": [
     {
       "key": "baseUrl",
-      "value": "http://localhost:8000/api/v1"
+      "value": "http://localhost:3000"
     },
     {
       "key": "token",
@@ -26,39 +26,166 @@
   },
   "item": [
     {
-      "name": "Dashboard",
+      "name": "Auth",
       "item": [
         {
-          "name": "POS Dashboard",
+          "name": "Sign In",
           "request": {
-            "method": "GET",
+            "method": "POST",
             "url": {
-              "raw": "{{baseUrl}}/pos/dashboard",
-              "host": ["{{baseUrl}}"],
-              "path": ["pos", "dashboard"]
+              "raw": "{{baseUrl}}/api/v1/auth/sign-in",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "sign-in"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"superadmin\",\n  \"password\": \"password\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Sign Out",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/sign-out",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "sign-out"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/refresh-token",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "refresh-token"
+              ]
             }
           }
         }
       ]
     },
     {
-      "name": "Product Categories",
+      "name": "Dashboard",
       "item": [
+        {
+          "name": "Dashboard",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/dashboard",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "dashboard"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Generate Presign URL",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/uploads/generate-presign-url",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "uploads",
+                "generate-presign-url"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "My Account",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/my-account",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "my-account"
+              ]
+            }
+          }
+        },
         {
           "name": "List (GET)",
           "request": {
             "method": "GET",
             "url": {
-              "raw": "{{baseUrl}}/product-categories?page=1&limit=10&orderBy[]=name:asc&orderBy[]=createdAt:desc",
-              "host": ["{{baseUrl}}"],
-              "path": ["product-categories"],
+              "raw": "{{baseUrl}}/api/v1/users?page=1&limit=10&orderBy[]=createdAt:desc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users"
+              ],
               "query": [
-                { "key": "page", "value": "1" },
-                { "key": "limit", "value": "10" },
-                { "key": "orderBy[]", "value": "name:asc" },
-                { "key": "orderBy[]", "value": "createdAt:desc" },
-                { "key": "q", "value": "", "disabled": true },
-                { "key": "with[]", "value": "products", "disabled": true }
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "orderBy[]",
+                  "value": "createdAt:desc"
+                },
+                {
+                  "key": "with[]",
+                  "value": "profile",
+                  "disabled": true
+                },
+                {
+                  "key": "with[]",
+                  "value": "role",
+                  "disabled": true
+                }
               ]
             }
           }
@@ -68,9 +195,639 @@
           "request": {
             "method": "POST",
             "url": {
-              "raw": "{{baseUrl}}/product-categories/get",
-              "host": ["{{baseUrl}}"],
-              "path": ["product-categories", "get"]
+              "raw": "{{baseUrl}}/api/v1/users/get",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "get"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"page\": 1,\n  \"limit\": 10,\n  \"orderBy\": [\"createdAt:desc\"],\n  \"with\": [\"profile\", \"role\"]\n}"
+            }
+          }
+        },
+        {
+          "name": "Detail",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/:id?with[]=profile&with[]=role",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ],
+              "query": [
+                {
+                  "key": "with[]",
+                  "value": "profile"
+                },
+                {
+                  "key": "with[]",
+                  "value": "role"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"kasir01\",\n  \"email\": \"kasir01@example.com\",\n  \"password\": \"secret123\",\n  \"roleId\": 2\n}"
+            }
+          }
+        },
+        {
+          "name": "Update",
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"kasir01\",\n  \"email\": \"kasir01@example.com\",\n  \"roleId\": 2\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete (Soft)",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Permanently",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/:id/permanently",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                ":id",
+                "permanently"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Restore",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/:id/restore",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                ":id",
+                "restore"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Upload Profile Image",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/profile/upload",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "profile",
+                "upload"
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "image",
+                  "type": "file",
+                  "src": "",
+                  "description": "Select image file (jpg/png)"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Roles",
+      "item": [
+        {
+          "name": "List (GET)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/roles?page=1&limit=10&orderBy[]=name:asc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "roles"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "orderBy[]",
+                  "value": "name:asc"
+                },
+                {
+                  "key": "with[]",
+                  "value": "roleHasPermissions",
+                  "disabled": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "List (POST get)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/roles/get",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "roles",
+                "get"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"page\": 1,\n  \"limit\": 10,\n  \"orderBy\": [\"name:asc\"],\n  \"with\": [\"roleHasPermissions\"]\n}"
+            }
+          }
+        },
+        {
+          "name": "Detail",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/roles/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "roles",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/roles",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "roles"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Cashier\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update",
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/roles/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "roles",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Cashier Senior\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/roles/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "roles",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Assign Permissions",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/roles/assign-permissions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "roles",
+                "assign-permissions"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"roleId\": 2,\n  \"permissionIds\": [1, 2, 3]\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Permissions",
+      "item": [
+        {
+          "name": "List (GET)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/permissions?page=1&limit=10&orderBy[]=name:asc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "permissions"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "orderBy[]",
+                  "value": "name:asc"
+                },
+                {
+                  "key": "roleId",
+                  "value": "1",
+                  "disabled": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "List (POST get)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/permissions/get",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "permissions",
+                "get"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"page\": 1,\n  \"limit\": 10,\n  \"orderBy\": [\"name:asc\"],\n  \"roleId\": 1\n}"
+            }
+          }
+        },
+        {
+          "name": "Detail",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/permissions/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "permissions",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/permissions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "permissions"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Show Report\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update",
+          "request": {
+            "method": "PUT",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/permissions/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "permissions",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Manage Report\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/permissions/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "permissions",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Check Valid Permissions",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/permissions/check-valid-permissions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "permissions",
+                "check-valid-permissions"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"permissions\": [\"Show Order\", \"Manage Order\"]\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Categories",
+      "item": [
+        {
+          "name": "List (GET)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/categories?page=1&limit=10&orderBy[]=name:asc&orderBy[]=createdAt:desc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "categories"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "orderBy[]",
+                  "value": "name:asc"
+                },
+                {
+                  "key": "orderBy[]",
+                  "value": "createdAt:desc"
+                },
+                {
+                  "key": "q",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "with[]",
+                  "value": "products",
+                  "disabled": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "List (POST get)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/categories/get",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "categories",
+                "get"
+              ]
             },
             "body": {
               "mode": "raw",
@@ -83,9 +840,22 @@
           "request": {
             "method": "GET",
             "url": {
-              "raw": "{{baseUrl}}/product-categories/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["product-categories", "1"]
+              "raw": "{{baseUrl}}/api/v1/categories/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "categories",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
             }
           }
         },
@@ -94,9 +864,15 @@
           "request": {
             "method": "POST",
             "url": {
-              "raw": "{{baseUrl}}/product-categories",
-              "host": ["{{baseUrl}}"],
-              "path": ["product-categories"]
+              "raw": "{{baseUrl}}/api/v1/categories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "categories"
+              ]
             },
             "body": {
               "mode": "raw",
@@ -109,9 +885,22 @@
           "request": {
             "method": "PUT",
             "url": {
-              "raw": "{{baseUrl}}/product-categories/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["product-categories", "1"]
+              "raw": "{{baseUrl}}/api/v1/categories/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "categories",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
             },
             "body": {
               "mode": "raw",
@@ -124,9 +913,22 @@
           "request": {
             "method": "DELETE",
             "url": {
-              "raw": "{{baseUrl}}/product-categories/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["product-categories", "1"]
+              "raw": "{{baseUrl}}/api/v1/categories/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "categories",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
             }
           }
         }
@@ -140,20 +942,62 @@
           "request": {
             "method": "GET",
             "url": {
-              "raw": "{{baseUrl}}/products?page=1&limit=10&orderBy[]=name:asc&orderBy[]=createdAt:desc",
-              "host": ["{{baseUrl}}"],
-              "path": ["products"],
+              "raw": "{{baseUrl}}/api/v1/products?page=1&limit=10&orderBy[]=name:asc&orderBy[]=createdAt:desc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products"
+              ],
               "query": [
-                { "key": "page", "value": "1" },
-                { "key": "limit", "value": "10" },
-                { "key": "orderBy[]", "value": "name:asc" },
-                { "key": "orderBy[]", "value": "createdAt:desc" },
-                { "key": "q", "value": "", "disabled": true },
-                { "key": "isActive", "value": "true", "disabled": true },
-                { "key": "categoryId", "value": "1", "disabled": true },
-                { "key": "barcode", "value": "8991234560010", "disabled": true },
-                { "key": "sku", "value": "KS-001", "disabled": true },
-                { "key": "with[]", "value": "categories", "disabled": true }
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "orderBy[]",
+                  "value": "name:asc"
+                },
+                {
+                  "key": "orderBy[]",
+                  "value": "createdAt:desc"
+                },
+                {
+                  "key": "q",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "isActive",
+                  "value": "true",
+                  "disabled": true
+                },
+                {
+                  "key": "categoryId",
+                  "value": "1",
+                  "disabled": true
+                },
+                {
+                  "key": "barcode",
+                  "value": "8991234560010",
+                  "disabled": true
+                },
+                {
+                  "key": "sku",
+                  "value": "KS-001",
+                  "disabled": true
+                },
+                {
+                  "key": "with[]",
+                  "value": "categories",
+                  "disabled": true
+                }
               ]
             }
           }
@@ -163,9 +1007,16 @@
           "request": {
             "method": "POST",
             "url": {
-              "raw": "{{baseUrl}}/products/get",
-              "host": ["{{baseUrl}}"],
-              "path": ["products", "get"]
+              "raw": "{{baseUrl}}/api/v1/products/get",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products",
+                "get"
+              ]
             },
             "body": {
               "mode": "raw",
@@ -178,11 +1029,27 @@
           "request": {
             "method": "GET",
             "url": {
-              "raw": "{{baseUrl}}/products/1?with[]=categories",
-              "host": ["{{baseUrl}}"],
-              "path": ["products", "1"],
+              "raw": "{{baseUrl}}/api/v1/products/:id?with[]=categories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ],
               "query": [
-                { "key": "with[]", "value": "categories" }
+                {
+                  "key": "with[]",
+                  "value": "categories"
+                }
               ]
             }
           }
@@ -192,9 +1059,15 @@
           "request": {
             "method": "POST",
             "url": {
-              "raw": "{{baseUrl}}/products",
-              "host": ["{{baseUrl}}"],
-              "path": ["products"]
+              "raw": "{{baseUrl}}/api/v1/products",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products"
+              ]
             },
             "body": {
               "mode": "raw",
@@ -207,9 +1080,22 @@
           "request": {
             "method": "PUT",
             "url": {
-              "raw": "{{baseUrl}}/products/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["products", "1"]
+              "raw": "{{baseUrl}}/api/v1/products/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
             },
             "body": {
               "mode": "raw",
@@ -222,9 +1108,22 @@
           "request": {
             "method": "DELETE",
             "url": {
-              "raw": "{{baseUrl}}/products/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["products", "1"]
+              "raw": "{{baseUrl}}/api/v1/products/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
             }
           }
         },
@@ -233,9 +1132,23 @@
           "request": {
             "method": "DELETE",
             "url": {
-              "raw": "{{baseUrl}}/products/1/permanently",
-              "host": ["{{baseUrl}}"],
-              "path": ["products", "1", "permanently"]
+              "raw": "{{baseUrl}}/api/v1/products/:id/permanently",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products",
+                ":id",
+                "permanently"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
             }
           }
         },
@@ -244,9 +1157,23 @@
           "request": {
             "method": "POST",
             "url": {
-              "raw": "{{baseUrl}}/products/1/restore",
-              "host": ["{{baseUrl}}"],
-              "path": ["products", "1", "restore"]
+              "raw": "{{baseUrl}}/api/v1/products/:id/restore",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products",
+                ":id",
+                "restore"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
             }
           }
         },
@@ -255,9 +1182,16 @@
           "request": {
             "method": "POST",
             "url": {
-              "raw": "{{baseUrl}}/products/upload",
-              "host": ["{{baseUrl}}"],
-              "path": ["products", "upload"]
+              "raw": "{{baseUrl}}/api/v1/products/upload",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "products",
+                "upload"
+              ]
             },
             "body": {
               "mode": "formdata",
@@ -282,22 +1216,73 @@
           "request": {
             "method": "GET",
             "url": {
-              "raw": "{{baseUrl}}/orders?page=1&limit=10&orderBy[]=createdAt:desc&orderBy[]=totalAmount:asc",
-              "host": ["{{baseUrl}}"],
-              "path": ["orders"],
+              "raw": "{{baseUrl}}/api/v1/orders?page=1&limit=10&orderBy[]=createdAt:desc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orders"
+              ],
               "query": [
-                { "key": "page", "value": "1" },
-                { "key": "limit", "value": "10" },
-                { "key": "orderBy[]", "value": "createdAt:desc" },
-                { "key": "orderBy[]", "value": "totalAmount:asc" },
-                { "key": "status", "value": "completed", "disabled": true },
-                { "key": "paymentMethod", "value": "cash", "disabled": true },
-                { "key": "customerId", "value": "1", "disabled": true },
-                { "key": "userId", "value": "1", "disabled": true },
-                { "key": "createdAtDay", "value": "2024-01-01", "disabled": true },
-                { "key": "with[]", "value": "customer", "disabled": true },
-                { "key": "with[]", "value": "orderItems", "disabled": true },
-                { "key": "with[]", "value": "payments", "disabled": true }
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "orderBy[]",
+                  "value": "createdAt:desc"
+                },
+                {
+                  "key": "status",
+                  "value": "pending",
+                  "disabled": true
+                },
+                {
+                  "key": "paymentMethod",
+                  "value": "qris",
+                  "disabled": true
+                },
+                {
+                  "key": "customerId",
+                  "value": "1",
+                  "disabled": true
+                },
+                {
+                  "key": "userId",
+                  "value": "1",
+                  "disabled": true
+                },
+                {
+                  "key": "createdAtDay",
+                  "value": "2026-09-09",
+                  "disabled": true
+                },
+                {
+                  "key": "with[]",
+                  "value": "customer",
+                  "disabled": true
+                },
+                {
+                  "key": "with[]",
+                  "value": "user",
+                  "disabled": true
+                },
+                {
+                  "key": "with[]",
+                  "value": "orderItems",
+                  "disabled": true
+                },
+                {
+                  "key": "with[]",
+                  "value": "payment",
+                  "disabled": true
+                }
               ]
             }
           }
@@ -307,13 +1292,20 @@
           "request": {
             "method": "POST",
             "url": {
-              "raw": "{{baseUrl}}/orders/get",
-              "host": ["{{baseUrl}}"],
-              "path": ["orders", "get"]
+              "raw": "{{baseUrl}}/api/v1/orders/get",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orders",
+                "get"
+              ]
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"page\": 1,\n  \"limit\": 10,\n  \"orderBy\": [\"createdAt:desc\", \"totalAmount:asc\"],\n  \"status\": \"completed\",\n  \"paymentMethod\": \"cash\",\n  \"with\": [\"customer\", \"orderItems\", \"payments\"]\n}"
+              "raw": "{\n  \"page\": 1,\n  \"limit\": 10,\n  \"orderBy\": [\"createdAt:desc\"],\n  \"status\": \"pending\",\n  \"paymentMethod\": \"qris\",\n  \"with\": [\"customer\", \"user\", \"orderItems\", \"payment\"]\n}"
             }
           }
         },
@@ -322,30 +1314,128 @@
           "request": {
             "method": "GET",
             "url": {
-              "raw": "{{baseUrl}}/orders/1?with[]=orderItems&with[]=payments&with[]=customer&with[]=user",
-              "host": ["{{baseUrl}}"],
-              "path": ["orders", "1"],
+              "raw": "{{baseUrl}}/api/v1/orders/:id?with[]=orderItems&with[]=payment&with[]=customer&with[]=user",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orders",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ],
               "query": [
-                { "key": "with[]", "value": "orderItems" },
-                { "key": "with[]", "value": "payments" },
-                { "key": "with[]", "value": "customer" },
-                { "key": "with[]", "value": "user" }
+                {
+                  "key": "with[]",
+                  "value": "orderItems"
+                },
+                {
+                  "key": "with[]",
+                  "value": "payment"
+                },
+                {
+                  "key": "with[]",
+                  "value": "customer"
+                },
+                {
+                  "key": "with[]",
+                  "value": "user"
+                }
               ]
             }
           }
         },
         {
-          "name": "Create Order",
+          "name": "Create Order (Cash)",
           "request": {
             "method": "POST",
             "url": {
-              "raw": "{{baseUrl}}/orders",
-              "host": ["{{baseUrl}}"],
-              "path": ["orders"]
+              "raw": "{{baseUrl}}/api/v1/orders",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orders"
+              ]
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"customerId\": 1,\n  \"userId\": 1,\n  \"paymentMethod\": \"cash\",\n  \"notes\": \"Pesanan makan di tempat\",\n  \"paymentReference\": \"PAY-001\",\n  \"items\": [\n    {\n      \"productId\": 1,\n      \"quantity\": 2\n    },\n    {\n      \"productId\": 2,\n      \"quantity\": 1\n    }\n  ]\n}"
+              "raw": "{\n  \"userId\": 1,\n  \"paymentMethod\": \"cash\",\n  \"amount\": 50000,\n  \"notes\": \"Pesanan makan di tempat\",\n  \"items\": [\n    { \"productId\": 1, \"quantity\": 2 },\n    { \"productId\": 2, \"quantity\": 1 }\n  ]\n}"
+            }
+          }
+        },
+        {
+          "name": "Create Order (QRIS)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orders",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orders"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": 1,\n  \"paymentMethod\": \"qris\",\n  \"notes\": \"Pesanan QRIS\",\n  \"items\": [\n    { \"productId\": 1, \"quantity\": 1 }\n  ]\n}"
+            }
+          }
+        },
+        {
+          "name": "Create Order (VA BCA)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orders",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orders"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": 1,\n  \"paymentMethod\": \"va_bca\",\n  \"notes\": \"Pesanan VA\",\n  \"items\": [\n    { \"productId\": 1, \"quantity\": 1 }\n  ]\n}"
+            }
+          }
+        },
+        {
+          "name": "Check Payment Status (Saya Sudah Bayar)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/orders/:id/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orders",
+                ":id",
+                "status"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
             }
           }
         },
@@ -354,9 +1444,23 @@
           "request": {
             "method": "PUT",
             "url": {
-              "raw": "{{baseUrl}}/orders/1/status",
-              "host": ["{{baseUrl}}"],
-              "path": ["orders", "1", "status"]
+              "raw": "{{baseUrl}}/api/v1/orders/:id/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orders",
+                ":id",
+                "status"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
             },
             "body": {
               "mode": "raw",
@@ -369,9 +1473,23 @@
           "request": {
             "method": "POST",
             "url": {
-              "raw": "{{baseUrl}}/orders/1/cancel",
-              "host": ["{{baseUrl}}"],
-              "path": ["orders", "1", "cancel"]
+              "raw": "{{baseUrl}}/api/v1/orders/:id/cancel",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "orders",
+                ":id",
+                "cancel"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
             }
           }
         }
@@ -385,17 +1503,43 @@
           "request": {
             "method": "GET",
             "url": {
-              "raw": "{{baseUrl}}/payments?page=1&limit=10&orderBy[]=createdAt:desc&orderBy[]=amount:asc&orderId=1",
-              "host": ["{{baseUrl}}"],
-              "path": ["payments"],
+              "raw": "{{baseUrl}}/api/v1/payments?page=1&limit=10&orderBy[]=createdAt:desc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "payments"
+              ],
               "query": [
-                { "key": "page", "value": "1" },
-                { "key": "limit", "value": "10" },
-                { "key": "orderBy[]", "value": "createdAt:desc" },
-                { "key": "orderBy[]", "value": "amount:asc" },
-                { "key": "orderId", "value": "1", "disabled": true },
-                { "key": "status", "value": "completed", "disabled": true },
-                { "key": "method", "value": "cash", "disabled": true }
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "orderBy[]",
+                  "value": "createdAt:desc"
+                },
+                {
+                  "key": "orderId",
+                  "value": "1",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "success",
+                  "disabled": true
+                },
+                {
+                  "key": "method",
+                  "value": "qris",
+                  "disabled": true
+                }
               ]
             }
           }
@@ -405,13 +1549,20 @@
           "request": {
             "method": "POST",
             "url": {
-              "raw": "{{baseUrl}}/payments/get",
-              "host": ["{{baseUrl}}"],
-              "path": ["payments", "get"]
+              "raw": "{{baseUrl}}/api/v1/payments/get",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "payments",
+                "get"
+              ]
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"page\": 1,\n  \"limit\": 10,\n  \"orderBy\": [\"createdAt:desc\", \"amount:asc\"],\n  \"orderId\": 1,\n  \"status\": \"completed\",\n  \"method\": \"cash\"\n}"
+              "raw": "{\n  \"page\": 1,\n  \"limit\": 10,\n  \"orderBy\": [\"createdAt:desc\"],\n  \"orderId\": 1,\n  \"status\": \"success\",\n  \"method\": \"qris\"\n}"
             }
           }
         },
@@ -420,24 +1571,96 @@
           "request": {
             "method": "GET",
             "url": {
-              "raw": "{{baseUrl}}/payments/1",
-              "host": ["{{baseUrl}}"],
-              "path": ["payments", "1"]
+              "raw": "{{baseUrl}}/api/v1/payments/:id",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "payments",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "1"
+                }
+              ]
             }
           }
         },
         {
-          "name": "Create Payment",
+          "name": "Detail by Order",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/payments/:orderId/order",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "payments",
+                ":id",
+                "order"
+              ],
+              "variable": [
+                {
+                  "key": "orderId",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Midtrans",
+      "item": [
+        {
+          "name": "Webhook Notification",
           "request": {
             "method": "POST",
             "url": {
-              "raw": "{{baseUrl}}/payments",
-              "host": ["{{baseUrl}}"],
-              "path": ["payments"]
+              "raw": "{{baseUrl}}/api/v1/webhooks/midtrans",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "webhooks",
+                "midtrans"
+              ]
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"orderId\": 1,\n  \"amount\": 27500,\n  \"method\": \"card\",\n  \"reference\": \"CARD-001\"\n}"
+              "raw": "{\n  \"order_id\": \"INV-000001\",\n  \"transaction_status\": \"settlement\",\n  \"payment_type\": \"qris\",\n  \"gross_amount\": \"100000.00\",\n  \"signature_key\": \"...\",\n  \"status_code\": \"200\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SSE",
+      "item": [
+        {
+          "name": "Event Stream",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/sse",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sse"
+              ]
             }
           }
         }

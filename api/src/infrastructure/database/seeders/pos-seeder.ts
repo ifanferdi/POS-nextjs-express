@@ -5,6 +5,7 @@ import { IProduct, IProductHasCategory } from '@/domain/entities/models/product'
 import { Seeder } from '@/domain/infrastructures/database.interface';
 import { calculateRounding } from '@/helpers/common.helper';
 import { PrismaClient, Product } from '@/infrastructure/database/prisma/generated/client';
+import { Decimal } from '@/infrastructure/database/prisma/generated/internal/prismaNamespace';
 import {
   OrderCreateManyInput,
   OrderItemCreateManyInput,
@@ -30,7 +31,7 @@ export default class PosSeeder implements Seeder {
 
   private async seedCategories() {
     const data = Array.from({ length: 100 }, (_: unknown, i: number) => ({
-      name: `${faker.commerce.department()} ${i}`,
+      name: faker.commerce.department(),
       description: faker.commerce.productDescription(),
     }));
 
@@ -61,6 +62,7 @@ export default class PosSeeder implements Seeder {
       const data = Array.from(
         { length: Math.min(CHUNK, TOTAL_PRODUCTS - chunk) },
         (__: unknown, i: number) => {
+          const { images: dummyImages } = _.sample(images) ?? { thumbnail: undefined, images: [] };
           const index = chunk + i;
           const price = faker.number.int({ min: 5000, max: 500000 });
           const cost = Math.round(price * faker.number.float({ min: 0.3, max: 0.7 }));
@@ -72,7 +74,7 @@ export default class PosSeeder implements Seeder {
               faker.food.dish(),
               faker.commerce.product(),
             ])}-${faker.number.int({ max: 1000 })}`,
-            imagePath: _.sample(images)?.download_url ?? null,
+            imagePath: _.sample(dummyImages) ?? null,
             description: faker.helpers.maybe(() => faker.commerce.productDescription(), {
               probability: 0.8,
             }),
@@ -125,26 +127,33 @@ export default class PosSeeder implements Seeder {
   }
 
   private async getDummyImages() {
-    interface ImagesResponse {
-      id: string;
-      author: string;
-      width: number;
-      height: number;
-      url: string;
-      download_url: string;
+    interface Product {
+      thumbnail: string;
+      images: string[];
     }
-    return (
-      await axios.get<ImagesResponse[]>('https://picsum.photos/v2/list', {
-        params: { limit: 100 },
-      })
-    ).data;
+    interface DummyJsonResponse {
+      products: Product[];
+    }
+    const { data } = await axios.get<DummyJsonResponse>('https://dummyjson.com/products', {
+      params: { limit: 200 },
+    });
+
+    return data.products.map((p) => ({ thumbnail: p.thumbnail, images: p.images }));
   }
 
   private async seedOrders(products: IProduct[]) {
     const users = await this.prisma.user.findMany({ select: { id: true }, where: { roleId: 1 } });
     if (users.length < 1) return;
 
-    const paymentMethods = Object.values(PaymentMethod);
+    const weightedPaymentMethods = [
+      ...Array(25).fill(PaymentMethod.CASH),
+      ...Array(30).fill(PaymentMethod.QRIS),
+      ...Array(15).fill(PaymentMethod.VA_BCA),
+      ...Array(10).fill(PaymentMethod.VA_BNI),
+      ...Array(10).fill(PaymentMethod.VA_BRI),
+      ...Array(10).fill(PaymentMethod.VA_MANDIRI),
+    ];
+
     let progress = Progress.create({
       updateFrequency: 150,
       total: TOTAL_ORDERS,
@@ -162,8 +171,11 @@ export default class PosSeeder implements Seeder {
         const id = chunk + i;
         const cashier = _.sample(users);
 
-        const status = _.sample(Object.values(OrderStatus))!;
-        const paymentMethod = _.sample(paymentMethods)!;
+        const paymentMethod = _.sample(weightedPaymentMethods)!;
+        const status =
+          paymentMethod === PaymentMethod.CASH
+            ? _.sample([OrderStatus.COMPLETED, OrderStatus.CANCELLED])!
+            : _.sample([OrderStatus.PENDING, OrderStatus.EXPIRED])!;
 
         const itemsCount = faker.number.int({ min: 1, max: 5 });
         const selectedProducts = _.sampleSize(products, itemsCount);
@@ -183,12 +195,17 @@ export default class PosSeeder implements Seeder {
 
         const paymentStatus =
           status === OrderStatus.COMPLETED
-            ? PaymentStatus.COMPLETED
-            : status === OrderStatus.CANCELLED
-              ? PaymentStatus.FAILED
-              : _.sample([PaymentStatus.PENDING, PaymentStatus.COMPLETED])!;
+            ? PaymentStatus.SUCCESS
+            : status === OrderStatus.EXPIRED
+              ? PaymentStatus.EXPIRED
+              : status === OrderStatus.CANCELLED
+                ? PaymentStatus.CANCELLED
+                : PaymentStatus.PENDING;
 
-        const { rounding, total: totalRounding } = calculateRounding(total);
+        const { rounding, total: totalRounding } =
+          paymentMethod === PaymentMethod.CASH
+            ? calculateRounding(new Decimal(total))
+            : { rounding: 0, total };
 
         orders.push({
           id,
@@ -200,7 +217,6 @@ export default class PosSeeder implements Seeder {
           discount,
           total,
           status,
-          paymentMethod,
           notes: faker.helpers.maybe(() => faker.lorem.sentence(), { probability: 0.3 }),
         });
         payments.push({

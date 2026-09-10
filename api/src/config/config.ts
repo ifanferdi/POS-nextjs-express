@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import authConfig from './auth.config';
 import databaseConfig from './database.config';
+import midtransConfig from './midtrans.config';
 import storageConfig from './storage.config';
 
 const APP_PORT = process.env.APP_PORT || 3000;
@@ -8,7 +9,10 @@ const config = {
   app: {
     name: process.env.APP_NAME || 'ExpressJS Typescript',
     version: process.env.APP_VERSION || '1.0.0',
-    env: (process.env.APP_ENV || 'development') as 'development' | 'staging' | 'production',
+    env: (process.env.APP_ENV.toLowerCase() || 'development') as
+      | 'development'
+      | 'staging'
+      | 'production',
     port: APP_PORT,
     url: process.env.APP_URL || `http://localhost:${APP_PORT}`,
   },
@@ -36,6 +40,7 @@ const config = {
     index: 'auth-user-index',
   },
   redis: { url: process.env.REDIS_URL || 'redis://localhost:6379' },
+  midtrans: midtransConfig,
   filesystem: (process.env.FILESYSTEM || 'local') as 's3' | 'local',
   smtp: {
     user: process.env.SMTP_USER,

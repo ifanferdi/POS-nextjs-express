@@ -11,7 +11,7 @@ subscriber.connect();
 
 type SSEScope = (typeof config.sse.scope)[number];
 type SSEMessage = {
-  scope: SSEScope;
+  scope?: SSEScope;
   userId?: string;
   action: string;
   entity: string;
@@ -31,7 +31,7 @@ export async function initSSERedisBridge() {
           data: payload.data,
         };
 
-        if (payload.scope === 'user' && payload.userId) {
+        if (payload.userId) {
           sseManager.sendToUser({ userId: payload.userId, event, data });
         } else {
           sseManager.broadcast({ event, data });

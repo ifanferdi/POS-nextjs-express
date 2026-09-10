@@ -7,6 +7,7 @@ const DateStringSchema = z
   .refine((val) => !isString(new Date(val).getTime()), { message: 'Invalid date value' });
 
 export const StringSchema = z.string().trim();
+export const BooleanSchema = z.boolean();
 export const NumberSchema = z.number();
 export const DateSchema = z.union([DateStringSchema, z.date()]);
 export const BasePagination = <T extends EnumLike>(columns: T) => {
@@ -14,7 +15,7 @@ export const BasePagination = <T extends EnumLike>(columns: T) => {
   const SortDirectionEnum = z.enum(['asc', 'desc']).optional();
 
   return z.object({
-    page: NumberSchema.optional().default(1),
+    page: NumberSchema.default(1),
     limit: z.union([z.literal(-1), NumberSchema.optional()]).default(10),
     orderBy: z.array(z.object({ field: SortFieldEnum, direction: SortDirectionEnum })).optional(),
     columns: z.array(z.nativeEnum(columns)).optional(),

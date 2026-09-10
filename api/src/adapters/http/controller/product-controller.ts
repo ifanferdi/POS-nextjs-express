@@ -49,6 +49,7 @@ export default class ProductController extends BaseController {
     const params: FindByIdProductDto = {
       id: Number(req.params.id),
       with: req.query.with as any,
+      columns: req.query.columns as any,
     };
 
     FindByIdProductSchema.parse(params);

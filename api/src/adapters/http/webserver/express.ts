@@ -1,3 +1,12 @@
+import Routes from '@/adapters/http/routes';
+import ErrorHandler from '@/adapters/http/webserver/error-handler';
+import ExtractJwtToken from '@/adapters/http/webserver/extract-jwt-token';
+import RouteNotFoundHandler from '@/adapters/http/webserver/route-not-found-handler';
+import { verifySignedUrl } from '@/adapters/http/webserver/verify-signed-url';
+import config from '@/config/config';
+import { HttpStatusCode } from '@/constants/http-status.constant';
+import { Controllers } from '@/domain/adapters/controller.interface';
+import { UseCases } from '@/domain/use-cases/use-case.interface';
 import cors from 'cors';
 import { default as express, Express } from 'express';
 import morgan from 'morgan';
@@ -5,22 +14,15 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import swaggerUi from 'swagger-ui-express';
 import { parse } from 'yaml';
-import config from '@/config/config';
-import { HttpStatusCode } from '@/constants/http-status.constant';
-import { Controllers } from '@/domain/adapters/controller.interface';
-import { UseCases } from '@/domain/use-cases/use-case.interface';
-import Routes from '@/adapters/http/routes';
-import ErrorHandler from '@/adapters/http/webserver/error-handler';
-import ExtractJwtToken from '@/adapters/http/webserver/extract-jwt-token';
-import RouteNotFoundHandler from '@/adapters/http/webserver/route-not-found-handler';
-import { verifySignedUrl } from '@/adapters/http/webserver/verify-signed-url';
 
 export default function routes(app: Express, controllers: Controllers, useCases: UseCases) {
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
   app.use(morgan('dev'));
 
-  app.use(cors({ origin: 'http://localhost:3000', credentials: true }));
+  app.use(
+    cors({ origin: ['http://localhost:3000', 'http://192.168.111.212:3000'], credentials: true }),
+  );
 
   // SWAGGER UI
   const swaggerDocument = parse(

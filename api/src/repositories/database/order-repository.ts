@@ -1,8 +1,9 @@
 import { OrderStatus } from '@/domain/entities/enums/order.enum';
-import { PaymentStatus } from '@/domain/entities/enums/payment.enum';
-import { IOrder, IOrderItem, IPayment, StoreOrderDto } from '@/domain/entities/models/order';
-import { IUser } from '@/domain/entities/models/user';
+import { PaymentMethod, PaymentStatus } from '@/domain/entities/enums/payment.enum';
+import { MidtransPaymentUpdate } from '@/domain/entities/models/midtrans-payment-detail';
+import { StoreOrderDto, StoreOrderResponse } from '@/domain/entities/models/order';
 import { Repository } from '@/domain/repositories/database.interface';
+import AppError from '@/helpers/error.helper';
 import { generateOrderNumber } from '@/helpers/generate-string';
 import { Prisma } from '@/infrastructure/database/prisma/generated/client';
 import DatabaseBaseRepository from '@/repositories/database/_database-base-repository';
@@ -10,6 +11,7 @@ import QueryOrderRepository from '@/repositories/database/queries/query-order-re
 import {
   FindAllOrderDto,
   FindByIdOrderDto,
+  FindOneOrderDto,
   UpdateOrderStatusDto,
 } from '@/validations/order-validation';
 
@@ -48,7 +50,7 @@ export default class OrderRepository
     });
   }
 
-  async findOne(params: FindByIdOrderDto) {
+  async findOne(params: FindByIdOrderDto | FindOneOrderDto) {
     return this.prisma.order.findFirst({
       where: this.queryOrderRepository.handleWhere(params),
       select: {
@@ -58,18 +60,17 @@ export default class OrderRepository
     });
   }
 
-  store(data: StoreOrderDto) {
-    const { payment, subtotal, items, total, paymentMethod, ...orderData } = data;
+  async store(data: StoreOrderDto) {
+    const { payment, subtotal, items, total, meta, ...orderData } = data;
 
-    return this.prisma.$transaction(async (tx) => {
+    const order = await this.prisma.$transaction(async (tx) => {
       const order = await tx.order.create({
         data: {
           ...orderData,
           subtotal,
           total,
           orderNumber: generateOrderNumber(),
-          paymentMethod,
-          orderItems: { create: items },
+          orderItems: { create: items.map((item) => ({ ...item })) },
         },
         include: { orderItems: { include: { product: true } } },
       });
@@ -79,14 +80,18 @@ export default class OrderRepository
           ...payment,
           orderId: order.id,
           subtotal,
-          method: paymentMethod,
-          status: PaymentStatus.COMPLETED,
+          method: payment.method,
+          status:
+            payment.method === PaymentMethod.CASH ? PaymentStatus.SUCCESS : PaymentStatus.PENDING,
         },
       });
 
       await tx.order.update({
         where: { id: order.id },
-        data: { status: OrderStatus.COMPLETED },
+        data: {
+          status:
+            payment.method === PaymentMethod.CASH ? OrderStatus.COMPLETED : OrderStatus.PENDING,
+        },
       });
 
       // Atomic check + decrement: cegah race condition (TOCTOU)
@@ -99,19 +104,20 @@ export default class OrderRepository
 
         // 0 row ter-update → stok tidak cukup → throw → transaction rollback
         if (result.count === 0) {
-          throw new Error(`Stok produk ID ${item.productId} tidak mencukupi.`);
+          throw new AppError(`Stok produk ID ${item.productId} tidak mencukupi.`);
         }
       }
-
-      return tx.order.findUnique({
-        where: { id: order.id },
-        include: {
-          orderItems: { include: { product: true } },
-          payment: true,
-          user: { include: { profile: true } },
-        },
-      }) as Promise<IOrder & { user: IUser; orderItems: IOrderItem[]; payment: IPayment }>;
+      return order;
     });
+
+    return (await this.prisma.order.findUnique({
+      where: { id: order.id },
+      include: {
+        orderItems: { include: { product: true } },
+        payment: { include: { midtransDetail: true } },
+        user: { include: { profile: true } },
+      },
+    })) as unknown as Promise<StoreOrderResponse>;
   }
 
   update(data: UpdateOrderStatusDto) {
@@ -119,7 +125,7 @@ export default class OrderRepository
     return this.prisma.order.update({ where: { id }, data: updateData });
   }
 
-  async cancelOrder(id: number) {
+  cancelOrder(id: number) {
     return this.prisma.$transaction(async (tx) => {
       const order = await tx.order.findFirst({
         where: { id, status: { not: OrderStatus.CANCELLED } },
@@ -147,6 +153,46 @@ export default class OrderRepository
         where: { id },
         data: { status: OrderStatus.CANCELLED },
       });
+    });
+  }
+
+  midtransPaymentSuccess(
+    order: { id: number; status: OrderStatus },
+    payment: MidtransPaymentUpdate,
+  ) {
+    const { id: paymentId, midtransDetail, ...updatePayment } = payment;
+    const { midtransOrderId, ...detail } = midtransDetail;
+
+    return this.prisma.$transaction(async (tx) => {
+      await tx.payment.update({
+        where: { id: paymentId },
+        data: {
+          ...updatePayment,
+          midtransDetail: {
+            upsert: {
+              create: { midtransOrderId, ...detail },
+              update: detail,
+            },
+          },
+        },
+      });
+
+      await tx.order.update({ where: { id: order.id }, data: { status: order.status } });
+
+      const isRefunded = [
+        PaymentStatus.FAILED,
+        PaymentStatus.EXPIRED,
+        PaymentStatus.CANCELLED,
+      ].includes(payment.status);
+      if (isRefunded) {
+        const items = await tx.orderItem.findMany({ where: { orderId: order.id } });
+        for (const item of items)
+          if (item.productId)
+            await tx.product.update({
+              where: { id: item.productId },
+              data: { stock: { increment: item.quantity } },
+            });
+      }
     });
   }
 }

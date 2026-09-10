@@ -21,6 +21,8 @@ export default function Routes(app: Express, controllers: Controllers, auth: Aut
   app.use('/api/v1/categories', CategoryRoutes(controllers.categoryController, auth));
   app.use('/api/v1/products', ProductRoutes(controllers.productController, auth));
   app.use('/api/v1/orders', OrderRoutes(controllers.orderController, auth));
+  app.post('/api/v1/webhooks/midtrans', controllers.midtransController.webhook);
+  app.get('/api/v1/orders/:id/status', controllers.midtransController.status);
   app.use('/api/v1/payments', PaymentRoutes(controllers.paymentController, auth));
   app.use('/api/v1/sse', SseRoutes(controllers.sseController, auth));
 }

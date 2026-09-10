@@ -44,7 +44,7 @@ export const UpdateProductSchema = CreateProductSchema.extend({
   id: NumberSchema,
 }).partial({ name: true, price: true });
 
-export interface FindAllProductDto extends z.infer<typeof FindAllProductSchema>, SoftDeleteFields {}
+export interface FindAllProductDto extends z.input<typeof FindAllProductSchema>, SoftDeleteFields {}
 export interface FindByIdProductDto extends z.infer<typeof FindByIdProductSchema> {}
 export interface CreateProductDto extends z.infer<typeof CreateProductSchema> {}
 export interface UpdateProductDto extends z.infer<typeof UpdateProductSchema> {}

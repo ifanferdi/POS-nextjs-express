@@ -3,6 +3,7 @@ import AuthController from '@/adapters/http/controller/auth-controller';
 import CategoryController from '@/adapters/http/controller/category-controller';
 import OrderController from '@/adapters/http/controller/order-controller';
 import PaymentController from '@/adapters/http/controller/payment-controller';
+import MidtransController from '@/adapters/http/controller/midtrans-controller';
 import PermissionController from '@/adapters/http/controller/permission-controller';
 import ProductController from '@/adapters/http/controller/product-controller';
 import RoleController from '@/adapters/http/controller/role-controller';
@@ -20,4 +21,5 @@ export interface Controllers {
   productController: ProductController;
   orderController: OrderController;
   paymentController: PaymentController;
+  midtransController: MidtransController;
 }

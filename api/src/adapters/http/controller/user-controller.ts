@@ -53,7 +53,11 @@ export default class UserController extends BaseController {
   });
 
   findOne = asyncHandler(async (req: e.Request, res: e.Response) => {
-    const params = { id: Number(req.params.id), with: req.query.with } as FindByIdUserDto;
+    const params: FindByIdUserDto = {
+      id: Number(req.params.id),
+      with: req.query.with as any,
+      columns: req.query.columns as any,
+    };
     const result = await this.handleFindOne(params);
     res.send(result);
   });

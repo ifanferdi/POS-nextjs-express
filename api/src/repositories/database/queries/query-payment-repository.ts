@@ -1,3 +1,4 @@
+import { PaymentRelation } from '@/domain/entities/enums/payment.enum';
 import { Prisma } from '@/infrastructure/database/prisma/generated/client';
 import { PaymentScalarFieldEnum } from '@/infrastructure/database/prisma/generated/internal/prismaNamespace';
 import { FindAllPaymentDto, FindByIdPaymentDto } from '@/validations/payment-validation';
@@ -7,6 +8,14 @@ type PAYMENT_FIELD = (typeof PaymentScalarFieldEnum)[keyof typeof PaymentScalarF
 const PAYMENT_FIELDS = Object.keys(PaymentScalarFieldEnum) as PAYMENT_FIELD[];
 
 export default class QueryPaymentRepository {
+  handleInclude(relation: FindAllPaymentDto['with'] & FindByIdPaymentDto['with']) {
+    const include: Record<string, any> = {};
+
+    if (relation?.includes(PaymentRelation.ORDER)) include.order = true;
+
+    return Object.keys(include).length ? include : undefined;
+  }
+
   handleWhere(
     params: Omit<Partial<FindAllPaymentDto & FindByIdPaymentDto>, 'columns' | 'orderBy'>,
   ) {
@@ -32,7 +41,7 @@ export default class QueryPaymentRepository {
     })) as Record<string, 'asc' | 'desc'>[];
   }
 
-  handleSelect(cols: PAYMENT_FIELD[] = PAYMENT_FIELDS) {
+  handleSelect(cols: readonly PAYMENT_FIELD[] = PAYMENT_FIELDS) {
     const select: Prisma.PaymentSelect = {};
 
     if (cols && cols.length > 0) cols.forEach((c) => ((select as any)[c] = true));

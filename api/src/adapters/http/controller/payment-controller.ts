@@ -1,16 +1,13 @@
-import e from 'express';
-import asyncHandler from 'express-async-handler';
-import { HttpStatusCode } from '@/constants/http-status.constant';
+import BaseController from '@/adapters/http/controller/_base-controller';
 import { handleNumberOrArrayRequest, handleOrderByRequest } from '@/helpers/common.helper';
 import {
-  CreatePaymentDto,
-  CreatePaymentSchema,
   FindAllPaymentDto,
   FindAllPaymentSchema,
   FindByIdPaymentDto,
   FindByIdPaymentSchema,
 } from '@/validations/payment-validation';
-import BaseController from '@/adapters/http/controller/_base-controller';
+import e from 'express';
+import asyncHandler from 'express-async-handler';
 
 export default class PaymentController extends BaseController {
   findAll = asyncHandler(async (req: e.Request & Record<string, any>, res: e.Response) => {
@@ -37,7 +34,11 @@ export default class PaymentController extends BaseController {
   });
 
   findOne = asyncHandler(async (req: e.Request, res: e.Response) => {
-    const params: FindByIdPaymentDto = { id: Number(req.params.id) };
+    const params: FindByIdPaymentDto = {
+      id: Number(req.params.id),
+      with: req.query.with as any,
+      columns: req.query.columns as any,
+    };
 
     FindByIdPaymentSchema.parse(params);
 
@@ -46,18 +47,17 @@ export default class PaymentController extends BaseController {
     res.send(result);
   });
 
-  create = asyncHandler(async (req: e.Request, res: e.Response) => {
-    const payload: CreatePaymentDto = {
-      orderId: req.body.orderId,
-      amount: req.body.amount,
-      method: req.body.method,
-      reference: req.body.reference,
+  findOneByOrderId = asyncHandler(async (req: e.Request, res: e.Response) => {
+    const params: FindByIdPaymentDto = {
+      id: Number(req.params.orderId),
+      with: req.query.with as any,
+      columns: req.query.columns as any,
     };
 
-    CreatePaymentSchema.parse(payload);
+    FindByIdPaymentSchema.parse(params);
 
-    const payment = await this.useCases.paymentUseCase.createPayment.execute(payload);
+    const result = await this.useCases.paymentUseCase.findByOrderId.execute(params);
 
-    res.status(HttpStatusCode.CREATED).send({ message: 'Success.', payment });
+    res.send(result);
   });
 }

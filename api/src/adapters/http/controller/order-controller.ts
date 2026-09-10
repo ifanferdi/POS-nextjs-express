@@ -1,11 +1,6 @@
-import e from 'express';
-import asyncHandler from 'express-async-handler';
+import BaseController from '@/adapters/http/controller/_base-controller';
 import { HttpStatusCode } from '@/constants/http-status.constant';
-import {
-  extractUserId,
-  handleNumberOrArrayRequest,
-  handleOrderByRequest,
-} from '@/helpers/common.helper';
+import { handleNumberOrArrayRequest, handleOrderByRequest } from '@/helpers/common.helper';
 import { BaseFindById } from '@/validations/base-validation';
 import {
   CreateOrderDto,
@@ -17,7 +12,8 @@ import {
   UpdateOrderStatusDto,
   UpdateOrderStatusSchema,
 } from '@/validations/order-validation';
-import BaseController from '@/adapters/http/controller/_base-controller';
+import e from 'express';
+import asyncHandler from 'express-async-handler';
 
 export default class OrderController extends BaseController {
   findAll = asyncHandler(async (req: e.Request & Record<string, any>, res: e.Response) => {
@@ -51,6 +47,7 @@ export default class OrderController extends BaseController {
     const params: FindByIdOrderDto = {
       id: Number(req.params.id),
       with: req.query.with as any,
+      columns: req.query.columns as any,
     };
 
     FindByIdOrderSchema.parse(params);
@@ -62,8 +59,7 @@ export default class OrderController extends BaseController {
 
   create = asyncHandler(async (req: e.Request & Record<string, any>, res: e.Response) => {
     const payload: CreateOrderDto = {
-      customerId: req.body.customerId,
-      userId: req.body.userId || extractUserId(req),
+      userId: req.user?.id,
       notes: req.body.notes,
       items: req.body.items,
       paymentMethod: req.body.paymentMethod,

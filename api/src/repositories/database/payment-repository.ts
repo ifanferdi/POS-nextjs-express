@@ -1,19 +1,22 @@
 import { PaymentStatus } from '@/domain/entities/enums/payment.enum';
-import { Repository } from '@/domain/repositories/database.interface';
+import { PAYMENT_FIELD, PaymentSelectResult } from '@/domain/entities/models/payment';
 import { Prisma } from '@/infrastructure/database/prisma/generated/client';
+import {
+  PaymentInclude,
+  PaymentUncheckedCreateInput,
+  PaymentUpdateInput,
+} from '@/infrastructure/database/prisma/generated/models';
 import DatabaseBaseRepository from '@/repositories/database/_database-base-repository';
 import QueryPaymentRepository from '@/repositories/database/queries/query-payment-repository';
 import {
   CreatePaymentDto,
   FindAllPaymentDto,
-  FindByIdPaymentDto,
   FindOnePaymentDto,
+  UpdatePaymentDto,
 } from '@/validations/payment-validation';
+import _ from 'lodash';
 
-export default class PaymentRepository
-  extends DatabaseBaseRepository
-  implements Repository<FindAllPaymentDto, FindByIdPaymentDto, CreatePaymentDto, CreatePaymentDto>
-{
+export default class PaymentRepository extends DatabaseBaseRepository {
   private queryPaymentRepository = new QueryPaymentRepository();
 
   async findAll(params: Partial<FindAllPaymentDto>) {
@@ -38,23 +41,39 @@ export default class PaymentRepository
     });
   }
 
-  async findOne(params: FindOnePaymentDto) {
+  async findOne<const TCols extends readonly PAYMENT_FIELD[] | undefined = undefined>(
+    params: FindOnePaymentDto<TCols>,
+  ) {
     return this.prisma.payment.findFirst({
       where: this.queryPaymentRepository.handleWhere(params),
-      select: { ...this.queryPaymentRepository.handleSelect() },
-    });
+      select: {
+        ...this.queryPaymentRepository.handleSelect(params?.columns),
+        ...this.queryPaymentRepository.handleInclude(params?.with),
+      },
+    }) as Promise<PaymentSelectResult<TCols> | null>;
   }
 
   store(data: CreatePaymentDto) {
-    return this.prisma.payment.create({ data: { ...data, status: PaymentStatus.COMPLETED } });
+    if (!data.status) data.status = PaymentStatus.PENDING;
+
+    const createData: PaymentUncheckedCreateInput = _.omit(data, 'midtransDetail');
+    if (data.midtransDetail) createData.midtransDetail = { create: data.midtransDetail };
+
+    return this.prisma.payment.create({ data: createData });
   }
 
-  update(data: CreatePaymentDto) {
-    const { ...updateData } = data;
-    return this.prisma.payment.update({
-      where: { id: updateData.orderId },
-      data: updateData,
-    });
+  update(data: UpdatePaymentDto) {
+    const { orderId } = data;
+    if (!data.status) data.status = PaymentStatus.PENDING;
+
+    const updateData: PaymentUpdateInput = _.omit(data, 'midtransDetail');
+    const include: PaymentInclude = {};
+    if (data.midtransDetail) {
+      updateData.midtransDetail = { create: data.midtransDetail };
+      include.midtransDetail = true;
+    }
+
+    return this.prisma.payment.update({ where: { orderId }, data: updateData, include });
   }
 
   destroy(id: number | number[]) {

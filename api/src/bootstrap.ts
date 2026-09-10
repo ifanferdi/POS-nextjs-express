@@ -1,6 +1,7 @@
 import AppController from '@/adapters/http/controller/app-controller';
 import AuthController from '@/adapters/http/controller/auth-controller';
 import CategoryController from '@/adapters/http/controller/category-controller';
+import MidtransController from '@/adapters/http/controller/midtrans-controller';
 import OrderController from '@/adapters/http/controller/order-controller';
 import PaymentController from '@/adapters/http/controller/payment-controller';
 import PermissionController from '@/adapters/http/controller/permission-controller';
@@ -40,8 +41,8 @@ import CreateOrder from '@/use-cases/order/create-order';
 import FindAllOrder from '@/use-cases/order/find-all-order';
 import FindByIdOrder from '@/use-cases/order/find-by-id-order';
 import UpdateOrderStatus from '@/use-cases/order/update-order-status';
-import CreatePayment from '@/use-cases/payment/create-payment';
 import FindAllPayment from '@/use-cases/payment/find-all-payment';
+import FindByOrderId from '@/use-cases/payment/find-by-order-id';
 import FindByIdPayment from '@/use-cases/payment/find-by-id-payment';
 import CheckValidPermission from '@/use-cases/permission/check-valid-permission';
 import CreatePermission from '@/use-cases/permission/create-permission';
@@ -73,7 +74,9 @@ import UpdateUser from '@/use-cases/user/update-user';
 import { Express } from 'express';
 import SseController from './adapters/http/controller/sse-controller';
 import { initSSERedisBridge } from './infrastructure/event-stream/sse-redis-bridge';
+import MidtransRepository from './repositories/midtrans/midtrans-repository';
 import GeneratePresignUrl from './use-cases/common/upload-presign-url';
+import SyncMidtransToDatabase from './use-cases/midtrans/sync-midtrans-to-database';
 
 export default async function bootstrap(app: Express) {
   const repositories = await setupRepositories();
@@ -97,6 +100,7 @@ function setupControllers(useCases: UseCases): Controllers {
     productController: new ProductController(useCases),
     orderController: new OrderController(useCases),
     paymentController: new PaymentController(useCases),
+    midtransController: new MidtransController(useCases),
   };
 }
 
@@ -113,6 +117,7 @@ async function setupRepositories(): Promise<Repositories> {
     paymentRepository: new PaymentRepository(prisma),
     redisRepository: new RedisRepository(redisClient),
     storageRepository: new S3StorageRepository(),
+    midtransRepository: new MidtransRepository(),
   };
 }
 
@@ -183,7 +188,10 @@ function setupUseCases(repositories: Repositories): UseCases {
     paymentUseCase: {
       findAllPayment: new FindAllPayment(repositories),
       findByIdPayment: new FindByIdPayment(repositories),
-      createPayment: new CreatePayment(repositories),
+      findByOrderId: new FindByOrderId(repositories),
+    },
+    midtransUseCase: {
+      syncMidtransToDatabase: new SyncMidtransToDatabase(repositories),
     },
   };
 }

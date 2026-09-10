@@ -1,5 +1,3 @@
-import e from 'express';
-import asyncHandler from 'express-async-handler';
 import { HttpStatusCode } from '@/constants/http-status.constant';
 import { UseCases } from '@/domain/use-cases/use-case.interface';
 import { handleNumberOrArrayRequest, handleOrderByRequest } from '@/helpers/common.helper';
@@ -16,6 +14,8 @@ import {
   UpdateRoleDto,
   UpdateRoleSchema,
 } from '@/validations/role-validation';
+import e from 'express';
+import asyncHandler from 'express-async-handler';
 
 export default class RoleController {
   constructor(private useCases: UseCases) {}
@@ -46,7 +46,11 @@ export default class RoleController {
   });
 
   findOne = asyncHandler(async (req: e.Request, res: e.Response) => {
-    const params = { id: Number(req.params.id), with: req.query.with };
+    const params: FindByIdRoleDto = {
+      id: Number(req.params.id),
+      with: req.query.with as any,
+      columns: req.query.columns as any,
+    };
     const result = await this.handleFindOne(params as FindByIdRoleDto);
     res.send(result);
   });
