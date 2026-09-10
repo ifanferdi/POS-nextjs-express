@@ -1,4 +1,4 @@
-import { ApiResponse, Order, PaginatedResponse } from '@/domain';
+import { ActionResult, ApiResponse, Order, OrderApiResponse, OrderStatusResponse, PaginatedResponse } from '@/domain';
 import {
   CreateOrderInput,
   GetAllOrderParams,
@@ -7,10 +7,6 @@ import {
 } from '@/features/orders/schema';
 import { createServerApiClient } from '@/lib/api-server';
 import { defaultPaginatedResponse } from '@/lib/helper';
-
-interface OrderApiResponse extends ApiResponse {
-  order: Order;
-}
 
 export async function getAllOrders<T = Order>(params: GetAllOrderParams) {
   try {
@@ -33,6 +29,22 @@ export async function getOrderById<T = Order>(id: number, relation?: OrderRelati
 export async function createOrder(input: CreateOrderInput) {
   const api = await createServerApiClient();
   const response = await api.post<OrderApiResponse>('/v1/orders', input);
+
+  return response.data;
+}
+
+export async function getOrderStatus(id: number) {
+  const api = await createServerApiClient();
+  const response = await api.get<OrderStatusResponse>(`/v1/orders/${id}/status`);
+
+  return response.data;
+}
+
+export async function retryPayment(orderId: number) {
+  const api = await createServerApiClient();
+  const response = await api.post<ActionResult<OrderApiResponse['order']>>(
+    `/v1/payments/${orderId}/retry`,
+  );
 
   return response.data;
 }

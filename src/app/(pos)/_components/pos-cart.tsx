@@ -45,9 +45,9 @@ export function PosCart({ onCheckoutSuccess }: PosCartProps) {
             {items.map((item) => (
               <li
                 key={item.productId}
-                className="flex gap-3 rounded-lg border border-border/40 p-2.5 bg-primary/20 dark:bg-primary/40 transition hover:bg-primary/30 dark:hover:bg-primary/20 hover:border-primary"
+                className="flex gap-3 items-center rounded-lg border border-border/40 p-2.5 bg-primary/20 dark:bg-primary/40 transition hover:bg-primary/30 dark:hover:bg-primary/20 hover:border-primary"
               >
-                <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-md bg-muted">
+                <div className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-md bg-muted">
                   {item.imageUrl ? (
                     <Image
                       src={item.imageUrl}
@@ -83,7 +83,7 @@ export function PosCart({ onCheckoutSuccess }: PosCartProps) {
                       <button
                         type="button"
                         onClick={() => dec(item.productId)}
-                        className="flex size-6 items-center justify-center rounded-md border border-border/60 text-muted-foreground transition hover:bg-muted disabled:opacity-50"
+                        className="flex size-6 items-center justify-center rounded-md border border-border/60 text-muted-foreground transition hover:bg-primary/40 hover:text-white disabled:opacity-50"
                         aria-label="Decrease quantity"
                       >
                         <MinusIcon className="size-3.5" />
@@ -94,7 +94,7 @@ export function PosCart({ onCheckoutSuccess }: PosCartProps) {
                       <button
                         type="button"
                         onClick={() => inc(item.productId)}
-                        className="flex size-6 items-center justify-center rounded-md border border-border/60 text-muted-foreground transition hover:bg-muted disabled:opacity-50"
+                        className="flex size-6 items-center justify-center rounded-md border border-border/60 text-muted-foreground transition hover:bg-primary/40 hover:text-white disabled:opacity-50"
                         aria-label="Increase quantity"
                       >
                         <PlusIcon className="size-3.5" />
@@ -134,7 +134,7 @@ export function PosCart({ onCheckoutSuccess }: PosCartProps) {
 
       <PosCheckoutDialog
         open={checkoutOpen}
-        onOpenChange={setCheckoutOpen}
+        setCheckoutOpen={setCheckoutOpen}
         subtotal={subtotal}
         onCheckoutSuccess={onCheckoutSuccess}
       />

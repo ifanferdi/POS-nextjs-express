@@ -10,7 +10,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { company } from '@/config/config';
-import { PaymentMethod } from '@/domain';
+import { PaymentMethod } from '@/domain/payment.types';
 import { formatCurrency } from '@/lib/helper';
 import { PrinterIcon, RotateCcwIcon } from 'lucide-react';
 import moment from 'moment';

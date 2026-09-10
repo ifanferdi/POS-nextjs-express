@@ -1,26 +1,16 @@
 import { Product } from '@/domain/product.types';
 import { User } from '@/domain/user.types';
+import { ApiResponse } from './general.types';
+import { Payment, PaymentMethod } from './payment.types';
 
 export enum OrderStatus {
   PENDING = 'pending',
+  PAID = 'paid',
   COMPLETED = 'completed',
   CANCELLED = 'cancelled',
+  EXPIRED = 'expired',
 }
 export const ORDER_STATUS_VALUES = Object.values(OrderStatus);
-
-export enum PaymentMethod {
-  CASH = 'cash',
-  CARD = 'card',
-  TRANSFER = 'transfer',
-}
-export const PAYMENT_METHOD_VALUES = Object.values(PaymentMethod);
-
-export enum PaymentStatus {
-  PENDING = 'pending',
-  COMPLETED = 'completed',
-  FAILED = 'failed',
-  REFUNDED = 'refunded',
-}
 
 export enum OrderRelation {
   ORDER_ITEMS = 'order-items',
@@ -44,10 +34,10 @@ export interface Order {
   meta: Record<string, unknown> | null;
   createdAt: Date;
   updatedAt: Date;
-  orderItems: OrderItem[];
-  customer: User;
-  user: User;
-  payment: Payment;
+  orderItems?: OrderItem[];
+  customer?: User;
+  user?: User;
+  payment?: Payment;
 }
 
 export interface OrderItem {
@@ -63,17 +53,14 @@ export interface OrderItem {
   product?: Product;
 }
 
-export interface Payment {
-  id: number;
-  orderId: number;
-  subtotal: number;
-  rounding: number;
-  total: number;
-  amount: number;
-  change: number;
-  method: PaymentMethod;
-  reference: string | null;
-  status: PaymentStatus;
-  createdAt: Date;
-  updatedAt: Date;
+export interface OrderApiResponse extends ApiResponse {
+  order: {
+    order: Order;
+    paymentType?: string;
+    vaNumber?: number;
+    qrCodeUrl?: string;
+    expiryTime?: string;
+  };
 }
+
+export type OrderStatusResponse = Order;

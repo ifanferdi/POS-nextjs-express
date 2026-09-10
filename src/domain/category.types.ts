@@ -7,6 +7,9 @@ export interface Category {
   createdAt: Date;
   updatedAt: Date;
   products?: Product[];
+  _count?: {
+    productHasCategories: number;
+  };
 }
 
 export enum CategoryRelation {

@@ -1,6 +1,6 @@
 'use server';
 
-import { ActionResult, Order } from '@/domain';
+import { ActionResult, Order, OrderApiResponse } from '@/domain';
 import * as api from '@/features/orders/api';
 import {
   CreateOrderInput,
@@ -10,7 +10,9 @@ import {
 } from '@/features/orders/schema';
 import { revalidatePath } from 'next/cache';
 
-export async function createOrderAction(input: CreateOrderInput): Promise<ActionResult<Order>> {
+export async function createOrderAction(
+  input: CreateOrderInput,
+): Promise<ActionResult<OrderApiResponse['order']>> {
   const validate = CreateOrderSchema.safeParse(input);
   if (!validate.success) return { success: false, error: 'Invalid input.' };
 

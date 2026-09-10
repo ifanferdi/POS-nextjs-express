@@ -1,4 +1,5 @@
-import {  TablePagination } from '@/components/shared/table';
+import { OrderActions } from '@/app/(protected)/orders/_components/order-actions';
+import { TablePagination } from '@/components/shared/table';
 import { DataTable, EmptyTable } from '@/components/shared/table-server';
 import { Badge } from '@/components/ui/badge';
 import { Order, OrderStatus } from '@/domain';
@@ -6,7 +7,6 @@ import { getAllOrders } from '@/features/orders/api';
 import { GetAllOrderParams } from '@/features/orders/schema';
 import { formatCurrency } from '@/lib/helper';
 import moment from 'moment';
-import { OrderActions } from '@/app/(protected)/orders/_components/order-actions';
 
 export const headers = [
   '#',
@@ -103,6 +103,8 @@ function OrderTable(props: OrderTableProps) {
 
 const ORDER_STATUS_STYLES: Record<OrderStatus, string> = {
   [OrderStatus.PENDING]: 'bg-warning/10 text-warning',
+  [OrderStatus.PAID]: 'bg-success/10 text-success',
+  [OrderStatus.EXPIRED]: 'bg-destructive/10 text-destructive',
   [OrderStatus.COMPLETED]: 'bg-success/10 text-success',
   [OrderStatus.CANCELLED]: 'bg-destructive/10 text-destructive',
 };

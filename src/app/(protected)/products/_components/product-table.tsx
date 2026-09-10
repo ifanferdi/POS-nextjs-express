@@ -2,6 +2,7 @@ import { ProductActions } from '@/app/(protected)/products/_components/product-a
 import { TablePagination } from '@/components/shared/table';
 import { DataTable, EmptyTable, TooltipedCell } from '@/components/shared/table-server';
 import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { CategoryOption, Product } from '@/domain';
 import { getAllProducts } from '@/features/products/api';
 import { GetAllProductParams } from '@/features/products/schema';
@@ -81,14 +82,13 @@ function ProductTable(props: ProductTableProps) {
 }
 
 function handleCategoriesColumn(product: Product) {
-  const maxVisibleCategories = 2;
   const categories = product.categories!;
-  const visibleCategories = categories.slice(0, maxVisibleCategories);
-  const remaining = categories.length - visibleCategories.length;
+  const visibleCategories = categories.slice(0, 3);
+  const hiddenCategories = categories.slice(3);
 
   return (
     <div className="flex flex-wrap items-center gap-1">
-      {visibleCategories!.map((category) => (
+      {visibleCategories.map((category) => (
         <span
           key={category.id}
           className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary"
@@ -97,10 +97,23 @@ function handleCategoriesColumn(product: Product) {
           {category.name}
         </span>
       ))}
-      {remaining > 0 && (
-        <span className="inline-flex h-5 items-center rounded-full bg-muted px-2 text-xs font-medium text-muted-foreground">
-          +{remaining} more
-        </span>
+      {hiddenCategories.length > 0 && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className="inline-flex h-5 items-center rounded-full bg-muted px-2 text-xs font-medium text-muted-foreground cursor-help">
+              +{hiddenCategories.length} more
+            </span>
+          </TooltipTrigger>
+          <TooltipContent>
+            <div className="flex flex-col gap-1">
+              {hiddenCategories.map((cat) => (
+                <span key={cat.id} className="text-xs">
+                  {cat.name}
+                </span>
+              ))}
+            </div>
+          </TooltipContent>
+        </Tooltip>
       )}
     </div>
   );

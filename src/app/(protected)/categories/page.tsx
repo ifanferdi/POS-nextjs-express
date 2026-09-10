@@ -13,7 +13,7 @@ export default async function CategoriesPage({
 }) {
   const { page, q } = await searchParams;
   const pageNum = Number(page ?? 1);
-  const params: GetAllCategoryParams = { page: pageNum, q };
+  const params: GetAllCategoryParams = { page: pageNum, q, orderBy: ['name:asc'] };
 
   return (
     <div className="space-y-6">

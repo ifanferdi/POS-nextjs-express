@@ -2,15 +2,19 @@
 
 import { PosCart } from '@/app/(pos)/_components/pos-cart';
 import { PosProductGrid } from '@/app/(pos)/_components/pos-product-grid';
+import { PosReceipt } from '@/app/(pos)/_components/pos-receipt';
 import { CategoryOption, Order, Product } from '@/domain';
 import { CartItem, useCartStore } from '@/hooks/pos-cart-store';
 import { useState } from 'react';
-import { PosReceipt } from '@/app/(pos)/_components/pos-receipt';
 
 export interface PosLastOrder {
   order: Order;
   items: CartItem[];
   amountTendered?: number;
+  qrCodeUrl?: string;
+  vaNumber?: string;
+  paymentType?: string;
+  expiryTime?: string;
 }
 
 interface PosViewProps {
@@ -45,9 +49,9 @@ export function PosView({ products, totalProducts, categories }: PosViewProps) {
         <PosCart onCheckoutSuccess={setLastOrder} />
       </aside>
 
-      {lastOrder && (
+      {lastOrder && lastOrder.order.payment?.status === 'success' ? (
         <PosReceipt lastOrder={lastOrder} onNewTransaction={() => setLastOrder(null)} />
-      )}
+      ) : null}
     </div>
   );
 }

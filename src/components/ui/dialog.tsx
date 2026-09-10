@@ -43,10 +43,12 @@ function DialogContent({
   className,
   children,
   showCloseButton = true,
+  overlayClassName,
   onInteractOutside,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   showCloseButton?: boolean;
+  overlayClassName?: string;
 }) {
   // ponytail: Select/DropdownMenu di-dalam Dialog menjadi DismissableLayer lebih
   // tinggi yang disableOutsidePointerEvents → dialog content jadi pointer-events:none.
@@ -69,7 +71,7 @@ function DialogContent({
 
   return (
     <DialogPortal>
-      <DialogOverlay />
+      <DialogOverlay className={overlayClassName} />
       <DialogPrimitive.Content
         data-slot="dialog-content"
         onInteractOutside={(e) => {

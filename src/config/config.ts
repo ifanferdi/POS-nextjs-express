@@ -87,7 +87,7 @@ export const files = {
 export const midtrans = {
   clientKey: process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY ?? '',
   snapUrl:
-    process.env.NEXT_PUBLIC_MIDTRANS_ENV === 'production'
+    process.env.NEXT_PUBLIC_MIDTRANS_IS_PRODUCTION === 'true'
       ? 'https://app.midtrans.com/snap/snap.js'
       : 'https://app.sandbox.midtrans.com/snap/snap.js',
 };

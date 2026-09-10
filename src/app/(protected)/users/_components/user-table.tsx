@@ -60,7 +60,12 @@ function UserTable(props: UserTableProps) {
             </>
           ),
         },
-        { key: 'username', type: 'custom', content: user.username },
+        {
+          key: 'username',
+          type: 'custom',
+          content: user.username,
+          className: 'text-muted-foreground',
+        },
         { key: 'gender', content: _.capitalize(user.profile.gender) },
         {
           key: 'birth',

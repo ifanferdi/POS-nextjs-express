@@ -5,8 +5,9 @@ import { DataTable, EmptyTable } from '@/components/shared/table-server';
 import { Category } from '@/domain';
 import { getAllCategories } from '@/features/categories/api';
 import { GetAllCategoryParams } from '@/features/categories/schema';
+import Link from 'next/link';
 
-export const headers = ['#', 'Name', ''];
+export const headers = ['#', 'Name', 'Total Products', ''];
 
 interface categoriesTableSectionProps {
   params: GetAllCategoryParams;
@@ -36,11 +37,29 @@ function CategoryTable(props: CategoryTableProps) {
 
   return (
     <DataTable
-      className="md:w-lg"
+      className="md:w-xl"
       headers={headers}
       records={categories}
       cells={(category) => [
-        { key: 'name', type: 'custom', content: <CategoryDetailDialog category={category} /> },
+        {
+          key: 'name',
+          type: 'custom',
+          content: <CategoryDetailDialog category={category} />,
+          className: 'min-w-64',
+        },
+        {
+          key: 'products',
+          type: 'custom',
+          content: (
+            <Link
+              href={`/products?categoryId[]=${category.id}`}
+              className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors"
+            >
+              <span className="font-medium">{category._count?.productHasCategories ?? 0}</span>
+              <span className="text-xs">→</span>
+            </Link>
+          ),
+        },
         {
           key: 'action',
           type: 'custom',

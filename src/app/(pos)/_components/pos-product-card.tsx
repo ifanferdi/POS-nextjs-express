@@ -3,7 +3,7 @@ import { Product } from '@/domain';
 import { CartItem, useCartStore } from '@/hooks/pos-cart-store';
 import { formatCurrency } from '@/lib/helper';
 import { cn } from '@/lib/utils';
-import { MinusIcon, PackageIcon, PlusIcon, XIcon } from 'lucide-react';
+import { Loader2Icon, MinusIcon, PackageIcon, PlusIcon, XIcon } from 'lucide-react';
 import Image from 'next/image';
 import { useState } from 'react';
 
@@ -28,8 +28,10 @@ export function ProductCard({
   return (
     <div
       className={cn(
-        'flex flex-col overflow-hidden rounded-lg border transition-colors',
-        added ? 'border-primary ring-2 ring-primary/20' : 'border-border/60 hover:border-border',
+        'group flex flex-col overflow-hidden rounded-lg border transition-all duration-300',
+        added
+          ? 'border-primary ring-2 ring-primary/20'
+          : 'border-border/60 hover:border-border hover:shadow-lg hover:-translate-y-1',
       )}
     >
       <div className="relative aspect-square w-full bg-muted">
@@ -57,7 +59,7 @@ export function ProductCard({
                 stock: product.stock,
               })
             }
-            className="mt-1 w-full"
+            className="mt-1 w-full hover:bg-muted dark:hover:bg-muted"
           >
             + Add
           </Button>
@@ -66,7 +68,7 @@ export function ProductCard({
             <button
               type="button"
               onClick={() => remove(product.id)}
-              className="flex size-7 shrink-0 items-center justify-center rounded-md border border-border/60 text-muted-foreground transition hover:bg-muted hover:text-destructive"
+              className="flex size-7 shrink-0 items-center justify-center rounded-md border border-border/60 text-muted-foreground transition hover:bg-destructive hover:text-white"
               aria-label="Remove from cart"
             >
               <XIcon className="size-3.5" />
@@ -75,7 +77,7 @@ export function ProductCard({
               <button
                 type="button"
                 onClick={() => dec(product.id)}
-                className="flex size-7 items-center justify-center text-muted-foreground transition hover:bg-muted"
+                className="flex size-7 items-center justify-center text-muted-foreground transition hover:bg-muted rounded-s-md"
                 aria-label="Decrease"
               >
                 <MinusIcon className="size-3.5" />
@@ -84,7 +86,7 @@ export function ProductCard({
               <button
                 type="button"
                 onClick={() => inc(product.id)}
-                className="flex size-7 items-center justify-center text-muted-foreground transition hover:bg-muted"
+                className="flex size-7 items-center justify-center text-muted-foreground transition hover:bg-muted rounded-e-md"
                 aria-label="Increase"
               >
                 <PlusIcon className="size-3.5" />
@@ -102,25 +104,36 @@ interface ProductImageProps {
   name: string;
 }
 function ProductImage({ imageUrl, name }: ProductImageProps) {
+  const [error, setError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  if (!imageUrl)
+  if (!imageUrl || error)
     return (
       <div className="flex size-full items-center justify-center">
-        <PackageIcon className="size-10 text-muted-foreground/50" />
+        <PackageIcon className="size-10 text-muted-foreground" />
       </div>
     );
 
   return (
-    <Image
-      src={imageUrl}
-      alt={name}
-      fill // ← otomatis isi container
-      className={`object-cover transition-opacity duration-300 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
-      sizes="(max-width: 768px) 100px, 200px"
-      loading="eager"
-      onLoad={() => setIsLoading(false)}
-      onError={() => setIsLoading(false)}
-    />
+    <>
+      {isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <Loader2Icon className="size-8 animate-spin text-muted-foreground" />
+        </div>
+      )}
+      <Image
+        src={imageUrl}
+        alt={name}
+        fill
+        className={`object-cover transition-all duration-300 group-hover:scale-105 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
+        sizes="(max-width: 768px) 100px, 200px"
+        loading="eager"
+        onLoad={() => setIsLoading(false)}
+        onError={() => {
+          setIsLoading(false);
+          setError(true);
+        }}
+      />
+    </>
   );
 }

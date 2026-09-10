@@ -34,9 +34,13 @@ interface TableProps<T> {
   isNeedNumberColumn?: boolean;
   headers: string[];
   records: T[];
-  cells: (
-    cell: T,
-  ) => { key: string; type?: 'custom' | 'default' | 'link'; content: ReactNode; url?: string }[];
+  cells: (cell: T) => {
+    key: string;
+    type?: 'custom' | 'default' | 'link';
+    content: ReactNode;
+    url?: string;
+    className?: string;
+  }[];
   className?: string;
 }
 export function DataTable<T>({
@@ -67,8 +71,14 @@ export function DataTable<T>({
               {isNeedNumberColumn && (
                 <TableCell className="text-muted-foreground text-center">{index + 1}</TableCell>
               )}
-              {cells(record).map(({ key, content, type, url }) => (
-                <TableCellByType key={key} content={content} type={type} url={url} />
+              {cells(record).map(({ key, content, type, url, className }) => (
+                <TableCellByType
+                  key={key}
+                  content={content}
+                  className={className}
+                  type={type}
+                  url={url}
+                />
               ))}
             </TableRow>
           ))}
@@ -82,24 +92,26 @@ function TableCellByType({
   content,
   type,
   url,
+  className,
 }: {
   content: ReactNode;
   type?: 'custom' | 'default' | 'link';
   url?: string;
+  className?: string;
 }) {
   switch (type) {
     case 'custom':
-      return <TableCell className="text-muted-foreground">{content}</TableCell>;
+      return <TableCell className={className}>{content}</TableCell>;
     case 'link':
       return (
         <TableCell>
-          <Link href={url || ''} className="flex items-center gap-3">
+          <Link href={url || ''} className={`${className} flex items-center gap-3`}>
             {content}
           </Link>
         </TableCell>
       );
     default:
-      return <TableCell>{content}</TableCell>;
+      return <TableCell className={`${className} text-muted-foreground`}>{content}</TableCell>;
   }
 }
 

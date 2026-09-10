@@ -19,8 +19,8 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={`${font.variable} font-sans antialiased`}>
+    <html lang="en" className={font.variable} suppressHydrationWarning>
+      <body className={`${font.className} antialiased`}>
         <ThemeProvider>
           <TooltipProvider>
             {children}

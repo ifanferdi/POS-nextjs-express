@@ -1,3 +1,4 @@
+import { OrderActions } from '@/app/(protected)/orders/_components/order-actions';
 import { OrderStatusBadge } from '@/app/(protected)/orders/_components/order-table';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -19,10 +20,10 @@ import moment from 'moment';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { type ReactNode } from 'react';
-import { OrderActions } from '@/app/(protected)/orders/_components/order-actions';
 
 const PAYMENT_STATUS_STYLES: Record<PaymentStatus, string> = {
   [PaymentStatus.PENDING]: 'bg-warning/10 text-warning',
+  [PaymentStatus.SUCCESS]: 'bg-success/10 text-success',
   [PaymentStatus.COMPLETED]: 'bg-success/10 text-success',
   [PaymentStatus.FAILED]: 'bg-destructive/10 text-destructive',
   [PaymentStatus.REFUNDED]: 'bg-info/10 text-info',
