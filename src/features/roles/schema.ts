@@ -6,6 +6,7 @@ const Relation = z.array(z.enum(RoleRelation)).optional();
 
 export const GetAllRoleSchema = BasePagination.extend({
   with: Relation,
+  columns: z.array(z.string()).optional(),
 });
 
 const BaseRoleSchema = z.object({

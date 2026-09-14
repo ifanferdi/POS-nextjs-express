@@ -1,8 +1,16 @@
+import { Order } from './order.types';
+
+export enum PaymentRelation {
+  ORDER = 'order',
+  MIDTRANS_DETAIL = 'midtrans-detail',
+}
+
 export enum PaymentStatus {
   PENDING = 'pending',
   SUCCESS = 'success',
-  COMPLETED = 'completed',
   FAILED = 'failed',
+  EXPIRED = 'expired',
+  CANCELLED = 'cancelled',
   REFUNDED = 'refunded',
 }
 
@@ -29,6 +37,7 @@ export interface Payment {
   status: PaymentStatus;
   createdAt: Date;
   updatedAt: Date;
+  order?: Order;
   midtransDetail?: MidtransPaymentDetail;
 }
 

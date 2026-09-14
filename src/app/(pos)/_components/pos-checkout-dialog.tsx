@@ -20,11 +20,16 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Order } from '@/domain';
-import { MidtransPaymentDetail, PaymentMethod } from '@/domain/payment.types';
+import {
+  MidtransPaymentDetail,
+  Payment,
+  PaymentMethod,
+  PaymentStatus,
+} from '@/domain/payment.types';
 import { createOrderAction } from '@/features/orders/action';
 import { PosCheckoutForm, PosCheckoutFormSchema } from '@/features/orders/schema';
+import { getPaymentByOrderId } from '@/features/payments/action';
 import { CartItem, useCartStore } from '@/hooks/pos-cart-store';
-import { useSSE } from '@/hooks/use-sse';
 import { calculateRounding, formatCurrency } from '@/lib/helper';
 import { cn } from '@/lib/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -74,10 +79,9 @@ function PaymentCountdown({
   const [progress, setProgress] = useState<number>(100);
 
   useEffect(() => {
-    // const expiry = order.payment?.midtransDetail?.expiryTime
-    //   ? new Date(order.payment?.midtransDetail?.expiryTime).getTime()
-    //   : moment().add(1, 'hours').toDate().getTime();
-    const expiry = moment().add(10, 'seconds').toDate().getTime();
+    const expiry = order.payment?.midtransDetail?.expiryTime
+      ? new Date(order.payment?.midtransDetail?.expiryTime).getTime()
+      : moment().add(1, 'hours').toDate().getTime();
     const start = Date.now();
     const totalDuration = expiry - start;
 
@@ -180,26 +184,26 @@ export function PosCheckoutDialog({
     },
   });
 
-  useSSE<Order>({
-    events: ['order.status'],
-    onEvent: ({ data }) => {
-      console.log({ open, isPaymentMode, pendingPayment });
-      const paidOrder = data[0];
-      if (paidOrder.orderNumber !== createdOrder?.orderNumber) return;
+  // useSSE<Order>({
+  //   events: ['order.status'],
+  //   onEvent: ({ data }) => {
+  //     console.log({ open, isPaymentMode, pendingPayment });
+  //     const paidOrder = data[0];
+  //     if (paidOrder.orderNumber !== createdOrder?.orderNumber) return;
 
-      useCartStore.getState().clear();
-      if (isPaymentMode) toast.success('Payment received!');
-      if (pendingPayment) {
-        onCheckoutSuccess({
-          order: paidOrder,
-          items: pendingPayment.snapshot,
-        });
-      }
-      form.reset();
-      setPendingPayment(undefined);
-      setCheckoutOpen(false);
-    },
-  });
+  //     useCartStore.getState().clear();
+  //     if (isPaymentMode) toast.success('Payment received!');
+  //     if (pendingPayment) {
+  //       onCheckoutSuccess({
+  //         order: paidOrder,
+  //         items: pendingPayment.snapshot,
+  //       });
+  //     }
+  //     form.reset();
+  //     setPendingPayment(undefined);
+  //     setCheckoutOpen(false);
+  //   },
+  // });
 
   function onSubmit(data: PosCheckoutForm) {
     startTransition(async () => {
@@ -526,6 +530,13 @@ export function PosCheckoutDialog({
                     <p className="text-xs text-muted-foreground text-center">
                       Use mobile banking or ATM to transfer to this account number
                     </p>
+                    <CheckPaymentStatusButton
+                      orderId={createdOrder.id}
+                      isPaymentMode={isPaymentMode}
+                      setCheckoutOpen={setCheckoutOpen}
+                      form={form}
+                      setPendingPayment={setPendingPayment}
+                    />
                   </div>
                 ) : null}
               </div>
@@ -534,5 +545,43 @@ export function PosCheckoutDialog({
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function CheckPaymentStatusButton({
+  orderId,
+  isPaymentMode,
+  setCheckoutOpen,
+  form,
+  setPendingPayment,
+}: {
+  orderId: number;
+  isPaymentMode: boolean;
+  setCheckoutOpen: (open: boolean) => void;
+  form: UseFormReturn<PosCheckoutForm>;
+  setPendingPayment: (
+    result: (MidtransPaymentDetail & { snapshot: CartItem[] }) | undefined,
+  ) => void;
+}) {
+  const onClick = async () => {
+    const payment = await getPaymentByOrderId<Pick<Payment, 'id' | 'status'>>({
+      orderId,
+      columns: ['status'],
+    });
+
+    if (payment.status === PaymentStatus.SUCCESS) {
+      useCartStore.getState().clear();
+      if (isPaymentMode) toast.success('Payment received!');
+      form.reset();
+      setPendingPayment(undefined);
+      setCheckoutOpen(false);
+    }
+  };
+  return (
+    <>
+      <Button variant={'outline'} onClick={onClick}>
+        Check Payment Status
+      </Button>
+    </>
   );
 }

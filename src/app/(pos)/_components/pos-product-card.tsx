@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Product } from '@/domain';
 import { CartItem, useCartStore } from '@/hooks/pos-cart-store';
 import { formatCurrency } from '@/lib/helper';
@@ -17,6 +18,7 @@ export function ProductCard({
   onAdd: (item: Omit<CartItem, 'quantity'>, quantity?: number) => void;
 }) {
   const add = onAdd;
+  const setItem = useCartStore((s) => s.setItem);
   const inc = useCartStore((s) => s.inc);
   const dec = useCartStore((s) => s.dec);
   const remove = useCartStore((s) => s.remove);
@@ -28,13 +30,11 @@ export function ProductCard({
   return (
     <div
       className={cn(
-        'group flex flex-col overflow-hidden rounded-lg border transition-all duration-300',
-        added
-          ? 'border-primary ring-2 ring-primary/20'
-          : 'border-border/60 hover:border-border hover:shadow-lg hover:-translate-y-1',
+        'bg-card group flex flex-col overflow-hidden rounded-lg border transition-all duration-300',
+        added ? 'border-primary' : 'hover:shadow-lg hover:-translate-y-1',
       )}
     >
-      <div className="relative aspect-square w-full bg-muted">
+      <div className="relative aspect-square w-full bg-muted/50">
         <ProductImage imageUrl={product.imageUrl} name={product.name} />
       </div>
       <div className="flex flex-1 flex-col gap-1 p-2">
@@ -73,20 +73,29 @@ export function ProductCard({
             >
               <XIcon className="size-3.5" />
             </button>
-            <div className="flex flex-1 items-center justify-between rounded-md border border-border/60">
+            <div className="flex min-w-0 flex-1 items-center justify-between rounded-md border border-border/60">
               <button
                 type="button"
                 onClick={() => dec(product.id)}
-                className="flex size-7 items-center justify-center text-muted-foreground transition hover:bg-muted rounded-s-md"
+                className="flex size-7 shrink-0 items-center justify-center text-muted-foreground transition hover:bg-muted rounded-s-md"
                 aria-label="Decrease"
               >
                 <MinusIcon className="size-3.5" />
               </button>
-              <span className="min-w-6 text-center text-sm font-medium tabular-nums">{qty}</span>
+              <Input
+                aria-label={`${product.name} quantity`}
+                type="text"
+                inputMode="numeric"
+                value={qty}
+                onChange={(e) =>
+                  setItem(product.id, Number(e.target.value.replace(/\D/g, '')) || 0)
+                }
+                className="h-7 w-0 min-w-6 flex-1 appearance-none border-0 bg-transparent px-0 text-center text-sm font-medium tabular-nums focus-visible:ring-0 [&::-webkit-inner-spin-button]:appearance-none"
+              />
               <button
                 type="button"
                 onClick={() => inc(product.id)}
-                className="flex size-7 items-center justify-center text-muted-foreground transition hover:bg-muted rounded-e-md"
+                className="flex size-7 shrink-0 items-center justify-center text-muted-foreground transition hover:bg-muted rounded-e-md"
                 aria-label="Increase"
               >
                 <PlusIcon className="size-3.5" />

@@ -20,6 +20,7 @@ export const GetAllProductSchema = BasePagination.extend({
   sku: z.union([requiredStringSchema('sku'), z.array(requiredStringSchema('sku'))]).optional(),
   categoryId: z.union([numberSchema, z.array(optionalNumberSchema)]).optional(),
   with: Relation,
+  columns: z.array(z.string()).optional(),
 });
 
 const BaseProductSchema = z.object({

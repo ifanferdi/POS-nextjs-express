@@ -34,8 +34,11 @@ export async function createServerApiClient() {
     (response) => response,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async (error: Record<string, any>) => {
+
       // JWT expired — redirect ke login (refresh token juga sudah expired/fail)
-      if (error.response?.data?.message === 'jwt expired') redirect('/login');
+      if (error.reponse?.status === 401 || error.response?.data?.message === 'jwt expired') {
+        redirect('/login');
+      }
 
       const message =
         (error.response?.data as { message?: string })?.message ??

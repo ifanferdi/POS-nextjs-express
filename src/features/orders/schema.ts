@@ -11,6 +11,7 @@ export const GetAllOrderSchema = BasePagination.extend({
   customerId: z.union([numberSchema, z.array(numberSchema)]).optional(),
   userId: z.union([numberSchema, z.array(numberSchema)]).optional(),
   with: Relation,
+  columns: z.array(z.string()).optional(),
 });
 
 const OrderItemSchema = z.object({

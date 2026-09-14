@@ -13,6 +13,7 @@ const Relation = z.array(z.enum(CategoryRelation)).optional();
 export const GetAllCategorySchema = BasePagination.extend({
   CategoryId: z.union([numberSchema, z.array(optionalNumberSchema)]).optional(),
   with: Relation,
+  columns: z.array(z.string()).optional(),
 });
 
 const BaseCategorySchema = z.object({

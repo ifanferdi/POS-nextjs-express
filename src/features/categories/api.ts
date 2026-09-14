@@ -16,6 +16,7 @@ export async function getAllCategories<T = Category>(params: GetAllCategoryParam
   try {
     const api = await createServerApiClient();
     const response = await api.get<PaginatedResponse<T>>('/v1/categories', { params });
+
     return response.data;
   } catch {
     return defaultPaginatedResponse;

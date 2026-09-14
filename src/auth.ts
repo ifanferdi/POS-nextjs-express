@@ -35,7 +35,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
       // Request berikutnya — cek proaktif apakah token perlu di-refresh
       const bufferMs = authConfig.refreshBufferSeconds * 1000;
-      const isExpiringSoon = Date.now() > token.tokenExpiry - bufferMs;
+      const tokenExpired = token.tokenExpiry ?? token.exp;
+      const isExpiringSoon = Date.now() > tokenExpired - bufferMs;
 
       if (!isExpiringSoon) {
         return token; // token masih fresh, gak perlu refresh

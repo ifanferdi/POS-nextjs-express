@@ -35,8 +35,8 @@ export function PosView({ products, totalProducts, categories }: PosViewProps) {
   }
 
   return (
-    <div className="grid h-full grid-cols-1 gap-6 p-4 md:p-6 lg:grid-cols-[1fr_400px]">
-      <section className="min-h-0 overflow-hidden print:hidden">
+    <div className="flex h-full flex-col p-4 lg:grid lg:grid-cols-[1fr_400px] lg:gap-4">
+      <section className="min-h-0 flex-1 overflow-hidden lg:pb-0 print:hidden">
         <PosProductGrid
           products={products}
           totalProducts={totalProducts}
@@ -45,7 +45,7 @@ export function PosView({ products, totalProducts, categories }: PosViewProps) {
         />
       </section>
 
-      <aside className="min-h-0 lg:max-h-[calc(100vh-7rem)]">
+      <aside className="min-h-0 max-lg:fixed max-lg:inset-x-0 max-lg:bottom-0 max-lg:z-20 max-lg:px-3 max-lg:py-3 max-lg:shadow-[0_-4px_12px_rgb(0_0_0/0.08)]">
         <PosCart onCheckoutSuccess={setLastOrder} />
       </aside>
 

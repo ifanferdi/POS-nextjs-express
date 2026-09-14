@@ -4,9 +4,7 @@ import { Input } from '@/components/ui/input';
 import { CategoryOption, Product } from '@/domain';
 import { fetchProductsAction } from '@/features/products/action';
 import { CartItem, useCartStore } from '@/hooks/pos-cart-store';
-import { useSSE } from '@/hooks/use-sse';
 import { cn } from '@/lib/utils';
-import _ from 'lodash';
 import { SearchIcon, XIcon } from 'lucide-react';
 import { Dispatch, RefObject, SetStateAction, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
@@ -44,21 +42,21 @@ export function PosProductGrid({
   const catExpanded = !catForceCollapsed && expandSearchCategory;
   const items = useCartStore((s) => s.items);
 
-  useSSE<Product>({
-    events: ['product.create', 'product.update', 'product.delete'],
-    onEvent: ({ action, data }) => {
-      if (['create', 'update', 'delete'].includes(action))
-        setProducts((products) =>
-          products.map((product) => {
-            const currentProduct = _.find(data, { id: product.id });
-            if (currentProduct && product.id === currentProduct.id)
-              return { ...product, stock: currentProduct.stock };
+  // useSSE<Product>({
+  //   events: ['product.create', 'product.update', 'product.delete'],
+  //   onEvent: ({ action, data }) => {
+  //     if (['create', 'update', 'delete'].includes(action))
+  //       setProducts((products) =>
+  //         products.map((product) => {
+  //           const currentProduct = _.find(data, { id: product.id });
+  //           if (currentProduct && product.id === currentProduct.id)
+  //             return { ...product, stock: currentProduct.stock };
 
-            return product;
-          }),
-        );
-    },
-  });
+  //           return product;
+  //         }),
+  //       );
+  //   },
+  // });
 
   const filteredCategories = useMemo(() => {
     const q = categoryQuery.trim().toLowerCase();
@@ -118,8 +116,8 @@ export function PosProductGrid({
   );
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-3">
-      <div className="space-y-2">
+    <div className="flex h-full min-h-0 flex-col">
+      <div className="space-y-2 pb-2">
         <div className="relative">
           <SearchIcon
             id="search-product"
@@ -189,7 +187,7 @@ export function PosProductGrid({
               </button>
             )}
           </div>
-          <div className="flex flex-1 gap-1.5 overflow-x-auto">
+          <div className="flex flex-1 gap-1.5 overflow-x-auto scrollbar-none">
             <CategoryPill active={selectedCategories.size === 0} onClick={handleAll}>
               All
             </CategoryPill>
@@ -206,7 +204,7 @@ export function PosProductGrid({
         </div>
       </div>
 
-      <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto">
+      <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto scrollbar-thin">
         {filtered.length === 0 && !isLoadingMore ? (
           <div className="py-10 text-center text-sm text-muted-foreground">No products.</div>
         ) : (
