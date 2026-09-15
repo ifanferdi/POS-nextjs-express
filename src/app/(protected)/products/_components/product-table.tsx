@@ -3,7 +3,7 @@ import { TablePagination } from '@/components/shared/table';
 import { DataTable, EmptyTable, TooltipedCell } from '@/components/shared/table-server';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { CategoryOption, Product } from '@/domain';
+import { CategoryOption, ProductList } from '@/domain';
 import { getAllProducts } from '@/features/products/api';
 import { GetAllProductParams } from '@/features/products/schema';
 import { formatCurrency } from '@/lib/helper';
@@ -16,7 +16,7 @@ interface ProductTableSectionProps {
 }
 export async function ProductTableSection(props: ProductTableSectionProps) {
   const { params, categories } = props;
-  const { data: products, ...meta } = await getAllProducts(params);
+  const { data: products, ...meta } = await getAllProducts<ProductList>(params);
   return (
     <>
       <ProductTable products={products} categories={categories} />
@@ -31,7 +31,7 @@ export async function ProductTableSection(props: ProductTableSectionProps) {
 }
 
 interface ProductTableProps {
-  products: Product[];
+  products: ProductList[];
   categories: CategoryOption[];
 }
 function ProductTable(props: ProductTableProps) {
@@ -81,8 +81,8 @@ function ProductTable(props: ProductTableProps) {
   );
 }
 
-function handleCategoriesColumn(product: Product) {
-  const categories = product.categories!;
+function handleCategoriesColumn(product: ProductList) {
+  const categories = product.categories;
   const visibleCategories = categories.slice(0, 3);
   const hiddenCategories = categories.slice(3);
 

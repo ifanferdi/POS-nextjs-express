@@ -1,10 +1,10 @@
-import { User } from '@/domain/user.types';
+import { UserProfile } from '@/domain/user.types';
 
 export interface LoginResponseDto {
   token: string;
   refreshToken: string;
   tokenExpiry: number;
-  user: User;
+  user: UserProfile;
 }
 
-export interface RefreshTokenResponseDto extends LoginResponseDto {}
+export type RefreshTokenResponseDto = LoginResponseDto;

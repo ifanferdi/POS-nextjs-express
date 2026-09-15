@@ -34,7 +34,7 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
     q,
     status: statusEnum,
     paymentMethod: paymentMethodEnum,
-    with: [OrderRelation.CUSTOMER, OrderRelation.ORDER_ITEMS],
+    with: [OrderRelation.PAYMENT],
   };
 
   return (

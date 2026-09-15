@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { options } from '@/config/config';
-import { GENDER_VALUES, RoleOption, User } from '@/domain';
+import { GENDER_VALUES, RoleOption, UserList } from '@/domain';
 import { createUserAction, updateUserAction } from '@/features/users/action';
 import {
   CreateUserInput,
@@ -36,11 +36,9 @@ import { useState, useTransition } from 'react';
 import { Controller, useForm, UseFormReturn } from 'react-hook-form';
 import { toast } from 'sonner';
 
-type UserWithoutPermissions = Omit<User, 'permissions'>;
-
 interface UserFormDialogProps {
   mode: 'create' | 'edit';
-  user?: UserWithoutPermissions;
+  user?: UserList;
   roles: RoleOption[];
   editOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
@@ -75,23 +73,23 @@ interface UserFormProps {
   mode: 'create' | 'edit';
   roles: RoleOption[];
   onClose: () => void;
-  user?: UserWithoutPermissions;
+  user?: UserList;
 }
 function UserForm(props: UserFormProps) {
   const { roles, user, mode, onClose } = props;
   const [isPending, startTransition] = useTransition();
   const isCreateMode = mode === 'create';
   const defaultValues = {
-    username: isCreateMode ? '' : user!.username,
+    username: !isCreateMode && user ? user.username : '',
     password: undefined,
     confirmPassword: undefined,
-    isActive: isCreateMode ? true : user!.isActive,
-    roleId: isCreateMode ? undefined : user!.roleId,
+    isActive: !isCreateMode && user ? user.isActive : true,
+    roleId: !isCreateMode && user ? user.roleId : undefined,
     profile: {
-      fullName: isCreateMode ? '' : user!.profile.fullName,
-      placeOfBirth: isCreateMode ? '' : user!.profile.placeOfBirth,
-      dateOfBirth: isCreateMode ? '' : user!.profile.dateOfBirth,
-      gender: isCreateMode ? undefined : user!.profile.gender,
+      fullName: !isCreateMode && user ? user.profile.fullName : '',
+      placeOfBirth: !isCreateMode && user ? user.profile.placeOfBirth : '',
+      dateOfBirth: !isCreateMode && user ? user.profile.dateOfBirth : '',
+      gender: !isCreateMode && user ? user.profile.gender : undefined,
     },
   };
 

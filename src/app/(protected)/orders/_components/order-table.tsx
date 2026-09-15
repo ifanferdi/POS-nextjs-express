@@ -2,7 +2,7 @@ import { OrderActions } from '@/app/(protected)/orders/_components/order-actions
 import { TablePagination } from '@/components/shared/table';
 import { DataTable, EmptyTable } from '@/components/shared/table-server';
 import { Badge } from '@/components/ui/badge';
-import { Order, OrderStatus } from '@/domain';
+import { getPaymentMethod, OrderList, OrderStatus } from '@/domain';
 import { getAllOrders } from '@/features/orders/api';
 import { GetAllOrderParams } from '@/features/orders/schema';
 import { formatCurrency } from '@/lib/helper';
@@ -25,7 +25,7 @@ interface OrderTableSectionProps {
 }
 export async function OrderTableSection(props: OrderTableSectionProps) {
   const { params } = props;
-  const { data: orders, ...meta } = await getAllOrders(params);
+  const { data: orders, ...meta } = await getAllOrders<OrderList>(params);
   return (
     <>
       <OrderTable orders={orders} />
@@ -40,7 +40,7 @@ export async function OrderTableSection(props: OrderTableSectionProps) {
 }
 
 interface OrderTableProps {
-  orders: Order[];
+  orders: OrderList[];
 }
 function OrderTable(props: OrderTableProps) {
   const { orders } = props;
@@ -64,7 +64,7 @@ function OrderTable(props: OrderTableProps) {
           },
           {
             key: 'items',
-            content: `${order.orderItems?.length ?? 0} item`,
+            content: `${order._count.orderItems ?? 0} item`,
           },
           {
             key: 'total',
@@ -73,9 +73,9 @@ function OrderTable(props: OrderTableProps) {
           {
             key: 'payment',
             type: 'custom',
-            content: order.paymentMethod ? (
+            content: order.payment?.method ? (
               <span className="inline-flex items-center gap-1.5 capitalize">
-                {order.paymentMethod}
+                {getPaymentMethod(order.payment.method)}
               </span>
             ) : (
               '-'

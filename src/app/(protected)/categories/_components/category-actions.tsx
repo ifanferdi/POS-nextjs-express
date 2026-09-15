@@ -12,14 +12,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Category } from '@/domain';
+import { CategoryList } from '@/domain';
 import { deleteCategoryAction } from '@/features/categories/action';
 import { EyeIcon, PencilIcon, TrashIcon } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
 
-export function CategoryActions({ category }: { category: Category }) {
+export function CategoryActions({ category }: { category: CategoryList }) {
   const router = useRouter();
   const pathname = usePathname();
   const [editOpen, setEditOpen] = useState(false);

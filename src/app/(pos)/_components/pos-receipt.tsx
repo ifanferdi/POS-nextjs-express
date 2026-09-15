@@ -1,6 +1,5 @@
 'use client';
 
-import type { PosLastOrder } from '@/app/(pos)/_components/pos-view';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -10,6 +9,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { company } from '@/config/config';
+import { getPaymentMethod, PosLastOrder } from '@/domain';
 import { PaymentMethod } from '@/domain/payment.types';
 import { formatCurrency } from '@/lib/helper';
 import { PrinterIcon, RotateCcwIcon } from 'lucide-react';
@@ -24,7 +24,7 @@ interface PosReceiptProps {
 export function PosReceipt({ lastOrder, onNewTransaction }: PosReceiptProps) {
   const { order, items, amountTendered } = lastOrder;
   const [open, setOpen] = useState(!!lastOrder);
-  const isCash = order.paymentMethod === PaymentMethod.CASH && amountTendered !== undefined;
+  const isCash = order.payment.method === PaymentMethod.CASH && amountTendered !== undefined;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -48,7 +48,7 @@ export function PosReceipt({ lastOrder, onNewTransaction }: PosReceiptProps) {
               />
               <ReceiptRow
                 label="Payment"
-                value={order.paymentMethod ? capitalize(order.paymentMethod) : '-'}
+                value={order.payment.method ? getPaymentMethod(order.payment.method) : '-'}
               />
             </div>
 
@@ -84,8 +84,8 @@ export function PosReceipt({ lastOrder, onNewTransaction }: PosReceiptProps) {
 
             {isCash && (
               <div className="space-y-1 text-xs">
-                <ReceiptRow label="Cash" value={formatCurrency(order.payment?.amount ?? 0)} />
-                <ReceiptRow label="Change" value={formatCurrency(order.payment?.change ?? 0)} />
+                <ReceiptRow label="Cash" value={formatCurrency(order.payment.amount ?? 0)} />
+                <ReceiptRow label="Change" value={formatCurrency(order.payment.change ?? 0)} />
               </div>
             )}
 

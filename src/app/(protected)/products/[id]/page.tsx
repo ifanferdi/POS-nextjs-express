@@ -3,7 +3,7 @@ import { BarcodeDisplay } from '@/app/(protected)/products/_components/product-b
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { ProductRelation } from '@/domain';
+import { ProductDetail, ProductRelation } from '@/domain';
 import { getProductById } from '@/features/products/api';
 import { formatCurrency } from '@/lib/helper';
 import {
@@ -22,7 +22,7 @@ import { notFound } from 'next/navigation';
 
 export default async function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const product = await getProductById(Number(id), [ProductRelation.CATEGORIES]).catch(() => null);
+  const product = await getProductById<ProductDetail>(Number(id), [ProductRelation.CATEGORIES]);
 
   if (!product) notFound();
 
@@ -194,9 +194,6 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
           <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
             <span>Created at {moment(product.createdAt).format('MMMM D, YYYY, HH:mm')}</span>
             <span>Updated at {moment(product.updatedAt).format('MMMM D, YYYY, HH:mm')}</span>
-            <span>
-              Product ID: <span className="font-mono">{product.id}</span>
-            </span>
           </div>
         </CardContent>
       </Card>

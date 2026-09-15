@@ -18,7 +18,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Role, User } from '@/domain';
+import { Role, User, UserList } from '@/domain';
 import { deleteUserAction } from '@/features/users/action';
 import { EyeIcon, MoreHorizontalIcon, PencilIcon, TrashIcon } from 'lucide-react';
 import Link from 'next/link';
@@ -30,7 +30,7 @@ type UserWithoutPermissions = Omit<User, 'permissions'>;
 type RoleOption = Pick<Role, 'id' | 'name'>;
 
 interface UserActionsProps {
-  user: UserWithoutPermissions;
+  user: UserList;
   roles: RoleOption[];
 }
 

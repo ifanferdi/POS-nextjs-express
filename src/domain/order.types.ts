@@ -1,7 +1,8 @@
+import { MidtransPaymentDetail, Payment } from '@/domain/payment.types';
 import { Product } from '@/domain/product.types';
-import { User } from '@/domain/user.types';
+import { UserProfile } from '@/domain/user.types';
+import { CartItem } from '@/hooks/pos-cart-store';
 import { ApiResponse } from './general.types';
-import { Payment, PaymentMethod } from './payment.types';
 
 export enum OrderStatus {
   PENDING = 'pending',
@@ -13,9 +14,12 @@ export enum OrderStatus {
 export const ORDER_STATUS_VALUES = Object.values(OrderStatus);
 
 export enum OrderRelation {
-  ORDER_ITEMS = 'order-items',
   CUSTOMER = 'customer',
+  CUSTOMER_PROFILE = 'customer.profile',
   USER = 'user',
+  USER_PROFILE = 'user.profile',
+  ORDER_ITEMS = 'order-items',
+  ORDER_ITEMS_PRODUCT = 'order-items.product',
   PAYMENT = 'payment',
 }
 
@@ -29,15 +33,22 @@ export interface Order {
   discount: number;
   total: number;
   status: OrderStatus;
-  paymentMethod: PaymentMethod | null;
   notes: string | null;
   meta: Record<string, unknown> | null;
   createdAt: Date;
   updatedAt: Date;
-  orderItems?: OrderItem[];
-  customer?: User;
-  user?: User;
-  payment?: Payment;
+}
+
+export interface OrderDetail extends Order {
+  payment: Payment;
+  user: UserProfile;
+  customer: UserProfile;
+  orderItems: OrderItemProducts[];
+}
+
+export interface OrderList extends Order {
+  payment: Payment;
+  _count: { orderItems: number };
 }
 
 export interface OrderItem {
@@ -50,12 +61,28 @@ export interface OrderItem {
   meta: Record<string, unknown> | null;
   createdAt: Date;
   updatedAt: Date;
-  product?: Product;
+}
+
+export interface OrderItemProducts extends OrderItem {
+  product: Product;
+}
+export interface CreatedOrder extends Order {
+  payment: Payment & { midtransDetail: MidtransPaymentDetail };
+}
+
+export interface PosLastOrder {
+  order: CreatedOrder;
+  items: CartItem[];
+  amountTendered?: number;
+  qrCodeUrl?: string;
+  vaNumber?: string;
+  paymentType?: string;
+  expiryTime?: string;
 }
 
 export interface OrderApiResponse extends ApiResponse {
   order: {
-    order: Order;
+    order: CreatedOrder;
     paymentType?: string;
     vaNumber?: number;
     qrCodeUrl?: string;

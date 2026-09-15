@@ -1,6 +1,5 @@
 'use client';
 
-import { PosLastOrder } from '@/app/(pos)/_components/pos-view';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -19,7 +18,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Order } from '@/domain';
+import { CreatedOrder, PosLastOrder } from '@/domain';
 import {
   MidtransPaymentDetail,
   Payment,
@@ -30,6 +29,7 @@ import { createOrderAction } from '@/features/orders/action';
 import { PosCheckoutForm, PosCheckoutFormSchema } from '@/features/orders/schema';
 import { getPaymentByOrderId } from '@/features/payments/action';
 import { CartItem, useCartStore } from '@/hooks/pos-cart-store';
+import { useSSE } from '@/hooks/use-sse';
 import { calculateRounding, formatCurrency } from '@/lib/helper';
 import { cn } from '@/lib/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -66,7 +66,7 @@ function PaymentCountdown({
   onCheckoutSuccess,
   setPendingPayment,
 }: {
-  order: Order & { snapshot: CartItem[] };
+  order: CreatedOrder & { snapshot: CartItem[] };
   expiryTime: Date | string;
   setCheckoutOpen: (open: boolean) => void;
   form: UseFormReturn<PosCheckoutForm>;
@@ -79,8 +79,8 @@ function PaymentCountdown({
   const [progress, setProgress] = useState<number>(100);
 
   useEffect(() => {
-    const expiry = order.payment?.midtransDetail?.expiryTime
-      ? new Date(order.payment?.midtransDetail?.expiryTime).getTime()
+    const expiry = order.payment.midtransDetail.expiryTime
+      ? new Date(order.payment.midtransDetail.expiryTime).getTime()
       : moment().add(1, 'hours').toDate().getTime();
     const start = Date.now();
     const totalDuration = expiry - start;
@@ -170,7 +170,7 @@ export function PosCheckoutDialog({
   >();
   const [copied, setCopied] = useState(false);
   const { rounding, total } = calculateRounding(subtotal);
-  const [createdOrder, setCreatedOrder] = useState<Order>();
+  const [createdOrder, setCreatedOrder] = useState<CreatedOrder>();
 
   const form = useForm<PosCheckoutForm>({
     resolver: zodResolver(PosCheckoutFormSchema),
@@ -184,26 +184,25 @@ export function PosCheckoutDialog({
     },
   });
 
-  // useSSE<Order>({
-  //   events: ['order.status'],
-  //   onEvent: ({ data }) => {
-  //     console.log({ open, isPaymentMode, pendingPayment });
-  //     const paidOrder = data[0];
-  //     if (paidOrder.orderNumber !== createdOrder?.orderNumber) return;
+  useSSE<CreatedOrder>({
+    events: ['order.status'],
+    onEvent: ({ data }) => {
+      const paidOrder = data[0];
+      if (paidOrder.orderNumber !== createdOrder?.orderNumber) return;
 
-  //     useCartStore.getState().clear();
-  //     if (isPaymentMode) toast.success('Payment received!');
-  //     if (pendingPayment) {
-  //       onCheckoutSuccess({
-  //         order: paidOrder,
-  //         items: pendingPayment.snapshot,
-  //       });
-  //     }
-  //     form.reset();
-  //     setPendingPayment(undefined);
-  //     setCheckoutOpen(false);
-  //   },
-  // });
+      useCartStore.getState().clear();
+      if (isPaymentMode) toast.success('Payment received!');
+      if (pendingPayment) {
+        onCheckoutSuccess({
+          order: paidOrder,
+          items: pendingPayment.snapshot,
+        });
+      }
+      form.reset();
+      setPendingPayment(undefined);
+      setCheckoutOpen(false);
+    },
+  });
 
   function onSubmit(data: PosCheckoutForm) {
     startTransition(async () => {
@@ -240,7 +239,7 @@ export function PosCheckoutDialog({
         form.reset();
         setCheckoutOpen(false);
       } else {
-        setPendingPayment({ ...result.data.order.payment!.midtransDetail!, snapshot });
+        setPendingPayment({ ...result.data.order.payment.midtransDetail!, snapshot });
       }
     });
   }
@@ -264,7 +263,7 @@ export function PosCheckoutDialog({
 
   function handleCopyVA() {
     if (pendingPayment?.vaNumber) {
-      navigator.clipboard.writeText(pendingPayment.vaNumber);
+      navigator.clipboard.writeText(pendingPayment?.vaNumber);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
       toast.success('VA number copied!');

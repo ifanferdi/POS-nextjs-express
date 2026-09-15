@@ -1,16 +1,16 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { UserRelation } from '@/domain';
+import { UserDetail, UserRelation } from '@/domain';
 import { getUserById } from '@/features/users/api';
-import { ArrowLeftIcon } from 'lucide-react';
 import _ from 'lodash';
+import { ArrowLeftIcon } from 'lucide-react';
 import moment from 'moment';
 import Link from 'next/link';
 
 export default async function UserDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const user = await getUserById(Number(id), [UserRelation.PROFILE, UserRelation.ROLE]);
+  const user = await getUserById<UserDetail>(Number(id), [UserRelation.PROFILE, UserRelation.ROLE]);
 
   const initials = user.profile.fullName
     .split(' ')
@@ -26,7 +26,7 @@ export default async function UserDetailPage({ params }: { params: Promise<{ id:
     { label: 'Place of Birth', value: user.profile.placeOfBirth },
     { label: 'Date of Birth', value: moment(user.profile.dateOfBirth).format('MMMM Do YYYY') },
     { label: 'Age', value: `${user.profile.age} years` },
-    { label: 'Created At', value: moment(user.createdAt).format('MMMM Do YYYY, HH:mm') },
+    // { label: 'Created At', value: moment(user.createdAt).format('MMMM Do YYYY, HH:mm') },
   ];
 
   return (
@@ -76,8 +76,9 @@ export default async function UserDetailPage({ params }: { params: Promise<{ id:
             ))}
           </dl>
           <Separator />
-          <div className="text-xs text-muted-foreground">
-            User ID: <span className="font-mono">{user.id}</span>
+          <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
+            <span>Created at {moment(user.createdAt).format('MMMM D, YYYY, HH:mm')}</span>
+            <span>Updated at {moment(user.updatedAt).format('MMMM D, YYYY, HH:mm')}</span>
           </div>
         </CardContent>
       </Card>

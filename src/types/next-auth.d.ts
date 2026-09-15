@@ -40,8 +40,6 @@ declare module 'next-auth' {
       updatedAt: Date;
       deletedAt: Date | null;
       profile: Profile;
-      role: Record<string, any>;
-      permissions: Record<string, any>[];
     };
   }
 }

@@ -18,7 +18,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { CategoryOption, Product } from '@/domain';
+import { CategoryOption, ProductList } from '@/domain';
 import { deleteProductAction } from '@/features/products/action';
 import { EyeIcon, MoreHorizontalIcon, PencilIcon, TrashIcon } from 'lucide-react';
 import Link from 'next/link';
@@ -27,7 +27,7 @@ import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
 
 interface ProductActionsProps {
-  product: Product;
+  product: ProductList;
   categories: CategoryOption[];
 }
 

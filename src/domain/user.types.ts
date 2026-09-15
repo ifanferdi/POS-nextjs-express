@@ -1,4 +1,3 @@
-import { Permission } from '@/domain/permission.types';
 import { Role } from '@/domain/role.types';
 
 export enum Gender {
@@ -15,9 +14,18 @@ export interface User {
   createdAt: Date;
   updatedAt: Date;
   deletedAt: Date | null;
+}
+
+export interface UserProfile extends User {
   profile: Profile;
+}
+
+export interface UserDetail extends UserProfile {
   role: Role;
-  permissions: Permission[];
+}
+
+export interface UserList extends UserProfile {
+  role: Role;
 }
 
 export interface Profile {

@@ -29,7 +29,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { options } from '@/config/config';
-import { CategoryOption, Product } from '@/domain';
+import { CategoryOption, ProductList } from '@/domain';
 import { createCategoryAction } from '@/features/categories/action';
 import { createProductAction, updateProductAction } from '@/features/products/action';
 import {
@@ -69,7 +69,7 @@ const ProductFormSchema = CreateProductSchema.extend({ imageFile: ImageFileSchem
 
 interface ProductFormDialogProps {
   mode: 'create' | 'edit';
-  product?: Product;
+  product?: ProductList;
   categories: CategoryOption[];
   editOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
@@ -109,7 +109,7 @@ interface ProductFormProps {
   mode: 'create' | 'edit';
   categories: CategoryOption[];
   onClose: () => void;
-  product?: Product;
+  product?: ProductList;
 }
 function ProductForm(props: ProductFormProps) {
   const { mode, product, categories, onClose } = props;
@@ -118,16 +118,16 @@ function ProductForm(props: ProductFormProps) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(product?.imageUrl ?? null);
 
   const defaultValues = {
-    name: isCreateMode ? '' : product!.name,
-    description: isCreateMode ? '' : (product!.description ?? ''),
-    price: isCreateMode ? '' : product!.price,
-    cost: isCreateMode ? '' : (product!.cost ?? ''),
-    sku: isCreateMode ? '' : (product!.sku ?? ''),
-    barcode: isCreateMode ? '' : (product!.barcode ?? ''),
-    imagePath: isCreateMode ? '' : product!.imagePath,
-    isActive: isCreateMode ? true : product!.isActive,
-    stock: isCreateMode ? '' : product!.stock,
-    categoryIds: isCreateMode ? [] : _.map(product!.categories, 'id'),
+    name: !isCreateMode && product ? product.name : '',
+    description: !isCreateMode && product ? (product.description ?? '') : '',
+    price: !isCreateMode && product ? product.price : '',
+    cost: !isCreateMode && product ? (product.cost ?? '') : '',
+    sku: !isCreateMode && product ? (product.sku ?? '') : '',
+    barcode: !isCreateMode && product ? (product.barcode ?? '') : '',
+    imagePath: !isCreateMode && product ? product.imagePath : '',
+    isActive: !isCreateMode && product ? product.isActive : true,
+    stock: !isCreateMode && product ? product.stock : '',
+    categoryIds: !isCreateMode && product ? _.map(product.categories, 'id') : [],
   };
 
   const form = useForm<ProductFormValues>({

@@ -1,8 +1,8 @@
 'use client';
 
 import { PosCheckoutDialog } from '@/app/(pos)/_components/pos-checkout-dialog';
-import { PosLastOrder } from '@/app/(pos)/_components/pos-view';
 import { Button } from '@/components/ui/button';
+import { PosLastOrder } from '@/domain';
 import { cartCount, cartSubtotal, useCartStore } from '@/hooks/pos-cart-store';
 import { formatCurrency } from '@/lib/helper';
 import { cn } from '@/lib/utils';

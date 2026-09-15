@@ -1,7 +1,7 @@
 'use client';
 
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
-import { Category } from '@/domain';
+import { CategoryList } from '@/domain';
 import { BoxesIcon } from 'lucide-react';
 import moment from 'moment';
 import { type ReactNode, useState } from 'react';
@@ -10,7 +10,7 @@ export function CategoryDetailDialog({
   category,
   trigger,
 }: {
-  category: Category;
+  category: CategoryList;
   trigger?: ReactNode;
 }) {
   const [open, setOpen] = useState(false);
@@ -42,7 +42,7 @@ export function CategoryDetailDialog({
             <div>
               <p className="text-sm font-medium text-muted-foreground mb-2">Products</p>
               <p className="text-base leading-relaxed">
-                {category._count?.productHasCategories ?? 0}
+                {category._count.productHasCategories ?? 0}
               </p>
             </div>
 

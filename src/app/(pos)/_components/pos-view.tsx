@@ -3,22 +3,12 @@
 import { PosCart } from '@/app/(pos)/_components/pos-cart';
 import { PosProductGrid } from '@/app/(pos)/_components/pos-product-grid';
 import { PosReceipt } from '@/app/(pos)/_components/pos-receipt';
-import { CategoryOption, Order, Product } from '@/domain';
+import { CategoryOption, PosLastOrder, ProductDetail } from '@/domain';
 import { CartItem, useCartStore } from '@/hooks/pos-cart-store';
 import { useState } from 'react';
 
-export interface PosLastOrder {
-  order: Order;
-  items: CartItem[];
-  amountTendered?: number;
-  qrCodeUrl?: string;
-  vaNumber?: string;
-  paymentType?: string;
-  expiryTime?: string;
-}
-
 interface PosViewProps {
-  products: Product[];
+  products: ProductDetail[];
   totalProducts: number;
   categories: CategoryOption[];
 }
@@ -35,7 +25,7 @@ export function PosView({ products, totalProducts, categories }: PosViewProps) {
   }
 
   return (
-    <div className="flex h-full flex-col p-4 lg:grid lg:grid-cols-[1fr_400px] lg:gap-4">
+    <div className="flex h-full flex-col p-4 md:p-6 lg:grid lg:grid-cols-[1fr_400px] lg:gap-6">
       <section className="min-h-0 flex-1 overflow-hidden lg:pb-0 print:hidden">
         <PosProductGrid
           products={products}
@@ -45,7 +35,7 @@ export function PosView({ products, totalProducts, categories }: PosViewProps) {
         />
       </section>
 
-      <aside className="min-h-0 max-lg:fixed max-lg:inset-x-0 max-lg:bottom-0 max-lg:z-20 max-lg:px-3 max-lg:py-3 max-lg:shadow-[0_-4px_12px_rgb(0_0_0/0.08)]">
+      <aside className="min-h-0 max-lg:fixed bg-white max-lg:inset-x-0 max-lg:bottom-0 max-lg:z-20 max-lg:px-3 max-lg:py-3 lg:max-h-[calc(100vh-7rem)]">
         <PosCart onCheckoutSuccess={setLastOrder} />
       </aside>
 

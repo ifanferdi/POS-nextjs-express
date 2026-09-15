@@ -3,7 +3,7 @@ import { TablePagination } from '@/components/shared/table';
 import { DataTable, EmptyTable } from '@/components/shared/table-server';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { RoleOption, User } from '@/domain';
+import { RoleOption, UserList } from '@/domain';
 import { getAllUser } from '@/features/users/api';
 import { GetAllUserParams } from '@/features/users/schema';
 import { getInitials } from '@/lib/helper';
@@ -18,7 +18,7 @@ interface UserTableSectionProps {
 }
 export async function UserTableSection(props: UserTableSectionProps) {
   const { params, roles } = props;
-  const { data: users, ...meta } = await getAllUser(params);
+  const { data: users, ...meta } = await getAllUser<UserList>(params);
   return (
     <>
       <UserTable users={users} roles={roles} />
@@ -33,7 +33,7 @@ export async function UserTableSection(props: UserTableSectionProps) {
 }
 
 interface UserTableProps {
-  users: Omit<User, 'permissions'>[];
+  users: UserList[];
   roles: RoleOption[];
 }
 function UserTable(props: UserTableProps) {

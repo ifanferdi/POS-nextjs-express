@@ -77,7 +77,7 @@ export function BarcodeDisplay({
       className="group relative flex flex-col items-center rounded-lg outline-none transition focus-visible:ring-2 focus-visible:ring-ring/50"
       aria-label={`Copy barcode ${value}`}
     >
-      <svg ref={ref} className="h-auto w-full max-w-xs text-foreground" />
+      <svg ref={ref} className="h-auto w-full max-w-xs text-foreground dark:text-muted" />
       <span className="mt-1 inline-flex items-center gap-1 text-xs text-muted-foreground transition group-hover:text-foreground">
         {copied ? (
           <>

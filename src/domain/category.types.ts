@@ -1,15 +1,13 @@
-import { Product } from '@/domain/product.types';
-
 export interface Category {
   id: number;
   name: string;
   description: string | null;
   createdAt: Date;
   updatedAt: Date;
-  products?: Product[];
-  _count?: {
-    productHasCategories: number;
-  };
+}
+
+export interface CategoryList extends Category {
+  _count: { productHasCategories: number };
 }
 
 export enum CategoryRelation {

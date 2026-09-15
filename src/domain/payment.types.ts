@@ -1,5 +1,3 @@
-import { Order } from './order.types';
-
 export enum PaymentRelation {
   ORDER = 'order',
   MIDTRANS_DETAIL = 'midtrans-detail',
@@ -35,10 +33,9 @@ export interface Payment {
   method: PaymentMethod;
   reference: string | null;
   status: PaymentStatus;
+  paidAt: Date;
   createdAt: Date;
   updatedAt: Date;
-  order?: Order;
-  midtransDetail?: MidtransPaymentDetail;
 }
 
 export interface MidtransPaymentDetail {
@@ -58,3 +55,12 @@ export interface MidtransPaymentDetail {
   createdAt?: Date | string;
   updatedAt?: Date | string;
 }
+
+export const getPaymentMethod = (str: PaymentMethod) => {
+  switch (str !== PaymentMethod.CASH) {
+    case true:
+      return str.toUpperCase().replace('_', ' ');
+    default:
+      return 'Cash';
+  }
+};

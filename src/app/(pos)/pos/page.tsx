@@ -1,7 +1,7 @@
 import { PosProductGridSkeleton } from '@/app/(pos)/_components/pos-product-grid-skeleton';
 import { PosView } from '@/app/(pos)/_components/pos-view';
 import { Skeleton } from '@/components/ui/skeleton';
-import { CategoryOption, Product, ProductRelation } from '@/domain';
+import { CategoryOption, ProductDetail, ProductRelation } from '@/domain';
 import { getAllCategories } from '@/features/categories/api';
 import { getAllProducts } from '@/features/products/api';
 import { Suspense } from 'react';
@@ -15,7 +15,7 @@ export default async function PosPage() {
 }
 
 async function PosViewLoader() {
-  const { data: products, total: totalProducts } = await getAllProducts<Product>({
+  const { data: products, total: totalProducts } = await getAllProducts<ProductDetail>({
     isActive: true,
     limit: 15,
     orderBy: ['name:asc'],

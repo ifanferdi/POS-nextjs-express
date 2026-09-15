@@ -15,7 +15,14 @@ export interface Product {
   createdAt: Date;
   updatedAt: Date;
   deletedAt: Date | null;
-  categories?: Category[];
+}
+
+export interface ProductDetail extends Product {
+  categories: Category[];
+}
+
+export interface ProductList extends Product {
+  categories: Category[];
 }
 
 export enum ProductRelation {

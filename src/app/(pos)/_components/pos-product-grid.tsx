@@ -1,20 +1,23 @@
 'use client';
 
 import { Input } from '@/components/ui/input';
-import { CategoryOption, Product } from '@/domain';
-import { fetchProductsAction } from '@/features/products/action';
+import { options } from '@/config/config';
+import { CategoryOption, Product, ProductDetail, ProductRelation } from '@/domain';
+import { getAllProducts } from '@/features/products/api';
 import { CartItem, useCartStore } from '@/hooks/pos-cart-store';
+import { useSSE } from '@/hooks/use-sse';
 import { cn } from '@/lib/utils';
+import _ from 'lodash';
 import { SearchIcon, XIcon } from 'lucide-react';
 import { Dispatch, RefObject, SetStateAction, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { ProductCard } from './pos-product-card';
 import { SkeletonCard } from './pos-product-grid-skeleton';
 
-const PAGE_SIZE = 15;
+const PAGE_SIZE = options.posProductLength;
 
 interface PosProductGridProps {
-  products: Product[];
+  products: ProductDetail[];
   totalProducts: number;
   categories: CategoryOption[];
   onAdd: (item: Omit<CartItem, 'quantity'>, quantity?: number) => void;
@@ -26,7 +29,7 @@ export function PosProductGrid({
   categories,
   onAdd,
 }: PosProductGridProps) {
-  const [products, setProducts] = useState<Product[]>(initialProducts);
+  const [products, setProducts] = useState<ProductDetail[]>(initialProducts);
   const [total, setTotal] = useState<number>(initialTotal);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [query, setQuery] = useState('');
@@ -42,21 +45,21 @@ export function PosProductGrid({
   const catExpanded = !catForceCollapsed && expandSearchCategory;
   const items = useCartStore((s) => s.items);
 
-  // useSSE<Product>({
-  //   events: ['product.create', 'product.update', 'product.delete'],
-  //   onEvent: ({ action, data }) => {
-  //     if (['create', 'update', 'delete'].includes(action))
-  //       setProducts((products) =>
-  //         products.map((product) => {
-  //           const currentProduct = _.find(data, { id: product.id });
-  //           if (currentProduct && product.id === currentProduct.id)
-  //             return { ...product, stock: currentProduct.stock };
+  useSSE<Product>({
+    events: ['product.create', 'product.update', 'product.delete'],
+    onEvent: ({ action, data }) => {
+      if (['create', 'update', 'delete'].includes(action))
+        setProducts((products) =>
+          products.map((product) => {
+            const currentProduct = _.find(data, { id: product.id });
+            if (currentProduct && product.id === currentProduct.id)
+              return { ...product, stock: currentProduct.stock };
 
-  //           return product;
-  //         }),
-  //       );
-  //   },
-  // });
+            return product;
+          }),
+        );
+    },
+  });
 
   const filteredCategories = useMemo(() => {
     const q = categoryQuery.trim().toLowerCase();
@@ -104,7 +107,7 @@ export function PosProductGrid({
   }
 
   const hasMore = products.length < total;
-  useLodingOnScroll(
+  useLoadingOnScroll(
     isLoadingMore,
     hasMore,
     sentinelRef,
@@ -255,14 +258,14 @@ function CategoryPill({
   );
 }
 
-function useLodingOnScroll(
+function useLoadingOnScroll(
   isLoadingMore: boolean,
   hasMore: boolean,
   sentinelRef: RefObject<HTMLDivElement | null>,
   scrollRef: RefObject<HTMLDivElement | null>,
   setIsLoadingMore: Dispatch<SetStateAction<boolean>>,
   products: Product[],
-  setProducts: Dispatch<SetStateAction<Product[]>>,
+  setProducts: Dispatch<SetStateAction<ProductDetail[]>>,
   setTotal: Dispatch<SetStateAction<number>>,
 ) {
   useEffect(() => {
@@ -276,8 +279,13 @@ function useLodingOnScroll(
       (entries) => {
         if (entries[0]?.isIntersecting) {
           setIsLoadingMore(true);
-          fetchProductsAction(products.length + PAGE_SIZE)
-            .then(({ products: newProducts, total: newTotal }) => {
+          getAllProducts<ProductDetail>({
+            isActive: true,
+            limit: products.length + PAGE_SIZE,
+            orderBy: ['name:asc'],
+            with: [ProductRelation.CATEGORIES],
+          })
+            .then(({ data: newProducts, total: newTotal }) => {
               setProducts(newProducts);
               setTotal(newTotal);
             })

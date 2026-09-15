@@ -2,7 +2,7 @@ import { CategoryActions } from '@/app/(protected)/categories/_components/catego
 import { CategoryDetailDialog } from '@/app/(protected)/categories/_components/category-detail-dialog';
 import { TablePagination } from '@/components/shared/table';
 import { DataTable, EmptyTable } from '@/components/shared/table-server';
-import { Category } from '@/domain';
+import { CategoryList } from '@/domain';
 import { getAllCategories } from '@/features/categories/api';
 import { GetAllCategoryParams } from '@/features/categories/schema';
 import Link from 'next/link';
@@ -14,7 +14,7 @@ interface categoriesTableSectionProps {
 }
 export async function CategoriesTableSection(props: categoriesTableSectionProps) {
   const { params } = props;
-  const { data: categories, ...meta } = await getAllCategories(params);
+  const { data: categories, ...meta } = await getAllCategories<CategoryList>(params);
   return (
     <>
       <CategoryTable categories={categories} />
@@ -29,7 +29,7 @@ export async function CategoriesTableSection(props: categoriesTableSectionProps)
 }
 
 interface CategoryTableProps {
-  categories: Category[];
+  categories: CategoryList[];
 }
 function CategoryTable(props: CategoryTableProps) {
   const { categories } = props;
@@ -53,9 +53,11 @@ function CategoryTable(props: CategoryTableProps) {
           content: (
             <Link
               href={`/products?categoryId[]=${category.id}`}
-              className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors"
+              className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors hover:underline"
             >
-              <span className="font-medium">{category._count?.productHasCategories ?? 0}</span>
+              <span className="font-medium">
+                {category._count?.productHasCategories ?? 0} items
+              </span>
               <span className="text-xs">→</span>
             </Link>
           ),
