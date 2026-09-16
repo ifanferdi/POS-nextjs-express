@@ -10,19 +10,7 @@ import RoleController from '@/adapters/http/controller/role-controller';
 import UserController from '@/adapters/http/controller/user-controller';
 import express from '@/adapters/http/webserver/express';
 import { Controllers } from '@/domain/adapters/controller.interface';
-import { Repositories } from '@/domain/repositories/repositories.interface';
 import { UseCases } from '@/domain/use-cases/use-case.interface';
-import { prisma } from '@/infrastructure/database/prisma/prisma';
-import RedisConnection from '@/infrastructure/redis/redis-connection';
-import CategoryRepository from '@/repositories/database/category-repository';
-import OrderRepository from '@/repositories/database/order-repository';
-import PaymentRepository from '@/repositories/database/payment-repository';
-import PermissionRepository from '@/repositories/database/permission-repository';
-import ProductRepository from '@/repositories/database/product-repository';
-import RoleRepository from '@/repositories/database/role-repository';
-import UserRepository from '@/repositories/database/user-repository';
-import S3StorageRepository from '@/repositories/filesystem/s3-storage-repository';
-import RedisRepository from '@/repositories/redis/redis-repository';
 import SendOtp from '@/use-cases/auth/2FA/send-otp';
 import VerifyOtp from '@/use-cases/auth/2FA/verify-otp';
 import Authorization from '@/use-cases/auth/authorization';
@@ -42,8 +30,8 @@ import FindAllOrder from '@/use-cases/order/find-all-order';
 import FindByIdOrder from '@/use-cases/order/find-by-id-order';
 import UpdateOrderStatus from '@/use-cases/order/update-order-status';
 import FindAllPayment from '@/use-cases/payment/find-all-payment';
-import FindByOrderId from '@/use-cases/payment/find-by-order-id';
 import FindByIdPayment from '@/use-cases/payment/find-by-id-payment';
+import FindByOrderId from '@/use-cases/payment/find-by-order-id';
 import CheckValidPermission from '@/use-cases/permission/check-valid-permission';
 import CreatePermission from '@/use-cases/permission/create-permission';
 import DeletePermission from '@/use-cases/permission/delete-permission';
@@ -74,13 +62,12 @@ import UpdateUser from '@/use-cases/user/update-user';
 import { Express } from 'express';
 import SseController from './adapters/http/controller/sse-controller';
 import { initSSERedisBridge } from './infrastructure/event-stream/sse-redis-bridge';
-import MidtransRepository from './repositories/midtrans/midtrans-repository';
+import RedisConnection from './infrastructure/redis/redis-connection';
 import GeneratePresignUrl from './use-cases/common/upload-presign-url';
 import SyncMidtransToDatabase from './use-cases/midtrans/sync-midtrans-to-database';
 
 export default async function bootstrap(app: Express) {
-  const repositories = await setupRepositories();
-  const useCases = setupUseCases(repositories);
+  const useCases = await setupUseCases();
   const controllers = setupControllers(useCases);
 
   await initSSERedisBridge();
@@ -104,94 +91,79 @@ function setupControllers(useCases: UseCases): Controllers {
   };
 }
 
-async function setupRepositories(): Promise<Repositories> {
+async function setupUseCases(): Promise<UseCases> {
   const redisClient = await RedisConnection();
 
   return {
-    roleRepository: new RoleRepository(prisma),
-    permissionRepository: new PermissionRepository(prisma),
-    userRepository: new UserRepository(prisma),
-    categoryRepository: new CategoryRepository(prisma),
-    productRepository: new ProductRepository(prisma),
-    orderRepository: new OrderRepository(prisma),
-    paymentRepository: new PaymentRepository(prisma),
-    redisRepository: new RedisRepository(redisClient),
-    storageRepository: new S3StorageRepository(),
-    midtransRepository: new MidtransRepository(),
-  };
-}
-
-function setupUseCases(repositories: Repositories): UseCases {
-  return {
     commonUseCase: {
-      generatePresignUrl: new GeneratePresignUrl(repositories),
-      posDashboard: new PosDashboard(repositories),
+      generatePresignUrl: new GeneratePresignUrl(redisClient),
+      posDashboard: new PosDashboard(redisClient),
     },
     userUseCase: {
-      findAllUser: new FindAllUser(repositories),
-      createUser: new CreateUser(repositories),
-      findByIdUser: new FindByIdUser(repositories),
-      updateUser: new UpdateUser(repositories),
-      deleteUser: new DeleteUser(repositories),
-      restoreUser: new RestoreUser(repositories),
-      profileImage: new ProfileImage(repositories),
+      findAllUser: new FindAllUser(redisClient),
+      createUser: new CreateUser(redisClient),
+      findByIdUser: new FindByIdUser(redisClient),
+      updateUser: new UpdateUser(redisClient),
+      deleteUser: new DeleteUser(redisClient),
+      restoreUser: new RestoreUser(redisClient),
+      profileImage: new ProfileImage(redisClient),
     },
     authUseCase: {
-      signIn: new SignIn(repositories),
-      signOut: new SignOut(repositories),
-      checkToken: new CheckToken(repositories),
-      authorization: new Authorization(repositories),
-      refreshToken: new RefreshToken(repositories),
-      sendOtp: new SendOtp(repositories),
-      verifyOtp: new VerifyOtp(repositories),
+      signIn: new SignIn(redisClient),
+      signOut: new SignOut(redisClient),
+      checkToken: new CheckToken(redisClient),
+      authorization: new Authorization(redisClient),
+      refreshToken: new RefreshToken(redisClient),
+      sendOtp: new SendOtp(redisClient),
+      verifyOtp: new VerifyOtp(redisClient),
     },
     permissionUseCase: {
-      findAllPermission: new FindAllPermission(repositories),
-      createPermission: new CreatePermission(repositories),
-      findByIdPermission: new FindByIdPermission(repositories),
-      updatePermission: new UpdatePermission(repositories),
-      deletePermission: new DeletePermission(repositories),
-      checkValidPermission: new CheckValidPermission(repositories),
-      resetCachePermission: new ResetCachePermission(repositories),
+      findAllPermission: new FindAllPermission(redisClient),
+      createPermission: new CreatePermission(redisClient),
+      findByIdPermission: new FindByIdPermission(redisClient),
+      updatePermission: new UpdatePermission(redisClient),
+      deletePermission: new DeletePermission(redisClient),
+      checkValidPermission: new CheckValidPermission(redisClient),
+      resetCachePermission: new ResetCachePermission(redisClient),
     },
     roleUseCase: {
-      findAllRole: new FindAllRole(repositories),
-      createRole: new CreateRole(repositories),
-      findByIdRole: new FindByIdRole(repositories),
-      updateRole: new UpdateRole(repositories),
-      deleteRole: new DeleteRole(repositories),
-      roleAssignPermission: new RoleAssignPermission(repositories),
+      findAllRole: new FindAllRole(redisClient),
+      createRole: new CreateRole(redisClient),
+      findByIdRole: new FindByIdRole(redisClient),
+      updateRole: new UpdateRole(redisClient),
+      deleteRole: new DeleteRole(redisClient),
+      roleAssignPermission: new RoleAssignPermission(redisClient),
     },
     categoryUseCase: {
-      findAllCategory: new FindAllCategory(repositories),
-      findByIdCategory: new FindByIdCategory(repositories),
-      createCategory: new CreateCategory(repositories),
-      updateCategory: new UpdateCategory(repositories),
-      deleteCategory: new DeleteCategory(repositories),
+      findAllCategory: new FindAllCategory(redisClient),
+      findByIdCategory: new FindByIdCategory(redisClient),
+      createCategory: new CreateCategory(redisClient),
+      updateCategory: new UpdateCategory(redisClient),
+      deleteCategory: new DeleteCategory(redisClient),
     },
     productUseCase: {
-      findAllProduct: new FindAllProduct(repositories),
-      findByIdProduct: new FindByIdProduct(repositories),
-      createProduct: new CreateProduct(repositories),
-      updateProduct: new UpdateProduct(repositories),
-      deleteProduct: new DeleteProduct(repositories),
-      restoreProduct: new RestoreProduct(repositories),
-      productImage: new ProductImage(repositories),
+      findAllProduct: new FindAllProduct(redisClient),
+      findByIdProduct: new FindByIdProduct(redisClient),
+      createProduct: new CreateProduct(redisClient),
+      updateProduct: new UpdateProduct(redisClient),
+      deleteProduct: new DeleteProduct(redisClient),
+      restoreProduct: new RestoreProduct(redisClient),
+      productImage: new ProductImage(redisClient),
     },
     orderUseCase: {
-      findAllOrder: new FindAllOrder(repositories),
-      findByIdOrder: new FindByIdOrder(repositories),
-      createOrder: new CreateOrder(repositories),
-      updateOrderStatus: new UpdateOrderStatus(repositories),
-      cancelOrder: new CancelOrder(repositories),
+      findAllOrder: new FindAllOrder(redisClient),
+      findByIdOrder: new FindByIdOrder(redisClient),
+      createOrder: new CreateOrder(redisClient),
+      updateOrderStatus: new UpdateOrderStatus(redisClient),
+      cancelOrder: new CancelOrder(redisClient),
     },
     paymentUseCase: {
-      findAllPayment: new FindAllPayment(repositories),
-      findByIdPayment: new FindByIdPayment(repositories),
-      findByOrderId: new FindByOrderId(repositories),
+      findAllPayment: new FindAllPayment(redisClient),
+      findByIdPayment: new FindByIdPayment(redisClient),
+      findByOrderId: new FindByOrderId(redisClient),
     },
     midtransUseCase: {
-      syncMidtransToDatabase: new SyncMidtransToDatabase(repositories),
+      syncMidtransToDatabase: new SyncMidtransToDatabase(redisClient),
     },
   };
 }

@@ -8,8 +8,6 @@ export default class FindAllRole extends BaseUseCase {
     const data = await this.repositories.roleRepository.findAll(params);
     const total = await this.repositories.roleRepository.count(params);
 
-    console.log(data[0]);
-
     return paginate({ page, limit, total, data });
   }
 }

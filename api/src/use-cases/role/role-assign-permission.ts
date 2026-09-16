@@ -1,14 +1,12 @@
-import _ from 'lodash';
-import { Repositories } from '@/domain/repositories/repositories.interface';
 import {
   RoleAssignPermissionDto,
   SyncByPermissionIdsDto,
   SyncByPermissionsNameDto,
 } from '@/validations/role-validation';
+import _ from 'lodash';
+import BaseUseCase from '../_base-use-case';
 
-export default class RoleAssignPermission {
-  constructor(private repositories: Repositories) {}
-
+export default class RoleAssignPermission extends BaseUseCase {
   async execute(payload: RoleAssignPermissionDto) {
     if (payload.permissions)
       return await this.syncByPermissionIds(payload as SyncByPermissionIdsDto);
