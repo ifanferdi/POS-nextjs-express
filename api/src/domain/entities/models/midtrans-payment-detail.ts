@@ -1,10 +1,4 @@
-import { MidtransPaymentDetail } from '@/infrastructure/database/prisma/generated/client';
 import { PaymentStatus } from '../enums/payment.enum';
-import { IPayment } from './payment';
-
-export interface IMidtransPaymentDetail extends MidtransPaymentDetail {
-  payment?: IPayment;
-}
 
 export interface MidtransPaymentUpdate {
   id: number;

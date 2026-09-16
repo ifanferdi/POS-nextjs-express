@@ -1,17 +1,18 @@
-import { IPermission } from '@/domain/entities/models/permission';
-import { IRole } from '@/domain/entities/models/role';
-import { Profile, User } from '@/infrastructure/database/prisma/generated/client';
+import { Permission, Profile, Role, User } from '@/infrastructure/database/prisma/generated/client';
 import {
   ProfileScalarFieldEnum,
   UserScalarFieldEnum,
 } from '@/infrastructure/database/prisma/generated/internal/prismaNamespace';
 import _ from 'lodash';
 
-export interface IUser extends Omit<User, 'password'> {
-  id: number;
-  profile?: IProfile;
-  role?: IRole;
-  permissions?: { permission: IPermission }[];
+export interface IUser extends Omit<User, 'password'> {}
+
+export interface UserRelationData extends IUser {
+  role: Role & {
+    roleHasPermissions: Array<{ permission: Permission }>;
+    permissions: Array<Permission>;
+  };
+  permissions: Array<Permission>;
 }
 
 export interface IUserWithPassword extends IUser {
@@ -20,6 +21,10 @@ export interface IUserWithPassword extends IUser {
 
 export interface IProfile extends Profile {
   imageUrl?: string;
+}
+
+export interface IUserProfile extends User {
+  profile: IProfile;
 }
 
 export const USER_FIELD = UserScalarFieldEnum;

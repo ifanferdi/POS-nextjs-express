@@ -2,8 +2,8 @@ import { IUser } from '@/domain/entities/models/user';
 import { ErrorBadRequest, ErrorNotFound, ErrorUnauthorized } from '@/helpers/error.helper';
 import * as password from '@/helpers/password.helper';
 import BaseUseCase from '@/use-cases/_base-use-case';
-import SignIn from '@/use-cases/auth/sign-in';
 import SendOtp from '@/use-cases/auth/2FA/send-otp';
+import SignIn from '@/use-cases/auth/sign-in';
 
 export default class VerifyOtp extends BaseUseCase {
   private sendOtp = new SendOtp(this.repositories);
@@ -18,7 +18,7 @@ export default class VerifyOtp extends BaseUseCase {
     if (!user) throw new ErrorNotFound('Pengguna tidak ditemukan');
 
     // GET HASHED OTO FROM REDIS
-    const hashedOtp = await this.repositories.redisRepository?.findOne(key);
+    const hashedOtp = await this.repositories.redisRepository.findOne(key);
     if (!hashedOtp) throw new ErrorUnauthorized('Invalid verify OTP request.');
 
     // VERIFY OTP
@@ -30,8 +30,8 @@ export default class VerifyOtp extends BaseUseCase {
     }
 
     // DELETE REDIS IF OTP HAS BEEN VERIFIED
-    await this.repositories.redisRepository?.destroy(key);
-    await this.repositories.redisRepository?.destroy(rateLimiterKey);
+    await this.repositories.redisRepository.destroy(key);
+    await this.repositories.redisRepository.destroy(rateLimiterKey);
 
     return await new SignIn(this.repositories).handleStatefulMode(user);
   }

@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import config from '@/config/config';
 import { UserRelation } from '@/domain/entities/enums/user.enum';
 import { IUser, IUserWithPassword, USER_FIELDS } from '@/domain/entities/models/user';
@@ -7,8 +6,9 @@ import { ttl } from '@/helpers/common.helper';
 import { ErrorBadRequest } from '@/helpers/error.helper';
 import * as jwt from '@/helpers/jwt.helper';
 import * as password from '@/helpers/password.helper';
-import { SignInAuthDto } from '@/validations/auth-validation';
 import BaseUseCase from '@/use-cases/_base-use-case';
+import { SignInAuthDto } from '@/validations/auth-validation';
+import _ from 'lodash';
 
 const TOKEN_TIMEOUT = config.auth.tokenTimeout;
 const REFRESH_TOKEN_TIMEOUT = config.auth.refreshTokenTimeout;
@@ -55,7 +55,7 @@ export default class SignIn extends BaseUseCase {
   }
 
   private async storeTokenToRedis(value: RedisDataAuth, id: number) {
-    await this.repositories.redisRepository?.store({
+    await this.repositories.redisRepository.store({
       key: jwt.key(id),
       value,
       expired: ttl(REFRESH_TOKEN_TIMEOUT),

@@ -70,7 +70,7 @@ export default class UserController extends BaseController {
   }
 
   create = asyncHandler(async (req: e.Request, res: e.Response) => {
-    const payload: CreateUserProfileDto = {
+    let payload: CreateUserProfileDto = {
       username: req.body.username,
       password: req.body.password,
       confirmPassword: req.body.confirmPassword,
@@ -88,7 +88,7 @@ export default class UserController extends BaseController {
       };
 
     /** Request Validation **/
-    CreateUserProfileSchema.parse(payload);
+    payload = CreateUserProfileSchema.parse(payload);
 
     // Save to database
     const user = await this.useCases.userUseCase.createUser.execute(payload);
@@ -100,7 +100,7 @@ export default class UserController extends BaseController {
     const id = Number(req.params.id);
     await this.handleFindOne({ id });
 
-    const payload: UpdateUserProfileDto = {
+    let payload: UpdateUserProfileDto = {
       id,
       username: req.body.username,
       isActive: req.body.isActive,
@@ -123,7 +123,7 @@ export default class UserController extends BaseController {
     };
 
     /** Request Validation **/
-    UpdateUserProfileSchema.parse(payload);
+    payload = UpdateUserProfileSchema.parse(payload);
     ChangePasswordSchema.parse(payloadPassword);
 
     // Update to database

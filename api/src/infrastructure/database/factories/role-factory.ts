@@ -1,8 +1,8 @@
-import _ from 'lodash';
-import { IPermission } from '@/domain/entities/models/permission';
 import { CreateRoleDto } from '@/validations/role-validation';
+import _ from 'lodash';
+import { Permission } from '../prisma/generated/client';
 
-export default function RoleFactory(permissions: IPermission[]) {
+export default function RoleFactory(permissions: Permission[]) {
   const permissionByName = _.keyBy(permissions, 'name');
 
   const rolePermissions: Record<string, string[]> = {
@@ -39,7 +39,7 @@ export default function RoleFactory(permissions: IPermission[]) {
     User: ['Manage User', 'Show User'],
   };
 
-  const roleFactories: CreateRoleDto[] = [];
+  const roleFactories: Array<CreateRoleDto & { id: number }> = [];
   Object.keys(rolePermissions).map((role, index) =>
     roleFactories.push({
       id: index + 1,

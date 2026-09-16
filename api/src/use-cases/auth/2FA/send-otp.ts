@@ -29,7 +29,7 @@ export default class SendOtp extends BaseUseCase {
     // SENDING TO EMAIL RUN IN BACKGROUND
     this.sendOtpToEmail(otp);
 
-    await this.repositories.redisRepository?.store({
+    await this.repositories.redisRepository.store({
       key: this.key(user.id),
       value: hashedOtp,
       expired: ttl(OTP_TIMEOUT),
@@ -38,7 +38,7 @@ export default class SendOtp extends BaseUseCase {
   }
 
   private async handleIsResendOtpRequest(id: number) {
-    const isSessionExist = await this.repositories.redisRepository?.findOne(this.key(id));
+    const isSessionExist = await this.repositories.redisRepository.findOne(this.key(id));
 
     if (!isSessionExist) throw new AppError('Invalid OTP request. Session does not exist.');
   }
@@ -54,10 +54,10 @@ export default class SendOtp extends BaseUseCase {
 
   private async rateLimiter(userId: number) {
     const key = this.rateLimiterKey(userId);
-    const currentRequest = (await this.repositories.redisRepository?.incr(key)) as number;
+    const currentRequest = (await this.repositories.redisRepository.incr(key)) as number;
 
     if (currentRequest === 1)
-      await this.repositories.redisRepository?.expire(key, ttl(OTP_RATE_LIMIT_TIME));
+      await this.repositories.redisRepository.expire(key, ttl(OTP_RATE_LIMIT_TIME));
 
     if (currentRequest > OTP_RATE_LIMIT_NUM)
       throw new AppError('To many OTP request, please try again later.');

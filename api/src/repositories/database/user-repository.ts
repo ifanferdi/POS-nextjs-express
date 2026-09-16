@@ -1,10 +1,13 @@
-import _ from 'lodash';
+import { IUser } from '@/domain/entities/models/user';
 import { Repository } from '@/domain/repositories/database.interface';
 import { Prisma } from '@/infrastructure/database/prisma/generated/client';
+import { BatchPayload } from '@/infrastructure/database/prisma/generated/internal/prismaNamespace';
 import {
   UserCreateInput,
+  UserInclude,
   UserUpdateInput,
 } from '@/infrastructure/database/prisma/generated/models/User';
+import DatabaseBaseRepository from '@/repositories/database/_database-base-repository';
 import {
   CreateUserDto,
   CreateUserProfileDto,
@@ -13,13 +16,13 @@ import {
   UpdateUserDto,
   UpdateUserProfileDto,
 } from '@/validations/user-validation';
-import DatabaseBaseRepository from '@/repositories/database/_database-base-repository';
+import _ from 'lodash';
 
 export default class UserRepository
   extends DatabaseBaseRepository
   implements Repository<FindAllUserDto, FindOneUserDto, CreateUserDto, UpdateUserDto>
 {
-  async findAll(params: Partial<FindAllUserDto>) {
+  async findAll<T = IUser>(params: Partial<FindAllUserDto>) {
     const page = params?.page || 1;
     const limit = params?.limit || 10;
     const offset = (page - 1) * Number(limit);
@@ -35,64 +38,83 @@ export default class UserRepository
       },
     };
 
-    return this.prisma.user.findMany(query);
+    return this.prisma.user.findMany(query) as Promise<T[]>;
   }
 
   count(params: Partial<FindAllUserDto>) {
     return this.prisma.user.count({ where: this.queryUserRepository.handleWhere(params) });
   }
 
-  async findOne(params: FindOneUserDto) {
+  async findOne<T = IUser>(params: FindOneUserDto) {
     return this.prisma.user.findFirst({
       where: this.queryUserRepository.handleWhere(params),
       select: {
         ...this.queryUserRepository.handleSelect(params?.columns),
         ...this.queryUserRepository.handleInclude(params?.with),
       },
-    });
+    }) as Promise<T | null>;
   }
 
-  store(data: CreateUserProfileDto) {
+  async store<T = IUser>(data: CreateUserProfileDto) {
     const payload: UserCreateInput = _.omit(data, ['profile', 'confirmPassword']);
+    const include: UserInclude = {};
 
-    if (data.profile) payload.profile = { create: data.profile };
+    if (data.profile) {
+      payload.profile = { create: data.profile };
+      include.profile = true;
+    }
 
-    return this.prisma.user.create({ data: payload });
+    return this.prisma.user
+      .create({ data: payload, omit: { password: true }, include })
+      .finally() as Promise<T>;
   }
 
-  bulkStore(data: CreateUserDto[]) {
-    return this.prisma.user.createManyAndReturn({ data, skipDuplicates: true });
+  bulkStore<T = IUser>(data: CreateUserDto[]) {
+    return this.prisma.user.createManyAndReturn({ data, skipDuplicates: true }) as Promise<T[]>;
   }
 
-  update(data: UpdateUserProfileDto) {
-    const updateData: UserUpdateInput = {
-      ..._.omit(data, 'profile', 'auth'),
-      profile: { update: data.profile },
-    };
+  update<T = IUser>(data: UpdateUserProfileDto) {
+    const { profile, auth: _, ...rest } = data;
+    const payload: UserUpdateInput = rest;
+    const include: UserInclude = {};
 
-    return this.prisma.user.update({ where: { id: data.id }, data: updateData });
+    if (profile) {
+      payload.profile = { upsert: { create: profile, update: profile } };
+      include.profile = true;
+    }
+
+    return this.prisma.user
+      .update({ where: { id: data.id }, data: payload, omit: { password: true }, include })
+      .finally() as Promise<T>;
   }
 
-  destroy(id: number | number[]) {
+  destroy<T = BatchPayload | IUser>(id: number | number[]) {
     if (id instanceof Array)
       return this.prisma.user.updateMany({
         where: { id: { in: id } },
         data: { deletedAt: new Date() },
-      });
-    return this.prisma.user.update({ where: { id }, data: { deletedAt: new Date() } });
+      }) as Promise<T>;
+
+    return this.prisma.user
+      .update({ where: { id }, data: { deletedAt: new Date() } })
+      .finally() as Promise<T>;
   }
 
-  restore(id: number | number[]) {
+  restore<T = BatchPayload | IUser>(id: number | number[]) {
     if (id instanceof Array)
       return this.prisma.user.updateMany({
         where: { id: { in: id } },
         data: { deletedAt: null },
-      });
-    return this.prisma.user.update({ where: { id }, data: { deletedAt: null } });
+      }) as Promise<T>;
+
+    return this.prisma.user
+      .update({ where: { id }, data: { deletedAt: null } })
+      .finally() as Promise<T>;
   }
 
-  deletePermanently(id: number | number[]) {
-    if (id instanceof Array) return this.prisma.user.deleteMany({ where: { id: { in: id } } });
-    return this.prisma.user.deleteMany({ where: { id } });
+  deletePermanently<T = BatchPayload | IUser>(id: number | number[]) {
+    if (id instanceof Array)
+      return this.prisma.user.deleteMany({ where: { id: { in: id } } }) as Promise<T>;
+    return this.prisma.user.delete({ where: { id } }).finally() as Promise<T>;
   }
 }

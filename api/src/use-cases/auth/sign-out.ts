@@ -1,7 +1,7 @@
 import config from '@/config/config';
 import * as jwt from '@/helpers/jwt.helper';
-import { BaseFindById } from '@/validations/base-validation';
 import BaseUseCase from '@/use-cases/_base-use-case';
+import { BaseFindById } from '@/validations/base-validation';
 
 const AUTH_MODE = config.auth.mode;
 
@@ -15,5 +15,5 @@ export default class SignOut extends BaseUseCase {
     return true;
   }
 
-  private destroyToken = (id: number) => this.repositories.redisRepository?.destroy(jwt.key(id));
+  private destroyToken = (id: number) => this.repositories.redisRepository.destroy(jwt.key(id));
 }

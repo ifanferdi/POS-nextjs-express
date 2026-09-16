@@ -1,14 +1,19 @@
-import e from 'express';
 import { HttpStatusCode } from '@/constants/http-status.constant';
+import { UserRelation } from '@/domain/entities/enums/user.enum';
+import { IUser } from '@/domain/entities/models/user';
 import { Repositories } from '@/domain/repositories/repositories.interface';
 import { extractUserId } from '@/helpers/common.helper';
 import { ErrorBadRequest } from '@/helpers/error.helper';
-import { FindByIdUserDto } from '@/validations/user-validation';
+import { Role } from '@/infrastructure/database/prisma/generated/client';
 import CheckValidPermission from '@/use-cases/permission/check-valid-permission';
 import FindByIdUser from '@/use-cases/user/find-by-id-user';
+import e from 'express';
 
 export default class Authorization {
-  constructor(private readonly repositories: Repositories) {}
+  private findByIdUser: FindByIdUser;
+  constructor(private readonly repositories: Repositories) {
+    this.findByIdUser = new FindByIdUser(this.repositories);
+  }
 
   authorize(permissions: string | string[]) {
     return async (req: e.Request, res: e.Response, next: e.NextFunction) => {
@@ -35,9 +40,10 @@ export default class Authorization {
   }
 
   async hasRole(id: number, roles: string[] | string) {
-    const roleName = await new FindByIdUser(this.repositories)
-      .execute({ id, with: ['role'] } as FindByIdUserDto)
-      .then((res) => res.role?.name);
+    const user = (await this.findByIdUser.execute({ id, with: [UserRelation.ROLE] })) as IUser & {
+      role: Role;
+    };
+    const roleName = user.role.name;
 
     return Array.isArray(roles) && roleName ? roles.includes(roleName) : roleName === roles;
   }

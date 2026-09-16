@@ -1,35 +1,32 @@
-import { IProfile, IUser } from '@/domain/entities/models/user';
-import { Order, OrderItem } from '@/infrastructure/database/prisma/generated/client';
+import { IProfile, IUser, IUserProfile } from '@/domain/entities/models/user';
+import {
+  Order,
+  OrderItem,
+  Payment,
+  Product,
+} from '@/infrastructure/database/prisma/generated/client';
 import { OrderScalarFieldEnum } from '@/infrastructure/database/prisma/generated/internal/prismaNamespace';
-import { IMidtransPaymentDetail } from './midtrans-payment-detail';
-import { IPayment } from './payment';
-import { IProduct } from './product';
+import { PaymentMidtransDetail } from './payment';
 
-export interface IOrder extends Order {
-  id: number;
-  customer?: IUser;
-  user?: IUser;
-  orderItems?: IOrderItem[];
-  payment?: IPayment;
+export interface OrderPayment extends Order {
+  payment: Payment;
+}
+export interface OrderItemProduct extends OrderItem {
+  product: Product;
 }
 
-export interface IOrderItem extends OrderItem {
-  id: number;
-  product: IProduct;
-}
-
-export interface MetaProduct extends Partial<IProduct> {
+export interface MetaProduct extends Partial<Product> {
   snapshotAt?: Date;
 }
 
 export interface MetaOrder {
-  user?: IUser;
-  customer?: IUser;
+  user?: IUserProfile | IUser;
+  customer?: IUserProfile | IUser;
 }
 
 export interface MetaOrderItems {
-  product?: IProduct;
-  order?: IOrder;
+  product?: Product;
+  order?: Order;
 }
 
 export interface StoreOrderDtoItems {
@@ -50,16 +47,16 @@ export interface StoreOrderDto {
   notes?: string;
   meta?: Record<string, any>;
   items: StoreOrderDtoItems[];
-  payment: Pick<IPayment, 'amount' | 'change' | 'rounding' | 'total' | 'method' | 'reference'>;
+  payment: Pick<Payment, 'amount' | 'change' | 'rounding' | 'total' | 'method' | 'reference'>;
 }
 
 export interface StoreOrderResponse extends Omit<
-  IOrder,
+  Order,
   'customer' | 'user' | 'orderItems' | 'payment'
 > {
   user: IUser & { profile: IProfile };
-  orderItems: Array<IOrderItem & { product: IProduct }>;
-  payment: Promise<IPayment & { midtransDetail: IMidtransPaymentDetail }>;
+  orderItems: Array<OrderItemProduct>;
+  payment: PaymentMidtransDetail;
 }
 
 export const ORDER_FIELD = OrderScalarFieldEnum;

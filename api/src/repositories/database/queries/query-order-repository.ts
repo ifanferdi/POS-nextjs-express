@@ -3,14 +3,17 @@ import { PaymentMethod } from '@/domain/entities/enums/payment.enum';
 import { ORDER_FIELD, ORDER_FIELDS } from '@/domain/entities/models/order';
 import { USER_SELECT_FIELDS_PRISMA } from '@/domain/entities/models/user';
 import { Prisma } from '@/infrastructure/database/prisma/generated/client';
+import { OrderInclude } from '@/infrastructure/database/prisma/generated/models';
 import { FindAllOrderDto, FindByIdOrderDto } from '@/validations/order-validation';
 
 export default class QueryOrderRepository {
   handleInclude(relation: FindAllOrderDto['with'] & FindByIdOrderDto['with']) {
-    const include: Record<string, any> = {};
+    const include: OrderInclude = {};
 
     if (relation?.includes(OrderRelation.CUSTOMER))
       include.customer = { select: USER_SELECT_FIELDS_PRISMA };
+    if (relation?.includes(OrderRelation.CUSTOMER_PROFILE))
+      include.customer = { select: { ...USER_SELECT_FIELDS_PRISMA, profile: true } };
     if (relation?.includes(OrderRelation.USER))
       include.user = { select: USER_SELECT_FIELDS_PRISMA };
     if (relation?.includes(OrderRelation.USER_PROFILE))
@@ -77,6 +80,8 @@ export default class QueryOrderRepository {
     const select: Prisma.OrderSelect = {};
 
     if (cols && cols.length > 0) cols.forEach((c) => ((select as any)[c] = true));
+
+    select._count = { select: { orderItems: true } };
 
     return select;
   }

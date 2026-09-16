@@ -1,11 +1,12 @@
 import { CategoryRelation } from '@/domain/entities/enums/category.enum';
 import { CATEGORY_FIELD, CATEGORY_FIELDS } from '@/domain/entities/models/category';
 import { Prisma } from '@/infrastructure/database/prisma/generated/client';
+import { CategoryInclude } from '@/infrastructure/database/prisma/generated/models';
 import { FindAllCategoryDto, FindByIdCategoryDto } from '@/validations/category-validation';
 
 export default class QueryCategoryRepository {
   handleInclude(relation: FindAllCategoryDto['with'] & FindByIdCategoryDto['with']) {
-    const include: Record<string, any> = {};
+    const include: CategoryInclude = {};
 
     if (relation?.includes(CategoryRelation.PRODUCTS))
       include.productHasCategories = { select: { product: true } };

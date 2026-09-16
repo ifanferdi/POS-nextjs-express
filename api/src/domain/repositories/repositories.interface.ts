@@ -23,8 +23,8 @@ export interface Repositories extends ToolsRepository {
 
 interface ToolsRepository {
   rabbitmqRepository?: RabbitmqRepository;
-  redisRepository?: RedisRepository;
-  storageRepository?: S3Filesystem;
+  redisRepository: RedisRepository;
+  storageRepository: S3Filesystem;
   nodemailerRepository?: NodemailerRepository;
-  midtransRepository?: MidtransRepository;
+  midtransRepository: MidtransRepository;
 }

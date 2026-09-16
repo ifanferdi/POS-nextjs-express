@@ -1,20 +1,13 @@
-import { ICategory } from '@/domain/entities/models/category';
-import { OrderItem, Product } from '@/infrastructure/database/prisma/generated/client';
+import { Category, Product } from '@/infrastructure/database/prisma/generated/client';
 import { ProductScalarFieldEnum } from '@/infrastructure/database/prisma/generated/internal/prismaNamespace';
 
 export interface IProduct extends Product {
-  id: number;
-  imageUrl?: string;
-  productHasCategories?: IProductHasCategory[];
-  categories?: ICategory[];
-  orderItems?: OrderItem[];
+  imageUrl?: string ;
 }
 
-export interface IProductHasCategory {
-  productId: number;
-  categoryId: number;
-  product?: IProduct;
-  category?: ICategory;
+export interface ProductCategories extends IProduct {
+  productHasCategories: Array<{ category: Category }>;
+  categories?: Category[];
 }
 
 export const PRODUCT_FIELD = ProductScalarFieldEnum;

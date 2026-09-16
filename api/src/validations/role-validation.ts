@@ -30,7 +30,6 @@ export const FindAllRoleSchema = BasePagination(ROLE_FIELD)
       });
   });
 export const CreateRoleSchema = z.object({
-  id: NumberSchema.optional(),
   name: StringSchema.min(1, 'Name cannot be empty.').max(255),
   permissionIds: z.array(z.number()).optional(),
   permissions: z.array(StringSchema).optional(),

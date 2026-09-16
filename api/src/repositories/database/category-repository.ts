@@ -1,27 +1,23 @@
 import { Repository } from '@/domain/repositories/database.interface';
-import { Prisma } from '@/infrastructure/database/prisma/generated/client';
+import { Category, Prisma } from '@/infrastructure/database/prisma/generated/client';
+import { BatchPayload } from '@/infrastructure/database/prisma/generated/internal/prismaNamespace';
+import DatabaseBaseRepository from '@/repositories/database/_database-base-repository';
+import QueryCategoryRepository from '@/repositories/database/queries/query-category-repository';
 import {
   CreateCategoryDto,
   FindAllCategoryDto,
   FindByIdCategoryDto,
   UpdateCategoryDto,
 } from '@/validations/category-validation';
-import DatabaseBaseRepository from '@/repositories/database/_database-base-repository';
-import QueryCategoryRepository from '@/repositories/database/queries/query-category-repository';
 
 export default class CategoryRepository
   extends DatabaseBaseRepository
   implements
-    Repository<
-      FindAllCategoryDto,
-      FindByIdCategoryDto,
-      CreateCategoryDto,
-      UpdateCategoryDto
-    >
+    Repository<FindAllCategoryDto, FindByIdCategoryDto, CreateCategoryDto, UpdateCategoryDto>
 {
   private queryCategoryRepository = new QueryCategoryRepository();
 
-  async findAll(params: Partial<FindAllCategoryDto>) {
+  async findAll<T = Category>(params: Partial<FindAllCategoryDto>) {
     const page = params?.page || 1;
     const limit = params?.limit || 10;
     const offset = (page - 1) * Number(limit);
@@ -37,7 +33,7 @@ export default class CategoryRepository
       },
     };
 
-    return this.prisma.category.findMany(query);
+    return this.prisma.category.findMany(query) as Promise<T[]>;
   }
 
   count(params: Partial<FindAllCategoryDto>) {
@@ -46,28 +42,30 @@ export default class CategoryRepository
     });
   }
 
-  async findOne(params: FindByIdCategoryDto) {
+  async findOne<T = Category>(params: FindByIdCategoryDto) {
     return this.prisma.category.findFirst({
       where: this.queryCategoryRepository.handleWhere(params),
       select: {
         ...this.queryCategoryRepository.handleSelect(params?.columns),
         ...this.queryCategoryRepository.handleInclude(params?.with),
       },
-    });
+    }) as Promise<T | null>;
   }
 
-  store(data: CreateCategoryDto) {
-    return this.prisma.category.create({ data });
+  store<T = Category>(data: CreateCategoryDto) {
+    return this.prisma.category.create({ data }).finally() as Promise<T>;
   }
 
-  update(data: UpdateCategoryDto) {
+  update<T = Category>(data: UpdateCategoryDto) {
     const { id, ...updateData } = data;
-    return this.prisma.category.update({ where: { id }, data: updateData });
+    return this.prisma.category
+      .update({ where: { id }, data: updateData })
+      .finally() as Promise<T>;
   }
 
-  destroy(id: number | number[]) {
+  destroy<T = BatchPayload | Category>(id: number | number[]) {
     if (id instanceof Array)
-      return this.prisma.category.deleteMany({ where: { id: { in: id } } });
-    return this.prisma.category.delete({ where: { id } });
+      return this.prisma.category.deleteMany({ where: { id: { in: id } } }) as Promise<T>;
+    return this.prisma.category.delete({ where: { id } }).finally() as Promise<T>;
   }
 }

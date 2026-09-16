@@ -1,11 +1,11 @@
-import _ from 'lodash';
 import { IUser } from '@/domain/entities/models/user';
 import { JwtData, RedisDataAuth } from '@/domain/entities/types/auth.types';
-import RedisRepository from '@/repositories/redis/redis-repository';
 import { ErrorInternalServer, ErrorUnauthorized } from '@/helpers/error.helper';
 import * as jwt from '@/helpers/jwt.helper';
+import RedisRepository from '@/repositories/redis/redis-repository';
+import _ from 'lodash';
 
-export default async function (redisRepository?: RedisRepository, refreshToken?: string) {
+export default async function (redisRepository: RedisRepository, refreshToken: string) {
   if (!redisRepository) throw new ErrorInternalServer('Redis does not exist.');
 
   if (!refreshToken) throw new ErrorUnauthorized('No refresh token provided');

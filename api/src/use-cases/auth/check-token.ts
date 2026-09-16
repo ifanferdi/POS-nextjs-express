@@ -2,8 +2,8 @@ import config from '@/config/config';
 import { JwtData, RedisDataAuth } from '@/domain/entities/types/auth.types';
 import { ErrorUnauthorized } from '@/helpers/error.helper';
 import * as jwt from '@/helpers/jwt.helper';
-import { TokenDto } from '@/validations/auth-validation';
 import BaseUseCase from '@/use-cases/_base-use-case';
+import { TokenDto } from '@/validations/auth-validation';
 
 const AUTH_MODE = config.auth.mode;
 
@@ -15,7 +15,7 @@ export default class CheckToken extends BaseUseCase {
     if (AUTH_MODE === 'stateful') {
       // cek apakah token masih ada di redis atau sudah dihapus (sign out) / expired
       // note: 1 akun hanya 1 device, karna cache token akan ketimpa kalo ada login di device lain
-      const redisData: RedisDataAuth = await this.repositories.redisRepository?.findOne(
+      const redisData: RedisDataAuth = await this.repositories.redisRepository.findOne(
         jwt.key(tokenData.id),
       );
 

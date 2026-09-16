@@ -1,14 +1,19 @@
-import _ from 'lodash';
+import { ProductCategories } from '@/domain/entities/models/product';
 import { Repository } from '@/domain/repositories/database.interface';
-import { Prisma } from '@/infrastructure/database/prisma/generated/client';
+import { Prisma, Product, Role } from '@/infrastructure/database/prisma/generated/client';
+import { BatchPayload } from '@/infrastructure/database/prisma/generated/internal/prismaNamespace';
+import {
+  ProductCreateInput,
+  ProductInclude,
+} from '@/infrastructure/database/prisma/generated/models';
+import DatabaseBaseRepository from '@/repositories/database/_database-base-repository';
+import QueryProductRepository from '@/repositories/database/queries/query-product-repository';
 import {
   CreateProductDto,
   FindAllProductDto,
   FindByIdProductDto,
   UpdateProductDto,
 } from '@/validations/product-validation';
-import DatabaseBaseRepository from '@/repositories/database/_database-base-repository';
-import QueryProductRepository from '@/repositories/database/queries/query-product-repository';
 
 export default class ProductRepository
   extends DatabaseBaseRepository
@@ -16,7 +21,7 @@ export default class ProductRepository
 {
   private queryProductRepository = new QueryProductRepository();
 
-  async findAll(params: Partial<FindAllProductDto>) {
+  async findAll<T = Product>(params: Partial<FindAllProductDto>) {
     const page = params?.page || 1;
     const limit = params?.limit || 10;
     const offset = (page - 1) * Number(limit);
@@ -32,7 +37,7 @@ export default class ProductRepository
       },
     };
 
-    return this.prisma.product.findMany(query);
+    return this.prisma.product.findMany(query) as Promise<T[]>;
   }
 
   count(params: Partial<FindAllProductDto>) {
@@ -41,35 +46,33 @@ export default class ProductRepository
     });
   }
 
-  async findOne(params: FindByIdProductDto) {
+  async findOne<T = Product>(params: FindByIdProductDto) {
     return this.prisma.product.findFirst({
       where: this.queryProductRepository.handleWhere(params),
       select: {
         ...this.queryProductRepository.handleSelect(params?.columns),
         ...this.queryProductRepository.handleInclude(params?.with),
       },
-    });
+    }) as Promise<T | null>;
   }
 
-  store(data: CreateProductDto) {
+  store<T = Product>(data: CreateProductDto) {
     const { categoryIds, ...productData } = data;
+    const payload: ProductCreateInput = productData;
+    const include: ProductInclude = {};
 
-    return this.prisma.product.create({
-      data: {
-        ...productData,
-        productHasCategories:
-          categoryIds && categoryIds.length > 0
-            ? { create: categoryIds.map((categoryId) => ({ categoryId })) }
-            : undefined,
-      },
-      include: { productHasCategories: { include: { category: true } } },
-    });
+    if (categoryIds) {
+      payload.productHasCategories = { create: categoryIds.map((categoryId) => ({ categoryId })) };
+      include.productHasCategories = { include: { category: true } };
+    }
+
+    return this.prisma.product.create({ data: payload, include }).finally() as Promise<T>;
   }
 
-  update(data: UpdateProductDto) {
+  update<T = Product | ProductCategories>(data: UpdateProductDto) {
     const { id, categoryIds, ...productData } = data;
 
-    if (categoryIds !== undefined) {
+    if (categoryIds) {
       return this.prisma.$transaction(async (tx) => {
         await tx.productHasCategory.deleteMany({ where: { productId: id } });
         if (categoryIds.length > 0)
@@ -77,40 +80,49 @@ export default class ProductRepository
             data: categoryIds.map((categoryId) => ({ productId: id, categoryId })),
           });
 
-        return tx.product.update({
-          where: { id },
-          data: productData,
-          include: { productHasCategories: { include: { category: true } } },
-        });
+        return tx.product
+          .update({
+            where: { id },
+            data: productData,
+            include: { productHasCategories: { include: { category: true } } },
+          })
+          .finally() as Promise<T>;
       });
     }
 
-    return this.prisma.product.update({ where: { id }, data: productData });
+    return this.prisma.product.update({ where: { id }, data: productData }).finally() as Promise<T>;
   }
 
-  destroy(id: number | number[]) {
+  destroy<T = BatchPayload | Product>(id: number | number[]) {
     if (id instanceof Array)
       return this.prisma.product.updateMany({
         where: { id: { in: id } },
-        data: { deletedAt: new Date(), isActive: false },
-      });
-    return this.prisma.product.update({
-      where: { id },
-      data: { deletedAt: new Date(), isActive: false },
-    });
+        data: { deletedAt: new Date() },
+      }) as Promise<T>;
+
+    return this.prisma.product
+      .update({
+        where: { id },
+        data: { deletedAt: new Date() },
+      })
+      .finally() as Promise<T>;
   }
 
-  restore(id: number | number[]) {
+  restore<T = BatchPayload | Product>(id: number | number[]) {
     if (id instanceof Array)
       return this.prisma.product.updateMany({
         where: { id: { in: id } },
         data: { deletedAt: null },
-      });
-    return this.prisma.product.update({ where: { id }, data: { deletedAt: null } });
+      }) as Promise<T>;
+
+    return this.prisma.product
+      .update({ where: { id }, data: { deletedAt: null } })
+      .finally() as Promise<T>;
   }
 
-  deletePermanently(id: number | number[]) {
-    if (id instanceof Array) return this.prisma.product.deleteMany({ where: { id: { in: id } } });
-    return this.prisma.product.deleteMany({ where: { id } });
+  deletePermanently<T = BatchPayload | Role>(id: number | number[]) {
+    if (id instanceof Array)
+      return this.prisma.product.deleteMany({ where: { id: { in: id } } }) as Promise<T>;
+    return this.prisma.product.delete({ where: { id } }).finally() as Promise<T>;
   }
 }

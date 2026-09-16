@@ -55,7 +55,7 @@ export const FindAllUserSchema = BasePagination(USER_FIELD)
   });
 const UserBaseCreateUpdate = z.object({
   username: Username,
-  isActive: z.boolean(),
+  isActive: z.boolean().default(true),
   roleId: z.number(),
 });
 export const CreateUserSchema = UserBaseCreateUpdate.extend({

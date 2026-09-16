@@ -1,11 +1,12 @@
 import { ProductRelation } from '@/domain/entities/enums/product.enum';
 import { PRODUCT_FIELD, PRODUCT_FIELDS } from '@/domain/entities/models/product';
 import { Prisma } from '@/infrastructure/database/prisma/generated/client';
+import { ProductInclude } from '@/infrastructure/database/prisma/generated/models';
 import { FindAllProductDto, FindByIdProductDto } from '@/validations/product-validation';
 
 export default class QueryProductRepository {
   handleInclude(relation: FindAllProductDto['with'] & FindByIdProductDto['with']) {
-    const include: Record<string, any> = {};
+    const include: ProductInclude = {};
 
     if (relation?.includes(ProductRelation.CATEGORIES))
       include.productHasCategories = { select: { category: true } };

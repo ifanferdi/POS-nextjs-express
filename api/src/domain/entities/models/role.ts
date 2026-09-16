@@ -1,19 +1,16 @@
-import { Role, RoleHasPermission } from '@/infrastructure/database/prisma/generated/client';
+import { Role } from '@/infrastructure/database/prisma/generated/client';
 import { RoleScalarFieldEnum } from '@/infrastructure/database/prisma/generated/internal/prismaNamespace';
-import { IPermission } from '@/domain/entities/models/permission';
-import { IUser } from '@/domain/entities/models/user';
+import { Permission } from '@aws-sdk/client-s3';
 
-export interface IRoleHasPermission extends RoleHasPermission {
-  role?: IRole;
-  permission?: IPermission;
+export interface IRolePermission extends Role {
+  permission: Permission;
 }
 
-export interface IRole extends Role {
-  id: number;
-  roleHasPermissions?: IRoleHasPermission[];
-  users?: IUser[];
-  permissions?: IPermission[];
-}
+export type PartialRoleHasPermission = Role &
+  Partial<{
+    roleHasPermissions: Array<{ permission: Permission }>;
+    permissions: Array<Permission>;
+  }>;
 
 export const ROLE_FIELD = RoleScalarFieldEnum;
 export type ROLE_FIELD = (typeof ROLE_FIELD)[keyof typeof ROLE_FIELD];

@@ -80,11 +80,7 @@ export const UpdatePaymentSchema = CreatePaymentSchema.extend({
   midtransDetail,
 });
 
-export type FindOnePaymentDto<TCols extends readonly PAYMENT_FIELD[] | undefined> = Omit<
-  z.infer<typeof FindOnePaymentSchema>,
-  'columns'
-> & { columns?: TCols };
-// export interface FindOnePaymentDto extends z.infer<typeof FindOnePaymentSchema> {}
+export interface FindOnePaymentDto extends z.infer<typeof FindOnePaymentSchema> {}
 export interface FindAllPaymentDto extends z.infer<typeof FindAllPaymentSchema> {}
 export interface FindByIdPaymentDto extends z.infer<typeof FindByIdPaymentSchema> {}
 export interface CreatePaymentDto extends z.infer<typeof CreatePaymentSchema> {}

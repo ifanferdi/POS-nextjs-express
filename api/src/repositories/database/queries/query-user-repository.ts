@@ -2,11 +2,12 @@ import { UserRelation } from '@/domain/entities/enums/user.enum';
 import { ROLE_FIELDS_PRISMA } from '@/domain/entities/models/role';
 import { USER_FIELD, USER_SELECT_FIELDS } from '@/domain/entities/models/user';
 import { Prisma } from '@/infrastructure/database/prisma/generated/client';
+import { UserInclude } from '@/infrastructure/database/prisma/generated/models';
 import { FindAllUserDto, FindOneUserDto } from '@/validations/user-validation';
 
 export default class QueryUserRepository {
   handleInclude(relation: FindAllUserDto['with'] & FindOneUserDto['with']) {
-    const include: Record<string, any> = {};
+    const include: UserInclude = {};
 
     if (relation?.includes(UserRelation.PROFILE)) include.profile = true;
     if (relation?.includes(UserRelation.ROLE)) include.role = true;

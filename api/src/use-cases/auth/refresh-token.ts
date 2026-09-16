@@ -5,9 +5,9 @@ import checkRefreshToken from '@/helpers/check-refresh-token';
 import { ttl } from '@/helpers/common.helper';
 import { ErrorNotFound } from '@/helpers/error.helper';
 import * as jwt from '@/helpers/jwt.helper';
-import { TokenDto } from '@/validations/auth-validation';
 import BaseUseCase from '@/use-cases/_base-use-case';
 import SignIn from '@/use-cases/auth/sign-in';
+import { TokenDto } from '@/validations/auth-validation';
 
 const REFRESH_TOKEN_TIMEOUT = config.auth.refreshTokenTimeout;
 
@@ -20,7 +20,7 @@ export default class RefreshToken extends BaseUseCase {
 
   async handleStatefulMode(user: IUser, refreshToken: string) {
     const token = new SignIn(this.repositories).getToken({ ...user, isBearerToken: true });
-    const timeRemaining = await this.repositories.redisRepository?.getExpireInSecond(
+    const timeRemaining = await this.repositories.redisRepository.getExpireInSecond(
       jwt.key(user.id),
     );
     const { exp } = jwt.verify(token);
@@ -42,7 +42,7 @@ export default class RefreshToken extends BaseUseCase {
   }
 
   private async storeTokenToRedis(value: RedisDataAuth, id: number, expired: number) {
-    await this.repositories.redisRepository?.store({
+    await this.repositories.redisRepository.store({
       key: jwt.key(id),
       value,
       logging: false,

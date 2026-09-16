@@ -1,14 +1,12 @@
 import { PermissionRelation } from '@/domain/entities/enums/permission.enum';
 import { PERMISSION_FIELD, PERMISSION_FIELDS } from '@/domain/entities/models/permission';
 import { Prisma } from '@/infrastructure/database/prisma/generated/client';
-import {
-  FindAllPermissionDto,
-  FindByIdPermissionDto,
-} from '@/validations/permission-validation';
+import { PermissionInclude } from '@/infrastructure/database/prisma/generated/models';
+import { FindAllPermissionDto, FindByIdPermissionDto } from '@/validations/permission-validation';
 
 export default class QueryPermissionRepository {
   handleInclude(params: Pick<FindAllPermissionDto | FindByIdPermissionDto, 'with'>) {
-    const include: Record<string, any> = {};
+    const include: PermissionInclude = {};
 
     if (params?.with?.includes(PermissionRelation.ROLES))
       include.roleHasPermissions = { select: { role: true } };

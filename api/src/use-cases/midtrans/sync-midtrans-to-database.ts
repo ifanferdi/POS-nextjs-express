@@ -1,5 +1,6 @@
 import { OrderRelation, OrderStatus } from '@/domain/entities/enums/order.enum';
 import { PaymentStatus } from '@/domain/entities/enums/payment.enum';
+import { OrderPayment } from '@/domain/entities/models/order';
 import {
   MidtransChargeResponse,
   MidtransWebhookPayload,
@@ -23,7 +24,7 @@ export default class SyncMidtransToDatabase extends BaseUseCase {
 
     const status =
       notification ?? (await this.repositories.midtransRepository!.getStatus(orderNumber));
-    let order = await this.repositories.orderRepository.findOne({
+    let order = await this.repositories.orderRepository.findOne<OrderPayment>({
       orderNumber,
       with: [OrderRelation.PAYMENT],
     });

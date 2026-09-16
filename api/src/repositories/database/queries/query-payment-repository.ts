@@ -1,6 +1,9 @@
 import { PaymentRelation } from '@/domain/entities/enums/payment.enum';
 import { Prisma } from '@/infrastructure/database/prisma/generated/client';
-import { PaymentScalarFieldEnum } from '@/infrastructure/database/prisma/generated/internal/prismaNamespace';
+import {
+  PaymentInclude,
+  PaymentScalarFieldEnum,
+} from '@/infrastructure/database/prisma/generated/internal/prismaNamespace';
 import { FindAllPaymentDto, FindByIdPaymentDto } from '@/validations/payment-validation';
 
 type PAYMENT_FIELD = (typeof PaymentScalarFieldEnum)[keyof typeof PaymentScalarFieldEnum];
@@ -9,7 +12,7 @@ const PAYMENT_FIELDS = Object.keys(PaymentScalarFieldEnum) as PAYMENT_FIELD[];
 
 export default class QueryPaymentRepository {
   handleInclude(relation: FindAllPaymentDto['with'] & FindByIdPaymentDto['with']) {
-    const include: Record<string, any> = {};
+    const include: PaymentInclude = {};
 
     if (relation?.includes(PaymentRelation.ORDER)) include.order = true;
 

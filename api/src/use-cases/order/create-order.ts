@@ -1,7 +1,6 @@
 import config from '@/config/config';
 import { PaymentMethod } from '@/domain/entities/enums/payment.enum';
 import { UserRelation } from '@/domain/entities/enums/user.enum';
-import { IMidtransPaymentDetail } from '@/domain/entities/models/midtrans-payment-detail';
 import {
   MetaOrder,
   MetaOrderItems,
@@ -9,20 +8,19 @@ import {
   StoreOrderDtoItems,
   StoreOrderResponse,
 } from '@/domain/entities/models/order';
-import { IPayment } from '@/domain/entities/models/payment';
-import { IProduct } from '@/domain/entities/models/product';
-import { IUser } from '@/domain/entities/models/user';
+import { PaymentMidtransDetail } from '@/domain/entities/models/payment';
+import { IUserProfile } from '@/domain/entities/models/user';
 import {
   MidtransChargeBasePayload,
   MidtransChargePayload,
 } from '@/domain/infrastructures/midtrans.interface';
 import { calculateRounding } from '@/helpers/common.helper';
 import { ErrorBadRequest } from '@/helpers/error.helper';
+import { Product } from '@/infrastructure/database/prisma/generated/client';
 import { Decimal } from '@/infrastructure/database/prisma/generated/internal/prismaNamespace';
 import { publishSSEEvent } from '@/infrastructure/event-stream/sse-redis-bridge';
 import BaseUseCase from '@/use-cases/_base-use-case';
 import { CreateOrderDto } from '@/validations/order-validation';
-import UpdatePayment from '../payment/update-payment';
 import FindAllProduct from '../product/find-all-product';
 import FindByIdUser from '../user/find-by-id-user';
 
@@ -30,7 +28,6 @@ const EXPIRY_IN_MINUTES = config.midtrans.expiryMinutes;
 
 export default class CreateOrder extends BaseUseCase {
   private findByIdUser = new FindByIdUser(this.repositories);
-  private updatePayment = new UpdatePayment(this.repositories);
   private findAllProducts = new FindAllProduct(this.repositories);
 
   get now() {
@@ -45,7 +42,7 @@ export default class CreateOrder extends BaseUseCase {
       isActive: true,
     });
 
-    const productMap: Map<number, IProduct> = new Map(products.map((p: any) => [p.id, p]));
+    const productMap: Map<number, Product> = new Map(products.map((p: any) => [p.id, p]));
 
     const meta: MetaOrder = await this.handleMetaData(payload);
 
@@ -128,7 +125,7 @@ export default class CreateOrder extends BaseUseCase {
     const vaNumber = chargeResult.va_numbers?.[0]?.va_number || chargeResult.bill_key;
     const qrCodeUrl = chargeResult.actions?.find((a) => a.name === 'generate-qr-code')?.url;
 
-    order.payment = (await this.updatePayment.execute({
+    order.payment = await this.repositories.paymentRepository.update<PaymentMidtransDetail>({
       orderId: order.id,
       reference: order.orderNumber,
       midtransDetail: {
@@ -139,7 +136,7 @@ export default class CreateOrder extends BaseUseCase {
         qrCodeUrl,
         expiryTime: chargeResult.expiry_time ? new Date(chargeResult.expiry_time) : undefined,
       },
-    })) as unknown as Promise<IPayment & { midtransDetail: IMidtransPaymentDetail }>;
+    });
 
     return {
       order,
@@ -190,12 +187,12 @@ export default class CreateOrder extends BaseUseCase {
   }
 
   private async handleMetaData(payload: CreateOrderDto) {
-    let user: IUser | undefined;
+    let user: IUserProfile | undefined;
     if (payload.userId)
-      user = await this.findByIdUser.execute({
+      user = (await this.findByIdUser.execute({
         id: payload.userId,
         with: [UserRelation.PROFILE],
-      });
+      })) as IUserProfile;
 
     const meta: MetaOrder = {};
     if (user) meta.user = user;

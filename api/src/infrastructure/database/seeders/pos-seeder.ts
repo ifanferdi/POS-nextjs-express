@@ -1,10 +1,13 @@
 import { OrderStatus } from '@/domain/entities/enums/order.enum';
 import { PaymentMethod, PaymentStatus } from '@/domain/entities/enums/payment.enum';
-import { ICategory } from '@/domain/entities/models/category';
-import { IProduct, IProductHasCategory } from '@/domain/entities/models/product';
 import { Seeder } from '@/domain/infrastructures/database.interface';
 import { calculateRounding } from '@/helpers/common.helper';
-import { PrismaClient, Product } from '@/infrastructure/database/prisma/generated/client';
+import {
+  Category,
+  PrismaClient,
+  Product,
+  ProductHasCategory,
+} from '@/infrastructure/database/prisma/generated/client';
 import { Decimal } from '@/infrastructure/database/prisma/generated/internal/prismaNamespace';
 import {
   OrderCreateManyInput,
@@ -38,14 +41,14 @@ export default class PosSeeder implements Seeder {
     const categories = (await this.prisma.category.createManyAndReturn({
       data,
       skipDuplicates: true,
-    })) as unknown as Promise<ICategory[]>;
+    })) as unknown as Promise<Category[]>;
 
     console.info('✅ Seed Categories');
 
     return categories;
   }
 
-  private async seedProducts(categories: ICategory[]) {
+  private async seedProducts(categories: Category[]) {
     const images = await this.getDummyImages();
 
     let productProgress = Progress.create({
@@ -104,7 +107,7 @@ export default class PosSeeder implements Seeder {
     });
 
     for (let chunk = 0; chunk < products.length; chunk += CHUNK) {
-      const productHasCategories: IProductHasCategory[] = [];
+      const productHasCategories: ProductHasCategory[] = [];
       const data = Array.from(
         { length: Math.min(CHUNK, products.length - chunk) },
         (__: unknown, i: number) => {
@@ -141,7 +144,7 @@ export default class PosSeeder implements Seeder {
     return data.products.map((p) => ({ thumbnail: p.thumbnail, images: p.images }));
   }
 
-  private async seedOrders(products: IProduct[]) {
+  private async seedOrders(products: Product[]) {
     const users = await this.prisma.user.findMany({ select: { id: true }, where: { roleId: 1 } });
     if (users.length < 1) return;
 

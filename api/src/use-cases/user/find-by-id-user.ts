@@ -1,15 +1,15 @@
-import { IUser } from '@/domain/entities/models/user';
+import { handleProfileImageUrl } from '@/helpers/data-extractor';
 import { ErrorNotFound } from '@/helpers/error.helper';
-import { extractRelationData } from '@/helpers/extract-relationship';
-import { FindByIdUserDto } from '@/validations/user-validation';
 import BaseUseCase from '@/use-cases/_base-use-case';
+import { FindByIdUserDto } from '@/validations/user-validation';
 
 export default class FindByIdUser extends BaseUseCase {
   async execute(params: FindByIdUserDto) {
-    const user = (await this.repositories.userRepository.findOne(params)) as IUser;
+    const user = await this.repositories.userRepository.findOne(params);
+
     if (!user) throw new ErrorNotFound('Pengguna tidak ditemukan');
 
-    extractRelationData(params, user);
+    await handleProfileImageUrl(this.repositories.storageRepository, user);
 
     return user;
   }

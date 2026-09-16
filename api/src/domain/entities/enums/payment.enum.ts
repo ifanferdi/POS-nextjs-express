@@ -1,5 +1,6 @@
 export enum PaymentRelation {
   ORDER = 'order',
+  MIDTRANS_DETAIL = 'midtrans-detail',
 }
 
 export enum PaymentMethod {

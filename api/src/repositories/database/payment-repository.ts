@@ -1,6 +1,6 @@
 import { PaymentStatus } from '@/domain/entities/enums/payment.enum';
-import { PAYMENT_FIELD, PaymentSelectResult } from '@/domain/entities/models/payment';
-import { Prisma } from '@/infrastructure/database/prisma/generated/client';
+import { Payment, Prisma } from '@/infrastructure/database/prisma/generated/client';
+import { BatchPayload } from '@/infrastructure/database/prisma/generated/internal/prismaNamespace';
 import {
   PaymentInclude,
   PaymentUncheckedCreateInput,
@@ -19,7 +19,7 @@ import _ from 'lodash';
 export default class PaymentRepository extends DatabaseBaseRepository {
   private queryPaymentRepository = new QueryPaymentRepository();
 
-  async findAll(params: Partial<FindAllPaymentDto>) {
+  async findAll<T = Payment>(params: Partial<FindAllPaymentDto>) {
     const page = params?.page || 1;
     const limit = params?.limit || 10;
     const offset = (page - 1) * Number(limit);
@@ -32,7 +32,7 @@ export default class PaymentRepository extends DatabaseBaseRepository {
       select: { ...this.queryPaymentRepository.handleSelect(params?.columns) },
     };
 
-    return this.prisma.payment.findMany(query);
+    return this.prisma.payment.findMany(query) as Promise<T[]>;
   }
 
   count(params: Partial<FindAllPaymentDto>) {
@@ -41,28 +41,30 @@ export default class PaymentRepository extends DatabaseBaseRepository {
     });
   }
 
-  async findOne<const TCols extends readonly PAYMENT_FIELD[] | undefined = undefined>(
-    params: FindOnePaymentDto<TCols>,
-  ) {
+  async findOne<T = Payment>(params: FindOnePaymentDto) {
     return this.prisma.payment.findFirst({
       where: this.queryPaymentRepository.handleWhere(params),
       select: {
         ...this.queryPaymentRepository.handleSelect(params?.columns),
         ...this.queryPaymentRepository.handleInclude(params?.with),
       },
-    }) as Promise<PaymentSelectResult<TCols> | null>;
+    }) as Promise<T | null>;
   }
 
-  store(data: CreatePaymentDto) {
+  store<T = Payment>(data: CreatePaymentDto) {
     if (!data.status) data.status = PaymentStatus.PENDING;
+    const include: PaymentInclude = {};
 
-    const createData: PaymentUncheckedCreateInput = _.omit(data, 'midtransDetail');
-    if (data.midtransDetail) createData.midtransDetail = { create: data.midtransDetail };
+    const payload: PaymentUncheckedCreateInput = _.omit(data, 'midtransDetail');
+    if (data.midtransDetail) {
+      payload.midtransDetail = { create: data.midtransDetail };
+      include.midtransDetail = true;
+    }
 
-    return this.prisma.payment.create({ data: createData });
+    return this.prisma.payment.create({ data: payload, include }).finally() as Promise<T>;
   }
 
-  update(data: UpdatePaymentDto) {
+  update<T = Payment>(data: UpdatePaymentDto) {
     const { orderId } = data;
     if (!data.status) data.status = PaymentStatus.PENDING;
 
@@ -73,11 +75,14 @@ export default class PaymentRepository extends DatabaseBaseRepository {
       include.midtransDetail = true;
     }
 
-    return this.prisma.payment.update({ where: { orderId }, data: updateData, include });
+    return this.prisma.payment
+      .update({ where: { orderId }, data: updateData, include })
+      .finally() as Promise<T>;
   }
 
-  destroy(id: number | number[]) {
-    if (id instanceof Array) return this.prisma.payment.deleteMany({ where: { id: { in: id } } });
-    return this.prisma.payment.delete({ where: { id } });
+  destroy<T = BatchPayload | Payment>(id: number | number[]) {
+    if (id instanceof Array)
+      return this.prisma.payment.deleteMany({ where: { id: { in: id } } }) as Promise<T>;
+    return this.prisma.payment.delete({ where: { id } }).finally() as Promise<T>;
   }
 }

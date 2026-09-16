@@ -1,12 +1,13 @@
 import { Repository } from '@/domain/repositories/database.interface';
-import { Prisma } from '@/infrastructure/database/prisma/generated/client';
+import { Permission, Prisma } from '@/infrastructure/database/prisma/generated/client';
+import { BatchPayload } from '@/infrastructure/database/prisma/generated/internal/prismaNamespace';
+import DatabaseBaseRepository from '@/repositories/database/_database-base-repository';
 import {
   CreatePermissionDto,
   FindAllPermissionDto,
   FindByIdPermissionDto,
   UpdatePermissionDto,
 } from '@/validations/permission-validation';
-import DatabaseBaseRepository from '@/repositories/database/_database-base-repository';
 
 export default class PermissionRepository
   extends DatabaseBaseRepository
@@ -18,7 +19,7 @@ export default class PermissionRepository
       UpdatePermissionDto
     >
 {
-  async findAll(params: Partial<FindAllPermissionDto>) {
+  async findAll<T = Permission>(params: Partial<FindAllPermissionDto>) {
     const page = params?.page || 1;
     const limit = params?.limit || 10;
     const offset = (page - 1) * Number(limit);
@@ -34,7 +35,7 @@ export default class PermissionRepository
       },
     };
 
-    return this.prisma.permission.findMany(query);
+    return this.prisma.permission.findMany(query) as Promise<T[]>;
   }
 
   count(params: Partial<FindAllPermissionDto>) {
@@ -43,32 +44,34 @@ export default class PermissionRepository
     });
   }
 
-  async findOne(params: FindByIdPermissionDto) {
+  async findOne<T = Permission>(params: FindByIdPermissionDto) {
     return this.prisma.permission.findFirst({
       where: this.queryPermissionRepository.handleWhere(params),
       select: {
         ...this.queryPermissionRepository.handleSelect(params?.columns),
         ...this.queryPermissionRepository.handleInclude(params),
       },
-    });
+    }) as Promise<T | null>;
   }
 
-  async store(data: CreatePermissionDto | CreatePermissionDto[]) {
-    if (Array.isArray(data)) return this.bulkStore(data);
-    return this.prisma.permission.create({ data });
+  async store<T = Permission>(data: CreatePermissionDto) {
+    return this.prisma.permission.create({ data }).finally() as Promise<T>;
   }
 
-  bulkStore(data: CreatePermissionDto[]) {
-    return this.prisma.permission.createManyAndReturn({ data, skipDuplicates: true });
+  bulkStore<T = Permission>(data: CreatePermissionDto[]) {
+    return this.prisma.permission.createManyAndReturn({
+      data,
+      skipDuplicates: true,
+    }) as Promise<T[]>;
   }
 
-  update(data: UpdatePermissionDto) {
-    return this.prisma.permission.update({ where: { id: data.id }, data });
+  update<T = Permission>(data: UpdatePermissionDto) {
+    return this.prisma.permission.update({ where: { id: data.id }, data }).finally() as Promise<T>;
   }
 
-  destroy(id: number | number[]) {
+  destroy<T = BatchPayload | Permission>(id: number | number[]) {
     if (id instanceof Array)
-      return this.prisma.permission.deleteMany({ where: { id: { in: id } } });
-    return this.prisma.permission.deleteMany({ where: { id } });
+      return this.prisma.permission.deleteMany({ where: { id: { in: id } } }) as Promise<T>;
+    return this.prisma.permission.deleteMany({ where: { id } }) as Promise<T>;
   }
 }

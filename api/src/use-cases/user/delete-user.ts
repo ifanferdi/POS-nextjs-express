@@ -1,6 +1,7 @@
 import { UserRelation } from '@/domain/entities/enums/user.enum';
-import { BaseFindById } from '@/validations/base-validation';
+import { IUserProfile } from '@/domain/entities/models/user';
 import BaseUseCase from '@/use-cases/_base-use-case';
+import { BaseFindById } from '@/validations/base-validation';
 
 export default class DeleteUser extends BaseUseCase {
   execute({ id }: BaseFindById, options?: { isPermanently: boolean }) {
@@ -12,7 +13,7 @@ export default class DeleteUser extends BaseUseCase {
   }
 
   private async handleDeletePermanently({ id }: BaseFindById) {
-    const user = await this.repositories.userRepository.findOne({
+    const user = await this.repositories.userRepository.findOne<IUserProfile>({
       id,
       with: [UserRelation.SOFT_DELETE, UserRelation.PROFILE],
     });
@@ -20,7 +21,7 @@ export default class DeleteUser extends BaseUseCase {
 
     const deletePermanently = await this.repositories.userRepository.deletePermanently(id);
 
-    if (user.profile?.imagePath)
+    if (user.profile.imagePath)
       await this.repositories.storageRepository?.delete(user.profile.imagePath);
 
     return deletePermanently;

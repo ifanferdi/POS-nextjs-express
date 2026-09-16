@@ -1,8 +1,8 @@
 import { IUserWithPassword } from '@/domain/entities/models/user';
 import { ErrorBadRequest } from '@/helpers/error.helper';
 import * as password from '@/helpers/password.helper';
-import { ChangePasswordDto, UpdateUserProfileDto } from '@/validations/user-validation';
 import BaseUseCase from '@/use-cases/_base-use-case';
+import { ChangePasswordDto, UpdateUserProfileDto } from '@/validations/user-validation';
 
 export default class UpdateUser extends BaseUseCase {
   async execute(payload: UpdateUserProfileDto, payloadPassword?: ChangePasswordDto) {
