@@ -129,7 +129,3 @@ function ReceiptRow({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
-
-function capitalize(s: string) {
-  return s.charAt(0).toUpperCase() + s.slice(1);
-}

@@ -3,7 +3,6 @@
 import { PosCheckoutDialog } from '@/app/(pos)/_components/pos-checkout-dialog';
 import { Button } from '@/components/ui/button';
 import { PosLastOrder } from '@/domain';
-import { cartCount, cartSubtotal, useCartStore } from '@/hooks/pos-cart-store';
 import { formatCurrency } from '@/lib/helper';
 import { cn } from '@/lib/utils';
 import {
@@ -17,6 +16,7 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import { useState } from 'react';
+import { cartCount, cartSubtotal, useCartStore } from '../../../store/pos-cart-store';
 
 interface PosCartProps {
   onCheckoutSuccess: (result: PosLastOrder) => void;

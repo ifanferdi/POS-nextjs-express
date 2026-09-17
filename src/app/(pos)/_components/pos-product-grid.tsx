@@ -4,13 +4,13 @@ import { Input } from '@/components/ui/input';
 import { options } from '@/config/config';
 import { CategoryOption, Product, ProductDetail, ProductRelation } from '@/domain';
 import { getAllProducts } from '@/features/products/api';
-import { CartItem, useCartStore } from '@/hooks/pos-cart-store';
 import { useSSE } from '@/hooks/use-sse';
 import { cn } from '@/lib/utils';
 import _ from 'lodash';
 import { SearchIcon, XIcon } from 'lucide-react';
 import { Dispatch, RefObject, SetStateAction, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
+import { CartItem, useCartStore } from '../../../store/pos-cart-store';
 import { ProductCard } from './pos-product-card';
 import { SkeletonCard } from './pos-product-grid-skeleton';
 

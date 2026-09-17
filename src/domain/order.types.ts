@@ -1,7 +1,7 @@
 import { MidtransPaymentDetail, Payment } from '@/domain/payment.types';
 import { Product } from '@/domain/product.types';
 import { UserProfile } from '@/domain/user.types';
-import { CartItem } from '@/hooks/pos-cart-store';
+import { CartItem } from '../store/pos-cart-store';
 import { ApiResponse } from './general.types';
 
 export enum OrderStatus {

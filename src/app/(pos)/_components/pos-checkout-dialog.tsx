@@ -28,7 +28,6 @@ import {
 import { createOrderAction } from '@/features/orders/action';
 import { PosCheckoutForm, PosCheckoutFormSchema } from '@/features/orders/schema';
 import { getPaymentByOrderId } from '@/features/payments/action';
-import { CartItem, useCartStore } from '@/hooks/pos-cart-store';
 import { useSSE } from '@/hooks/use-sse';
 import { calculateRounding, formatCurrency } from '@/lib/helper';
 import { cn } from '@/lib/utils';
@@ -39,6 +38,7 @@ import Image from 'next/image';
 import { useEffect, useState, useTransition } from 'react';
 import { Controller, useForm, UseFormReturn, useWatch } from 'react-hook-form';
 import { toast } from 'sonner';
+import { CartItem, useCartStore } from '../../../store/pos-cart-store';
 
 function OrderItems({ items }: { items: CartItem[] }) {
   return (
@@ -274,7 +274,6 @@ export function PosCheckoutDialog({
     <Dialog
       open={open}
       onOpenChange={(isOpen) => {
-        console.log(!isOpen && pendingPayment);
         if (!isOpen && pendingPayment) {
           setPendingPayment(undefined);
           useCartStore.getState().clear();

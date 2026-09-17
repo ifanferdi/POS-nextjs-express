@@ -1,12 +1,12 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Product } from '@/domain';
-import { CartItem, useCartStore } from '@/hooks/pos-cart-store';
 import { formatCurrency } from '@/lib/helper';
 import { cn } from '@/lib/utils';
 import { Loader2Icon, MinusIcon, PackageIcon, PlusIcon, XIcon } from 'lucide-react';
 import Image from 'next/image';
 import { useState } from 'react';
+import { CartItem, useCartStore } from '../../../store/pos-cart-store';
 
 export function ProductCard({
   product,
