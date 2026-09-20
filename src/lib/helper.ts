@@ -5,6 +5,7 @@ export const stringEllipsis = (str: string, length = 30) =>
   _.truncate(str, { length, separator: '' });
 export const calculateAge = (dateOfBirth: Date) => moment().diff(moment(dateOfBirth), 'years');
 export const formatDate = (date: Date) => moment(date).format('YYYY-MM-DD');
+export const formatDateTime = (date: Date) => moment(date).format('YYYY-MM-DD hh:mm:ss');
 export const formatCurrency = (n: number, decimalDigits = 2) =>
   new Intl.NumberFormat('id-ID', {
     style: 'currency',

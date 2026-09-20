@@ -95,7 +95,7 @@ export function DefaultFilter({
               value="all"
               className={`cursor-pointer ${(activeFilter === 'all' || !activeFilter) && 'bg-muted-foreground/20 dark:bg-muted'}`}
             >
-              All Roles
+              All
             </DropdownMenuRadioItem>
           )}
           {items.map((item) => (

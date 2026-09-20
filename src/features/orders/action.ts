@@ -1,10 +1,20 @@
 'use server';
 
-import { ActionResult, Order, OrderApiResponse } from '@/domain';
+import {
+  ActionResult,
+  Order,
+  OrderApiResponse,
+  OrderDetail,
+  OrderList,
+  PaginatedResponse,
+} from '@/domain';
 import * as api from '@/features/orders/api';
 import {
   CreateOrderInput,
   CreateOrderSchema,
+  GetAllOrderParams,
+  GetAllOrderSchema,
+  OrderRelationParams,
   UpdateOrderInput,
   UpdateOrderSchema,
 } from '@/features/orders/schema';
@@ -25,6 +35,38 @@ export async function createOrderAction(
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to create order.',
+    };
+  }
+}
+
+export async function getOrdersAction(
+  params: GetAllOrderParams,
+): Promise<ActionResult<PaginatedResponse<OrderList>>> {
+  const validate = GetAllOrderSchema.safeParse(params);
+  if (!validate.success) return { success: false, error: 'Invalid params.' };
+
+  try {
+    const response = await api.getAllOrders<OrderList>(validate.data);
+    return { success: true, data: response };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to fetch orders.',
+    };
+  }
+}
+
+export async function getOrderByIdAction(
+  id: number,
+  relation?: OrderRelationParams,
+): Promise<ActionResult<OrderDetail>> {
+  try {
+    const order = await api.getOrderById<OrderDetail>(id, relation);
+    return { success: true, data: order };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to fetch order.',
     };
   }
 }

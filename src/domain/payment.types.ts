@@ -33,27 +33,30 @@ export interface Payment {
   method: PaymentMethod;
   reference: string | null;
   status: PaymentStatus;
-  paidAt: Date;
+  paidAt: Date | null;
+  expiredAt: Date | string | null;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface PaymentMidtrans extends Payment {
+  midtransDetail: MidtransPaymentDetail;
 }
 
 export interface MidtransPaymentDetail {
   id: number;
   paymentId: number;
   midtransOrderId: string;
-  transactionId?: string | null;
-  paymentType?: string | null;
-  transactionStatus?: string | null;
-  fraudStatus?: string | null;
-  vaNumber?: string | null;
-  qrCodeUrl?: string | null;
-  expiryTime?: Date | string | null;
-  signatureVerified?: boolean;
-  processedAt?: Date | string | null;
-  rawNotification?: Record<string, unknown>;
-  createdAt?: Date | string;
-  updatedAt?: Date | string;
+  transactionId: string | null;
+  paymentType: string | null;
+  transactionStatus: string | null;
+  fraudStatus: string | null;
+  vaNumber: string | null;
+  qrCodeUrl: string | null;
+  signatureVerified: boolean;
+  rawNotification: Record<string, unknown>;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export const getPaymentMethod = (str: PaymentMethod) => {

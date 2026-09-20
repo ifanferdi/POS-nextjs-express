@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/dialog';
 import { Order } from '@/domain';
 import { deleteOrderAction } from '@/features/orders/action';
-import { EyeIcon, TrashIcon } from 'lucide-react';
+import { EyeIcon } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';

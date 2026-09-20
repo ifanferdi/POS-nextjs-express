@@ -1,5 +1,6 @@
 'use client';
 
+import { PosPaymentModule } from '@/app/(pos)/_components/pos-payment-module';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -18,25 +19,14 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { CreatedOrder, PosLastOrder } from '@/domain';
-import {
-  MidtransPaymentDetail,
-  Payment,
-  PaymentMethod,
-  PaymentStatus,
-} from '@/domain/payment.types';
+import { CreatedOrder, PaymentMethod, PaymentMidtrans, PosLastOrder } from '@/domain';
 import { createOrderAction } from '@/features/orders/action';
 import { PosCheckoutForm, PosCheckoutFormSchema } from '@/features/orders/schema';
-import { getPaymentByOrderId } from '@/features/payments/action';
-import { useSSE } from '@/hooks/use-sse';
 import { calculateRounding, formatCurrency } from '@/lib/helper';
 import { cn } from '@/lib/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Check } from 'lucide-react';
-import moment from 'moment';
-import Image from 'next/image';
-import { useEffect, useState, useTransition } from 'react';
-import { Controller, useForm, UseFormReturn, useWatch } from 'react-hook-form';
+import { useState, useTransition } from 'react';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import { toast } from 'sonner';
 import { CartItem, useCartStore } from '../../../store/pos-cart-store';
 
@@ -58,100 +48,6 @@ function OrderItems({ items }: { items: CartItem[] }) {
   );
 }
 
-function PaymentCountdown({
-  order,
-  expiryTime,
-  setCheckoutOpen,
-  form,
-  onCheckoutSuccess,
-  setPendingPayment,
-}: {
-  order: CreatedOrder & { snapshot: CartItem[] };
-  expiryTime: Date | string;
-  setCheckoutOpen: (open: boolean) => void;
-  form: UseFormReturn<PosCheckoutForm>;
-  onCheckoutSuccess: (result: PosLastOrder) => void;
-  setPendingPayment: (
-    result: (MidtransPaymentDetail & { snapshot: CartItem[] }) | undefined,
-  ) => void;
-}) {
-  const [timeLeft, setTimeLeft] = useState<string>('');
-  const [progress, setProgress] = useState<number>(100);
-
-  useEffect(() => {
-    const expiry = order.payment.midtransDetail.expiryTime
-      ? new Date(order.payment.midtransDetail.expiryTime).getTime()
-      : moment().add(1, 'hours').toDate().getTime();
-    const start = Date.now();
-    const totalDuration = expiry - start;
-
-    const interval = setInterval(() => {
-      const now = Date.now();
-      const diff = expiry - now;
-
-      if (diff <= 0) {
-        toast.error('Payment expired!');
-        clearInterval(interval);
-        useCartStore.getState().clear();
-        onCheckoutSuccess({
-          order: order,
-          items: order.snapshot,
-        });
-        setPendingPayment(undefined);
-        form.reset();
-        setTimeLeft('Expired');
-        setProgress(0);
-        setCheckoutOpen(false);
-      } else {
-        const minutes = Math.floor(diff / 60000);
-        const seconds = Math.floor((diff % 60000) / 1000);
-        setTimeLeft(`${minutes}:${seconds.toString().padStart(2, '0')}`);
-        setProgress(Math.max(0, (diff / totalDuration) * 100));
-      }
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [expiryTime, form, setCheckoutOpen, onCheckoutSuccess, order, setPendingPayment]);
-
-  const radius = 40;
-  const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - (progress / 100) * circumference;
-
-  return (
-    <div className="flex items-center gap-3">
-      <div className="relative inline-flex items-center justify-center">
-        <svg className="size-24 -rotate-90" viewBox="0 0 100 100">
-          <circle
-            cx="50"
-            cy="50"
-            r={radius}
-            stroke="currentColor"
-            strokeWidth="4"
-            fill="none"
-            className="text-border/40"
-          />
-          <circle
-            cx="50"
-            cy="50"
-            r={radius}
-            stroke="currentColor"
-            strokeWidth="4"
-            fill="none"
-            strokeLinecap="round"
-            strokeDasharray={circumference}
-            strokeDashoffset={strokeDashoffset}
-            className="text-[#FF9500] transition-all duration-1000 ease-linear"
-          />
-        </svg>
-        <div className="absolute inset-0 flex items-center justify-center">
-          <span className="font-mono text-lg font-bold tabular-nums">{timeLeft}</span>
-        </div>
-      </div>
-      <div className="text-xs text-muted-foreground">Payment window closes when timer expires</div>
-    </div>
-  );
-}
-
 interface PosCheckoutDialogProps {
   open: boolean;
   setCheckoutOpen: (open: boolean) => void;
@@ -166,9 +62,8 @@ export function PosCheckoutDialog({
 }: PosCheckoutDialogProps) {
   const [isPending, startTransition] = useTransition();
   const [pendingPayment, setPendingPayment] = useState<
-    MidtransPaymentDetail & { snapshot: CartItem[] }
+    PaymentMidtrans & { snapshot: CartItem[] }
   >();
-  const [copied, setCopied] = useState(false);
   const { rounding, total } = calculateRounding(subtotal);
   const [createdOrder, setCreatedOrder] = useState<CreatedOrder>();
 
@@ -181,26 +76,6 @@ export function PosCheckoutDialog({
       paymentMethod: PaymentMethod.CASH,
       notes: '',
       amountTendered: 0,
-    },
-  });
-
-  useSSE<CreatedOrder>({
-    events: ['order.status'],
-    onEvent: ({ data }) => {
-      const paidOrder = data[0];
-      if (paidOrder.orderNumber !== createdOrder?.orderNumber) return;
-
-      useCartStore.getState().clear();
-      if (isPaymentMode) toast.success('Payment received!');
-      if (pendingPayment) {
-        onCheckoutSuccess({
-          order: paidOrder,
-          items: pendingPayment.snapshot,
-        });
-      }
-      form.reset();
-      setPendingPayment(undefined);
-      setCheckoutOpen(false);
     },
   });
 
@@ -239,7 +114,8 @@ export function PosCheckoutDialog({
         form.reset();
         setCheckoutOpen(false);
       } else {
-        setPendingPayment({ ...result.data.order.payment.midtransDetail!, snapshot });
+
+        setPendingPayment({ ...result.data.order.payment, snapshot });
       }
     });
   }
@@ -260,15 +136,6 @@ export function PosCheckoutDialog({
     { value: PaymentMethod.VA_BRI, label: 'VA BRI' },
     { value: PaymentMethod.VA_MANDIRI, label: 'VA Mandiri' },
   ];
-
-  function handleCopyVA() {
-    if (pendingPayment?.vaNumber) {
-      navigator.clipboard.writeText(pendingPayment?.vaNumber);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-      toast.success('VA number copied!');
-    }
-  }
 
   return (
     <Dialog
@@ -448,138 +315,35 @@ export function PosCheckoutDialog({
 
           {isPaymentMode && pendingPayment && createdOrder && (
             <div className="flex flex-col pl-6">
-              <div className="mb-6">
-                <h3 className="text-sm font-semibold uppercase tracking-wider mb-4">
-                  Payment Terminal
-                </h3>
-                {pendingPayment.expiryTime && (
-                  <PaymentCountdown
-                    order={{ ...createdOrder, snapshot: pendingPayment.snapshot }}
-                    onCheckoutSuccess={onCheckoutSuccess}
-                    expiryTime={pendingPayment.expiryTime}
-                    setCheckoutOpen={setCheckoutOpen}
-                    form={form}
-                    setPendingPayment={setPendingPayment}
-                  />
-                )}
-              </div>
-
-              <div className="flex-1 flex items-center justify-center border-2 rounded-lg p-8 bg-muted/20">
-                {pendingPayment.paymentType === 'qris' && pendingPayment.qrCodeUrl ? (
-                  <div className="flex flex-col items-center gap-6">
-                    <div className="text-center space-y-1">
-                      <p className="text-xs uppercase tracking-widest text-muted-foreground font-medium">
-                        Scan to Pay
-                      </p>
-                      <p className="text-2xl font-bold">QRIS</p>
-                    </div>
-                    <div className="p-4 bg-white rounded-lg border-2 shadow-sm">
-                      <Image
-                        width={200}
-                        height={200}
-                        src={pendingPayment.qrCodeUrl}
-                        alt="QRIS QR Code"
-                        className="w-64 h-64"
-                      />
-                    </div>
-                    <p className="text-xs text-muted-foreground text-center max-w-xs">
-                      Open your e-wallet app and scan this code to complete payment
-                    </p>
-                  </div>
-                ) : pendingPayment.vaNumber ? (
-                  <div className="flex flex-col items-center gap-6 w-full max-w-md">
-                    <div className="text-center space-y-1">
-                      <p className="text-xs uppercase tracking-widest text-muted-foreground font-medium">
-                        Transfer to
-                      </p>
-                      <p className="text-2xl font-bold">
-                        {paymentMethod === PaymentMethod.VA_BCA && 'BCA'}
-                        {paymentMethod === PaymentMethod.VA_BNI && 'BNI'}
-                        {paymentMethod === PaymentMethod.VA_BRI && 'BRI'}
-                        {paymentMethod === PaymentMethod.VA_MANDIRI && 'Mandiri'}
-                      </p>
-                    </div>
-                    <div className="w-full bg-card p-6 rounded-lg border-2 shadow-sm space-y-4">
-                      <div className="text-center">
-                        <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold mb-2">
-                          Virtual Account Number
-                        </p>
-                        <button
-                          type="button"
-                          onClick={handleCopyVA}
-                          className={cn(
-                            'w-full font-mono font-bold tabular-nums tracking-wider transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 text-center',
-                            pendingPayment.vaNumber.length > 20
-                              ? 'text-base sm:text-lg'
-                              : pendingPayment.vaNumber.length > 14
-                                ? 'text-lg sm:text-xl'
-                                : 'text-xl sm:text-2xl',
-                          )}
-                          aria-label="Copy virtual account number"
-                        >
-                          {copied ? <Check className="mr-2 inline size-5 text-success" /> : null}
-                          {pendingPayment.vaNumber}
-                        </button>
-                        <p className="mt-2 text-xs text-muted-foreground">
-                          Click account number to copy
-                        </p>
-                      </div>
-                    </div>
-                    <p className="text-xs text-muted-foreground text-center">
-                      Use mobile banking or ATM to transfer to this account number
-                    </p>
-                    <CheckPaymentStatusButton
-                      orderId={createdOrder.id}
-                      isPaymentMode={isPaymentMode}
-                      setCheckoutOpen={setCheckoutOpen}
-                      form={form}
-                      setPendingPayment={setPendingPayment}
-                    />
-                  </div>
-                ) : null}
-              </div>
+              <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider">Payment</h3>
+              <PosPaymentModule
+                orderId={createdOrder.id}
+                orderNumber={createdOrder.orderNumber}
+                paymentMethod={paymentMethod}
+                payment={pendingPayment}
+                onPaid={() => {
+                  useCartStore.getState().clear();
+                  toast.success('Payment received!');
+                  form.reset();
+                  setPendingPayment(undefined);
+                  setCheckoutOpen(false);
+                }}
+                onExpired={() => {
+                  toast.error('Payment expired!');
+                  useCartStore.getState().clear();
+                  onCheckoutSuccess({
+                    order: createdOrder,
+                    items: pendingPayment.snapshot,
+                  });
+                  form.reset();
+                  setPendingPayment(undefined);
+                  setCheckoutOpen(false);
+                }}
+              />
             </div>
           )}
         </div>
       </DialogContent>
     </Dialog>
-  );
-}
-
-function CheckPaymentStatusButton({
-  orderId,
-  isPaymentMode,
-  setCheckoutOpen,
-  form,
-  setPendingPayment,
-}: {
-  orderId: number;
-  isPaymentMode: boolean;
-  setCheckoutOpen: (open: boolean) => void;
-  form: UseFormReturn<PosCheckoutForm>;
-  setPendingPayment: (
-    result: (MidtransPaymentDetail & { snapshot: CartItem[] }) | undefined,
-  ) => void;
-}) {
-  const onClick = async () => {
-    const payment = await getPaymentByOrderId<Pick<Payment, 'id' | 'status'>>({
-      orderId,
-      columns: ['status'],
-    });
-
-    if (payment.status === PaymentStatus.SUCCESS) {
-      useCartStore.getState().clear();
-      if (isPaymentMode) toast.success('Payment received!');
-      form.reset();
-      setPendingPayment(undefined);
-      setCheckoutOpen(false);
-    }
-  };
-  return (
-    <>
-      <Button variant={'outline'} onClick={onClick}>
-        Check Payment Status
-      </Button>
-    </>
   );
 }

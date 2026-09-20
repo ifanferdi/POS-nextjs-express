@@ -1,12 +1,12 @@
+import { orderTableHeaders } from '@/app/(protected)/orders/_components/order-data-table';
 import { ActionSkeleton, HeaderTable, Skeleton } from '@/components/shared/table-server';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
-import { headers } from '@/app/(protected)/orders/_components/order-table';
 
 export function OrderTableSkeleton({ rows = 10 }: { rows?: number }) {
   return (
     <div className="overflow-hidden rounded-lg border border-border/60">
       <Table>
-        <HeaderTable headers={headers} />
+        <HeaderTable headers={orderTableHeaders} />
         <TableBody>
           {Array.from({ length: rows }).map((_, i) => (
             <TableRow key={i}>

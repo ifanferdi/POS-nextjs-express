@@ -30,17 +30,18 @@ export function HeaderTable({ headers }: { headers: string[] }) {
   );
 }
 
-interface TableProps<T> {
+export type CellsType = {
+  key: string;
+  type?: 'custom' | 'default' | 'link';
+  content: ReactNode;
+  url?: string;
+  className?: string;
+};
+export interface TableProps<T> {
   isNeedNumberColumn?: boolean;
   headers: string[];
   records: T[];
-  cells: (cell: T) => {
-    key: string;
-    type?: 'custom' | 'default' | 'link';
-    content: ReactNode;
-    url?: string;
-    className?: string;
-  }[];
+  cells: (cell: T) => Array<CellsType>;
   className?: string;
 }
 export function DataTable<T>({

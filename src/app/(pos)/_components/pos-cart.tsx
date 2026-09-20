@@ -1,6 +1,7 @@
 'use client';
 
 import { PosCheckoutDialog } from '@/app/(pos)/_components/pos-checkout-dialog';
+import { PosOrderHistoryDialog } from '@/app/(pos)/_components/pos-order-history-dialog';
 import { Button } from '@/components/ui/button';
 import { PosLastOrder } from '@/domain';
 import { formatCurrency } from '@/lib/helper';
@@ -8,6 +9,7 @@ import { cn } from '@/lib/utils';
 import {
   ChevronDownIcon,
   ChevronUpIcon,
+  ClipboardListIcon,
   InfoIcon,
   MinusIcon,
   PlusIcon,
@@ -28,6 +30,7 @@ export function PosCart({ onCheckoutSuccess }: PosCartProps) {
   const dec = useCartStore((s) => s.dec);
   const remove = useCartStore((s) => s.remove);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const [open, setOpen] = useState(false);
 
   const subtotal = cartSubtotal(items);
@@ -167,6 +170,15 @@ export function PosCart({ onCheckoutSuccess }: PosCartProps) {
         >
           Checkout
         </Button>
+        <Button
+          variant="outline"
+          className="mt-2 w-full"
+          onClick={() => setHistoryOpen(true)}
+          aria-label="Open order history"
+        >
+          <ClipboardListIcon />
+          <span>Orders</span>
+        </Button>
       </div>
 
       <PosCheckoutDialog
@@ -175,6 +187,8 @@ export function PosCart({ onCheckoutSuccess }: PosCartProps) {
         subtotal={subtotal}
         onCheckoutSuccess={onCheckoutSuccess}
       />
+
+      <PosOrderHistoryDialog open={historyOpen} setOpen={setHistoryOpen} />
     </div>
   );
 }

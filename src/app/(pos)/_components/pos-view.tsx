@@ -35,7 +35,7 @@ export function PosView({ products, totalProducts, categories }: PosViewProps) {
         />
       </section>
 
-      <aside className="min-h-0 max-lg:fixed bg-white max-lg:inset-x-0 max-lg:bottom-0 max-lg:z-20 max-lg:px-3 max-lg:py-3 lg:max-h-[calc(100vh-7rem)]">
+      <aside className="min-h-0 max-lg:fixed max-lg:inset-x-0 max-lg:bottom-0 max-lg:z-20 max-lg:px-3 max-lg:py-3 lg:max-h-[calc(100vh-7rem)]">
         <PosCart onCheckoutSuccess={setLastOrder} />
       </aside>
 
