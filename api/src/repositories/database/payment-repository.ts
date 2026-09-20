@@ -42,6 +42,8 @@ export default class PaymentRepository extends DatabaseBaseRepository {
   }
 
   async findOne<T = Payment>(params: FindOnePaymentDto) {
+    console.log(params);
+
     return this.prisma.payment.findFirst({
       where: this.queryPaymentRepository.handleWhere(params),
       select: {

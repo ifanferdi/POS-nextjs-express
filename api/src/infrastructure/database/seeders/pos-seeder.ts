@@ -210,11 +210,14 @@ export default class PosSeeder implements Seeder {
             ? calculateRounding(new Decimal(total))
             : { rounding: 0, total };
 
+        const paidAt = paymentStatus !== PaymentStatus.SUCCESS ? undefined : faker.date.anytime();
+        const orderNumber = `INV-${String(id).padStart(6, '0')}`;
+
         orders.push({
           id,
           customerId: null,
           userId: cashier?.id ?? 1,
-          orderNumber: `INV-${String(id).padStart(6, '0')}`,
+          orderNumber,
           subtotal,
           tax,
           discount,
@@ -229,11 +232,9 @@ export default class PosSeeder implements Seeder {
           total: totalRounding,
           amount: totalRounding,
           method: paymentMethod,
-          reference:
-            paymentMethod === PaymentMethod.CASH
-              ? null
-              : `PAY-${faker.string.alphanumeric(10).toUpperCase()}`,
+          reference: paymentMethod === PaymentMethod.CASH ? null : orderNumber,
           status: paymentStatus,
+          paidAt,
         });
       });
 

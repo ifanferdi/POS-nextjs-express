@@ -27,8 +27,8 @@ import FindByIdUser from '../user/find-by-id-user';
 const EXPIRY_IN_MINUTES = config.midtrans.expiryMinutes;
 
 export default class CreateOrder extends BaseUseCase {
-  private findByIdUser = new FindByIdUser(this.repositories);
-  private findAllProducts = new FindAllProduct(this.repositories);
+  private findByIdUser = new FindByIdUser(this.redisClient);
+  private findAllProducts = new FindAllProduct(this.redisClient);
 
   get now() {
     return new Date();
@@ -125,16 +125,17 @@ export default class CreateOrder extends BaseUseCase {
     const vaNumber = chargeResult.va_numbers?.[0]?.va_number || chargeResult.bill_key;
     const qrCodeUrl = chargeResult.actions?.find((a) => a.name === 'generate-qr-code')?.url;
 
+    const expiredAt = chargeResult.expiry_time ? new Date(chargeResult.expiry_time) : undefined;
     order.payment = await this.repositories.paymentRepository.update<PaymentMidtransDetail>({
       orderId: order.id,
       reference: order.orderNumber,
+      expiredAt,
       midtransDetail: {
         midtransOrderId: order.orderNumber,
         transactionId: chargeResult.transaction_id,
         paymentType: chargeResult.payment_type,
         vaNumber,
         qrCodeUrl,
-        expiryTime: chargeResult.expiry_time ? new Date(chargeResult.expiry_time) : undefined,
       },
     });
 
@@ -143,7 +144,6 @@ export default class CreateOrder extends BaseUseCase {
       paymentType: chargeResult.payment_type,
       vaNumber,
       qrCodeUrl,
-      expiryTime: chargeResult.expiry_time,
     };
   }
 

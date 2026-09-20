@@ -225,21 +225,19 @@ model Payment {
 }
 
 model MidtransPaymentDetail {
-  id                Int       @id @default(autoincrement())
-  paymentId         Int       @unique
-  midtransOrderId   String    @unique @db.VarChar(50)
-  transactionId     String?   @unique @db.VarChar(100)
-  paymentType       String?   @db.VarChar(30)
-  transactionStatus String?   @db.VarChar(30)
-  fraudStatus       String?   @db.VarChar(30)
-  vaNumber          String?   @db.VarChar(50)
-  qrCodeUrl         String?   @db.VarChar(500)
-  expiryTime        DateTime?
-  signatureVerified Boolean   @default(false)
-  processedAt       DateTime?
+  id                Int      @id @default(autoincrement())
+  paymentId         Int      @unique
+  midtransOrderId   String   @unique @db.VarChar(50)
+  transactionId     String?  @unique @db.VarChar(100)
+  paymentType       String?  @db.VarChar(30)
+  transactionStatus String?  @db.VarChar(30)
+  fraudStatus       String?  @db.VarChar(30)
+  vaNumber          String?  @db.VarChar(50)
+  qrCodeUrl         String?  @db.VarChar(500)
+  signatureVerified Boolean  @default(false)
   rawNotification   Json?
-  createdAt         DateTime  @default(now()) @db.Timestamptz
-  updatedAt         DateTime  @updatedAt @db.Timestamptz
+  createdAt         DateTime @default(now()) @db.Timestamptz
+  updatedAt         DateTime @updatedAt @db.Timestamptz
 
   payment Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
 

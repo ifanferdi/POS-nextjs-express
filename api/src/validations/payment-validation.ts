@@ -45,9 +45,7 @@ const midtransDetail = z
     fraudStatus: StringSchema.max(30).optional(),
     vaNumber: StringSchema.max(50).optional(),
     qrCodeUrl: StringSchema.max(500).optional(),
-    expiryTime: DateSchema.optional(),
     signatureVerified: BooleanSchema.optional(),
-    processedAt: DateSchema.optional(),
     rawNotification: z.record(z.any()).optional(),
   })
   .optional();

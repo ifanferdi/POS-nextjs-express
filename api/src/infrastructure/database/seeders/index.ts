@@ -1,4 +1,4 @@
-import { prisma } from '@/infrastructure/database/prisma/prisma';
+import { prismaNonLogger as prisma } from '@/infrastructure/database/prisma/prisma';
 import PosSeeder from '@/infrastructure/database/seeders/pos-seeder';
 import RolePermissionSeeder from '@/infrastructure/database/seeders/role-permission-seeder';
 import UserSeeder from '@/infrastructure/database/seeders/user-seeder';

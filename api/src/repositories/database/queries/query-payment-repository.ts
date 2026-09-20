@@ -15,6 +15,7 @@ export default class QueryPaymentRepository {
     const include: PaymentInclude = {};
 
     if (relation?.includes(PaymentRelation.ORDER)) include.order = true;
+    if (relation?.includes(PaymentRelation.MIDTRANS_DETAIL)) include.midtransDetail = true;
 
     return Object.keys(include).length ? include : undefined;
   }

@@ -28,8 +28,10 @@ const prisma =
     log: config.app.env === 'production' ? ['error'] : ['query', 'info', 'warn', 'error'],
   });
 
+const prismaNonLogger = globalForPrisma.prisma ?? new PrismaClient({ adapter, log: ['error'] });
+
 if (process.env.NODE_ENV !== 'production') {
   globalForPrisma.prisma = prisma;
 }
 
-export { prisma };
+export { prisma, prismaNonLogger };

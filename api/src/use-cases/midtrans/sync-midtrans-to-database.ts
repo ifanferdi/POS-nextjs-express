@@ -24,21 +24,11 @@ export default class SyncMidtransToDatabase extends BaseUseCase {
 
     const status =
       notification ?? (await this.repositories.midtransRepository!.getStatus(orderNumber));
-    let order = await this.repositories.orderRepository.findOne<OrderPayment>({
-      orderNumber,
-      with: [OrderRelation.PAYMENT],
-    });
 
-    if (!order) {
-      console.trace(`Order with order number ${orderNumber} not found`, 404);
-      return;
-    }
+    let checkOrder = await this.checkOrderPayment(orderNumber);
+    if (!checkOrder) return;
 
-    const payment = order.payment;
-    if (!payment) {
-      console.error(`Payment for order ${orderNumber} not found`, 404);
-      return;
-    }
+    let { order, payment } = checkOrder;
 
     const next = this.mapStatus(status);
 
@@ -62,7 +52,6 @@ export default class SyncMidtransToDatabase extends BaseUseCase {
         id: payment.id,
         status: next,
         paidAt: next === PaymentStatus.SUCCESS ? new Date() : undefined,
-        expiredAt: status?.expiry_time ? new Date(status?.expiry_time) : new Date(),
         midtransDetail: {
           midtransOrderId: status.order_id,
           transactionId: status.transaction_id,
@@ -75,7 +64,7 @@ export default class SyncMidtransToDatabase extends BaseUseCase {
       },
     );
 
-    order = await this.repositories.orderRepository.findOne({
+    const updatedOrder = await this.repositories.orderRepository.findOne<OrderPayment>({
       id: payment.orderId,
       with: [OrderRelation.PAYMENT],
     });
@@ -84,10 +73,10 @@ export default class SyncMidtransToDatabase extends BaseUseCase {
       scope: 'order',
       entity: 'order',
       action: 'status',
-      data: order ? [order] : [],
+      data: updatedOrder ? [updatedOrder] : [],
     });
 
-    return order;
+    return updatedOrder;
   }
 
   private handleGetOrderStatus(status: PaymentStatus) {
@@ -107,5 +96,25 @@ export default class SyncMidtransToDatabase extends BaseUseCase {
     )
       return PaymentStatus.SUCCESS;
     return PaymentStatus.PENDING;
+  }
+
+  private async checkOrderPayment(orderNumber: string) {
+    let order = await this.repositories.orderRepository.findOne<OrderPayment>({
+      orderNumber,
+      with: [OrderRelation.PAYMENT],
+    });
+
+    if (!order) {
+      console.error(`Order with order number ${orderNumber} not found`, 404);
+      return;
+    }
+
+    const payment = order.payment;
+    if (!payment) {
+      console.error(`Payment for order ${orderNumber} not found`, 404);
+      return;
+    }
+
+    return { order, payment };
   }
 }

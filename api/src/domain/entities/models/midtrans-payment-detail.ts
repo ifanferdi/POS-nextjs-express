@@ -4,7 +4,6 @@ export interface MidtransPaymentUpdate {
   id: number;
   status: PaymentStatus;
   paidAt?: Date;
-  expiredAt: Date;
   midtransDetail: {
     midtransOrderId: string;
     transactionId: string;
