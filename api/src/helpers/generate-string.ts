@@ -1,10 +1,17 @@
+import config from '@/config/config';
+import RedisConnection from '@/infrastructure/redis/redis-connection';
 import { randomInt } from 'crypto';
 import moment from 'moment';
 
-export function generateOrderNumber(): string {
-  const timestamp = moment().format('YYYYMMDDHHmmss');
-  const random = Math.floor(1000 + Math.random() * 9000);
-  return `INV-${timestamp}-${random}`;
+export async function generateOrderNumber(): Promise<string> {
+  const redisClient = await RedisConnection();
+  const date = moment().format('YYMMDD');
+  const key = `order-counter:${date}`;
+
+  const counter = await redisClient.incr(key);
+  if (counter === 1) await redisClient.expire(key, config.redis.orderCounterRedisTimeout);
+
+  return `INV-${date}-${String(counter).padStart(4, '0')}`;
 }
 
 export function generateOtp(digit = 6): string {

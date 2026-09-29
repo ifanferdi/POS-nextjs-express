@@ -39,7 +39,10 @@ const config = {
     apiKey: process.env.ELASTICSEARCH_API_KEY || '',
     index: 'auth-user-index',
   },
-  redis: { url: process.env.REDIS_URL || 'redis://localhost:6379' },
+  redis: {
+    url: process.env.REDIS_URL || 'redis://localhost:6379',
+    orderCounterRedisTimeout: Number(process.env.ORDER_COUNTR_REDIS_TIMEOUT) || 60 * 60 * 24 * 2, // hari
+  },
   midtrans: midtransConfig,
   filesystem: (process.env.FILESYSTEM || 'local') as 's3' | 'local',
   smtp: {

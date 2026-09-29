@@ -69,7 +69,7 @@ export default class OrderRepository
           ...orderData,
           subtotal,
           total,
-          orderNumber: generateOrderNumber(),
+          orderNumber: await generateOrderNumber(),
           orderItems: { create: items.map((item) => ({ ...item })) },
           status:
             payment.method === PaymentMethod.CASH ? OrderStatus.COMPLETED : OrderStatus.PENDING,
