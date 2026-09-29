@@ -1,7 +1,7 @@
 import { ErrorBadRequest } from '@/helpers/error.helper';
-import { UpdateRoleDto } from '@/validations/role-validation';
 import BaseUseCase from '@/use-cases/_base-use-case';
 import ResetCachePermission from '@/use-cases/permission/reset-cache-permission';
+import { UpdateRoleDto } from '@/validations/role-validation';
 
 export default class UpdateRole extends BaseUseCase {
   async execute(payload: UpdateRoleDto) {
@@ -10,7 +10,7 @@ export default class UpdateRole extends BaseUseCase {
     const role = await this.repositories.roleRepository.update(payload);
 
     if (payload.permissions || payload.permissionIds)
-      await new ResetCachePermission(this.repositories).execute({ roleId: role.id });
+      await new ResetCachePermission(this.redisClient).execute({ roleId: role.id });
 
     return role;
   }

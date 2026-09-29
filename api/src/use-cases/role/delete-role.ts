@@ -6,7 +6,7 @@ export default class DeleteRole extends BaseUseCase {
   async execute({ id }: BaseFindById) {
     const deletedRole = await this.repositories.roleRepository.destroy(id);
 
-    if (deletedRole) await new ResetCachePermission(this.repositories).execute({ roleId: id });
+    if (deletedRole) await new ResetCachePermission(this.redisClient).execute({ roleId: id });
 
     return deletedRole;
   }

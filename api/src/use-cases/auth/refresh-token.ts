@@ -19,7 +19,7 @@ export default class RefreshToken extends BaseUseCase {
   }
 
   async handleStatefulMode(user: IUser, refreshToken: string) {
-    const token = new SignIn(this.repositories).getToken({ ...user, isBearerToken: true });
+    const token = new SignIn(this.redisClient).getToken({ ...user, isBearerToken: true });
     const timeRemaining = await this.repositories.redisRepository.getExpireInSecond(
       jwt.key(user.id),
     );

@@ -4,7 +4,7 @@ import FindByIdUser from '@/use-cases/user/find-by-id-user';
 import { TokenDto } from '@/validations/auth-validation';
 
 export default class RefreshToken extends BaseUseCase {
-  private findByIdUser = new FindByIdUser(this.repositories);
+  private findByIdUser = new FindByIdUser(this.redisClient);
 
   async execute({ token: refreshToken }: TokenDto) {
     const userAuth = await checkRefreshToken(this.repositories.redisRepository, refreshToken);

@@ -6,7 +6,7 @@ import SendOtp from '@/use-cases/auth/2FA/send-otp';
 import SignIn from '@/use-cases/auth/sign-in';
 
 export default class VerifyOtp extends BaseUseCase {
-  private sendOtp = new SendOtp(this.repositories);
+  private sendOtp = new SendOtp(this.redisClient);
 
   async execute(params: { otp: string; userId: number }) {
     const key = this.sendOtp.key(params.userId);
@@ -33,6 +33,6 @@ export default class VerifyOtp extends BaseUseCase {
     await this.repositories.redisRepository.destroy(key);
     await this.repositories.redisRepository.destroy(rateLimiterKey);
 
-    return await new SignIn(this.repositories).handleStatefulMode(user);
+    return await new SignIn(this.redisClient).handleStatefulMode(user);
   }
 }

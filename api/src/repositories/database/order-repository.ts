@@ -71,6 +71,8 @@ export default class OrderRepository
           total,
           orderNumber: generateOrderNumber(),
           orderItems: { create: items.map((item) => ({ ...item })) },
+          status:
+            payment.method === PaymentMethod.CASH ? OrderStatus.COMPLETED : OrderStatus.PENDING,
         },
         include: { orderItems: { include: { product: true } } },
       });
@@ -83,14 +85,6 @@ export default class OrderRepository
           method: payment.method,
           status:
             payment.method === PaymentMethod.CASH ? PaymentStatus.SUCCESS : PaymentStatus.PENDING,
-        },
-      });
-
-      await tx.order.update({
-        where: { id: order.id },
-        data: {
-          status:
-            payment.method === PaymentMethod.CASH ? OrderStatus.COMPLETED : OrderStatus.PENDING,
         },
       });
 

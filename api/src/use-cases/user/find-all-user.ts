@@ -1,4 +1,5 @@
-import { handleProfileImageUrl } from '@/helpers/data-extractor';
+import { UserRelationData } from '@/domain/entities/models/user';
+import { extractRelationDataUser, handleProfileImageUrl } from '@/helpers/data-extractor';
 import paginate from '@/helpers/paginate.helper';
 import BaseUseCase from '@/use-cases/_base-use-case';
 import { FindAllUserDto } from '@/validations/user-validation';
@@ -11,9 +12,10 @@ export default class FindAllUser extends BaseUseCase {
     const total = await this.repositories.userRepository.count(params);
 
     await Promise.all(
-      data.map(
-        async (user) => await handleProfileImageUrl(this.repositories.storageRepository, user),
-      ),
+      data.map(async (user) => {
+        await handleProfileImageUrl(this.repositories.storageRepository, user);
+        extractRelationDataUser(params, user as unknown as UserRelationData);
+      }),
     );
 
     return paginate({ page, limit, total, data });

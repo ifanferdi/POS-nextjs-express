@@ -44,14 +44,16 @@ export default class SignIn extends BaseUseCase {
 
   async handleStatefulMode(user: IUser) {
     const token = this.getToken({ ...user, isBearerToken: true });
-    const { exp: tokenExpiry } = jwt.verify(token);
+    const { exp } = jwt.verify(token);
 
     const refreshToken = jwt.hash(user, REFRESH_TOKEN_TIMEOUT);
 
     const redisDataAuth: RedisDataAuth = { token, refreshToken, createdAt: new Date() };
     await this.storeTokenToRedis(redisDataAuth, user.id);
 
-    return { token, refreshToken, tokenExpiry, user };
+    console.log(exp);
+
+    return { token, refreshToken, exp, user };
   }
 
   private async storeTokenToRedis(value: RedisDataAuth, id: number) {

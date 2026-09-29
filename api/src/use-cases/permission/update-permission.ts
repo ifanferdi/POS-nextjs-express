@@ -1,7 +1,7 @@
 import { ErrorBadRequest } from '@/helpers/error.helper';
-import { UpdatePermissionDto } from '@/validations/permission-validation';
 import BaseUseCase from '@/use-cases/_base-use-case';
 import ResetCachePermission from '@/use-cases/permission/reset-cache-permission';
+import { UpdatePermissionDto } from '@/validations/permission-validation';
 
 export default class UpdatePermission extends BaseUseCase {
   async execute(payload: UpdatePermissionDto) {
@@ -9,7 +9,7 @@ export default class UpdatePermission extends BaseUseCase {
 
     const permission = await this.repositories.permissionRepository.update(payload);
 
-    await new ResetCachePermission(this.repositories).execute({ permissionId: payload.id });
+    await new ResetCachePermission(this.redisClient).execute({ permissionId: payload.id });
 
     return permission;
   }

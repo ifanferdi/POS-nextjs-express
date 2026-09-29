@@ -1,9 +1,9 @@
+import BaseUseCase from '@/use-cases/_base-use-case';
+import CheckValidPermission from '@/use-cases/permission/check-valid-permission';
 import {
   ResetCachePermissionDto,
   ResetCachePermissionSchema,
 } from '@/validations/permission-validation';
-import BaseUseCase from '@/use-cases/_base-use-case';
-import CheckValidPermission from '@/use-cases/permission/check-valid-permission';
 
 export default class ResetCachePermission extends BaseUseCase {
   async execute(params: ResetCachePermissionDto) {
@@ -12,7 +12,7 @@ export default class ResetCachePermission extends BaseUseCase {
     const userIds = await this.getUserIds(params);
 
     for (const userId of userIds) {
-      const redisKey = new CheckValidPermission(this.repositories).getRedisKey(userId);
+      const redisKey = new CheckValidPermission(this.redisClient).getRedisKey(userId);
 
       await this.repositories.redisRepository.destroy(redisKey);
     }

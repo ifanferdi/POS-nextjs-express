@@ -42,7 +42,7 @@ paths:
       tags: [Auth]
       summary: Sign in
       description: |
-        Returns user + JWT token. In stateful mode (AUTH_MODE=stateful), also returns refreshToken and tokenExpiry.
+        Returns user + JWT token. In stateful mode (AUTH_MODE=stateful), also returns refreshToken and exp.
       security: []
       requestBody:
         required: true
@@ -76,7 +76,7 @@ paths:
                   refreshToken:
                     type: string
                     description: Only returned in stateful mode
-                  tokenExpiry:
+                  exp:
                     type: number
                     description: Only returned in stateful mode
                   user:

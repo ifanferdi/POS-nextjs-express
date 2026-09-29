@@ -147,6 +147,7 @@ export default class PosSeeder implements Seeder {
   private async seedOrders(products: Product[]) {
     const users = await this.prisma.user.findMany({ select: { id: true }, where: { roleId: 1 } });
     if (users.length < 1) return;
+    const countAllUsers = await this.prisma.user.count();
 
     const weightedPaymentMethods = [
       ...Array(25).fill(PaymentMethod.CASH),
@@ -216,7 +217,7 @@ export default class PosSeeder implements Seeder {
         orders.push({
           id,
           customerId: null,
-          userId: cashier?.id ?? 1,
+          userId: faker.number.int({ min: 1, max: countAllUsers }),
           orderNumber,
           subtotal,
           tax,

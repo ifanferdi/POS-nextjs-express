@@ -6,7 +6,7 @@ import FindByIdUser from '@/use-cases/user/find-by-id-user';
 import { CheckValidPermissionDto } from '@/validations/permission-validation';
 
 export default class CheckValidPermission extends BaseUseCase {
-  private findByIdUser = new FindByIdUser(this.repositories);
+  private findByIdUser = new FindByIdUser(this.redisClient);
 
   getRedisKey = (userId: number) => `permissions:user-${userId}`;
 

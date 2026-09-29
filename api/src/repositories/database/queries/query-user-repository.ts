@@ -27,6 +27,14 @@ export default class QueryUserRepository {
           },
         },
       };
+    if (
+      relation?.includes(UserRelation.ORDERS_CASHIER) ||
+      relation?.includes(UserRelation.ORDERS_CASHIER_DETAILS)
+    ) {
+      include.cashierOrders = true;
+      if (relation?.includes(UserRelation.ORDERS_CASHIER_DETAILS))
+        include.cashierOrders = { include: { orderItems: true } };
+    }
 
     return Object.keys(include).length ? include : undefined;
   }
