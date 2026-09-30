@@ -1,10 +1,8 @@
 import { OrderRelation, OrderStatus } from '@/domain/entities/enums/order.enum';
 import { PaymentStatus } from '@/domain/entities/enums/payment.enum';
 import { OrderPayment } from '@/domain/entities/models/order';
-import {
-  MidtransChargeResponse,
-  MidtransWebhookPayload,
-} from '@/domain/infrastructures/midtrans.interface';
+import { MidtransWebhookPayload } from '@/domain/infrastructures/midtrans.interface';
+import { ErrorBadRequest } from '@/helpers/error.helper';
 import { publishSSEEvent } from '@/infrastructure/event-stream/sse-redis-bridge';
 import { SyncMidtransToDatabaseDto } from '@/validations/midtrans.validation';
 import BaseUseCase from '../_base-use-case';
@@ -19,18 +17,17 @@ export default class SyncMidtransToDatabase extends BaseUseCase {
     ]);
   }
 
-  async execute(params: SyncMidtransToDatabaseDto) {
+  async execute(params: SyncMidtransToDatabaseDto, isMockData = false) {
     const { orderNumber, notification } = params;
 
-    const status =
-      notification ?? (await this.repositories.midtransRepository!.getStatus(orderNumber));
+    if (!isMockData) this.verifyMidtransSignature(notification);
 
     let checkOrder = await this.checkOrderPayment(orderNumber);
     if (!checkOrder) return;
 
     let { order, payment } = checkOrder;
 
-    const next = this.mapStatus(status);
+    const next = this.mapStatus(notification);
 
     const paymentData = await this.repositories.paymentRepository.findOne({
       id: payment.id,
@@ -53,13 +50,13 @@ export default class SyncMidtransToDatabase extends BaseUseCase {
         status: next,
         paidAt: next === PaymentStatus.SUCCESS ? new Date() : undefined,
         midtransDetail: {
-          midtransOrderId: status.order_id,
-          transactionId: status.transaction_id,
-          paymentType: status.payment_type,
-          transactionStatus: status.transaction_status,
-          fraudStatus: status.fraud_status,
+          midtransOrderId: notification.order_id,
+          transactionId: notification.transaction_id,
+          paymentType: notification.payment_type,
+          transactionStatus: notification.transaction_status,
+          fraudStatus: notification.fraud_status,
           signatureVerified: Boolean(notification),
-          rawNotification: notification ?? status,
+          rawNotification: notification,
         },
       },
     );
@@ -86,7 +83,7 @@ export default class SyncMidtransToDatabase extends BaseUseCase {
     else return OrderStatus.PENDING;
   }
 
-  private mapStatus(status: MidtransWebhookPayload | MidtransChargeResponse) {
+  private mapStatus(status: MidtransWebhookPayload) {
     if (status.transaction_status === 'expire') return PaymentStatus.EXPIRED;
     if (status.transaction_status === 'cancel') return PaymentStatus.CANCELLED;
     if (status.transaction_status === 'deny') return PaymentStatus.FAILED;
@@ -96,6 +93,19 @@ export default class SyncMidtransToDatabase extends BaseUseCase {
     )
       return PaymentStatus.SUCCESS;
     return PaymentStatus.PENDING;
+  }
+
+  private verifyMidtransSignature(payload: MidtransWebhookPayload) {
+    const { order_id, status_code, gross_amount, signature_key } = payload;
+
+    const isValidSignatureKey = this.repositories.midtransRepository.verifySignature({
+      order_id,
+      status_code,
+      gross_amount,
+      signature_key,
+    });
+
+    if (!isValidSignatureKey) throw new ErrorBadRequest('Invalid midtrans signature key');
   }
 
   private async checkOrderPayment(orderNumber: string) {

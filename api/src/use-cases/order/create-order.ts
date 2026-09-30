@@ -17,7 +17,6 @@ import {
 import { calculateRounding } from '@/helpers/common.helper';
 import { ErrorBadRequest } from '@/helpers/error.helper';
 import { Product } from '@/infrastructure/database/prisma/generated/client';
-import { Decimal } from '@/infrastructure/database/prisma/generated/internal/prismaNamespace';
 import { publishSSEEvent } from '@/infrastructure/event-stream/sse-redis-bridge';
 import BaseUseCase from '@/use-cases/_base-use-case';
 import { CreateOrderDto } from '@/validations/order-validation';
@@ -65,12 +64,11 @@ export default class CreateOrder extends BaseUseCase {
     const tax = 0;
     const discount = 0;
     const total = subtotal + tax - discount;
+
     const isOnlinePayment = payload.paymentMethod !== PaymentMethod.CASH;
-    const rounding = isOnlinePayment ? Decimal(0) : calculateRounding(Decimal(total)).rounding;
-    const totalRounding = isOnlinePayment
-      ? Decimal(total)
-      : calculateRounding(Decimal(total)).total;
-    const amount = isOnlinePayment ? Decimal(total) : Decimal(payload.amount ?? 0);
+    const rounding = isOnlinePayment ? 0 : calculateRounding(total).rounding;
+    const totalRounding = isOnlinePayment ? total : calculateRounding(total).total;
+    const amount = isOnlinePayment ? total : (payload.amount ?? 0);
 
     const storeInput: StoreOrderDto = {
       userId: payload.userId,
@@ -83,11 +81,10 @@ export default class CreateOrder extends BaseUseCase {
       meta,
       payment: {
         amount,
-        change: isOnlinePayment ? Decimal(0) : amount.minus(totalRounding),
+        change: isOnlinePayment ? 0 : amount - totalRounding,
         rounding,
         total: totalRounding,
         method: payload.paymentMethod,
-        reference: payload.paymentReference ?? null,
       },
     };
 
@@ -109,7 +106,7 @@ export default class CreateOrder extends BaseUseCase {
       data: order.orderItems.map((orderItem) => orderItem.product),
     });
 
-    return order;
+    return { order };
   }
 
   private async handleOnlinePayment(
@@ -126,9 +123,9 @@ export default class CreateOrder extends BaseUseCase {
     const qrCodeUrl = chargeResult.actions?.find((a) => a.name === 'generate-qr-code')?.url;
 
     const expiredAt = chargeResult.expiry_time ? new Date(chargeResult.expiry_time) : undefined;
+
     order.payment = await this.repositories.paymentRepository.update<PaymentMidtransDetail>({
       orderId: order.id,
-      reference: order.orderNumber,
       expiredAt,
       midtransDetail: {
         midtransOrderId: order.orderNumber,

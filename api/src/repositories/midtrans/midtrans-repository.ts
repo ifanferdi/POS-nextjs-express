@@ -4,6 +4,7 @@ import {
   MidtransChargeResponse,
   MidtransWebhookPayload,
 } from '@/domain/infrastructures/midtrans.interface';
+import AppError from '@/helpers/error.helper';
 import axios from 'axios';
 import crypto from 'node:crypto';
 
@@ -12,8 +13,13 @@ const api = axios.create({ baseURL, auth: { username: config.midtrans.serverKey,
 
 export default class MidtransRepository {
   async charge(payload: MidtransChargePayload) {
-    const { data } = await api.post<MidtransChargeResponse>('/v2/charge', payload);
-    return data;
+    try {
+      const { data } = await api.post<MidtransChargeResponse>('/v2/charge', payload);
+      return data;
+    } catch (e: any) {
+      console.log(e.response);
+      throw new AppError('Midtrans payment error.', 500);
+    }
   }
 
   async getStatus(orderId: string) {

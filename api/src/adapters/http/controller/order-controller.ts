@@ -63,7 +63,6 @@ export default class OrderController extends BaseController {
       notes: req.body.notes,
       items: req.body.items,
       paymentMethod: req.body.paymentMethod,
-      paymentReference: req.body.paymentReference,
       amount: req.body.amount,
     };
 

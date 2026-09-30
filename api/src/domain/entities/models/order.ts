@@ -47,7 +47,7 @@ export interface StoreOrderDto {
   notes?: string;
   meta?: Record<string, any>;
   items: StoreOrderDtoItems[];
-  payment: Pick<Payment, 'amount' | 'change' | 'rounding' | 'total' | 'method' | 'reference'>;
+  payment: Pick<Payment, 'amount' | 'change' | 'rounding' | 'total' | 'method'>;
 }
 
 export interface StoreOrderResponse extends Omit<

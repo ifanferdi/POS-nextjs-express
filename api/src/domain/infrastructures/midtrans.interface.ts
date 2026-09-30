@@ -40,6 +40,7 @@ interface MidtransTransactionBase {
   transaction_id: string;
   status_message: string;
   status_code: string;
+  signature_key: string;
   payment_type: MidtransPaymentType;
   order_id: string;
   merchant_id: string;

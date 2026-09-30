@@ -132,8 +132,8 @@ model Product {
   id          Int       @id @default(autoincrement())
   name        String    @db.VarChar(255)
   description String?   @db.Text
-  price       Float
-  cost        Float?
+  price       Int
+  cost        Int?
   sku         String?   @unique @db.VarChar(100)
   barcode     String?   @unique @db.VarChar(100)
   imagePath   String?   @db.VarChar(255)
@@ -166,10 +166,10 @@ model Order {
   customerId  Int?
   userId      Int?
   orderNumber String      @unique @db.VarChar(50)
-  subtotal    Float       @default(0)
-  tax         Float       @default(0)
-  discount    Float       @default(0)
-  total       Float       @default(0)
+  subtotal    Int         @default(0)
+  tax         Int         @default(0)
+  discount    Int         @default(0)
+  total       Int         @default(0)
   status      OrderStatus @default(pending)
   notes       String?     @db.Text
   meta        Json?
@@ -190,8 +190,8 @@ model OrderItem {
   orderId    Int
   productId  Int?
   quantity   Int      @default(1)
-  unitPrice  Float
-  totalPrice Float
+  unitPrice  Int
+  totalPrice Int
   meta       Json?
   createdAt  DateTime @default(now()) @db.Timestamptz
   updatedAt  DateTime @updatedAt @db.Timestamptz
@@ -205,13 +205,12 @@ model OrderItem {
 model Payment {
   id        Int           @id @default(autoincrement())
   orderId   Int           @unique
-  subtotal  Decimal       @db.Decimal(12, 2) // sebelum rounding
-  rounding  Decimal       @default(0) @db.Decimal(12, 2) // nilai pembulatan
-  total     Decimal       @db.Decimal(12, 2) // subtotal + rounding
-  amount    Decimal       @db.Decimal(12, 2) // yang dibayar
-  change    Decimal       @default(0) @db.Decimal(12, 2)
+  subtotal  Int // sebelum rounding
+  rounding  Int           @default(0) // nilai pembulatan
+  total     Int // subtotal + rounding
+  amount    Int // yang dibayar
+  change    Int           @default(0)
   method    String        @db.VarChar(30)
-  reference String?       @db.VarChar(255)
   status    PaymentStatus @default(pending)
   paidAt    DateTime?
   expiredAt DateTime?

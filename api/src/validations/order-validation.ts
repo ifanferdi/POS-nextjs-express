@@ -44,14 +44,32 @@ const OrderItemSchema = z.object({
   quantity: NumberSchema.min(1).default(1),
 });
 
-export const CreateOrderSchema = z.object({
-  userId: NumberSchema,
-  notes: StringSchema.optional(),
-  items: z.array(OrderItemSchema).min(1),
-  paymentMethod: z.nativeEnum(PaymentMethod),
-  paymentReference: StringSchema.max(255).optional(),
-  amount: NumberSchema.optional(),
-});
+export const CreateOrderSchema = z
+  .object({
+    userId: NumberSchema,
+    notes: StringSchema.optional(),
+    items: z.array(OrderItemSchema).min(1),
+    paymentMethod: z.nativeEnum(PaymentMethod),
+    amount: NumberSchema.optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.paymentMethod === PaymentMethod.CASH) {
+      // Cash: uang yang diterima wajib diisi dan harus > 0
+      if (data.amount === undefined || data.amount <= 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['amount'],
+          message: 'Amount requeired for cash payment.',
+        });
+      }
+    } else if (data.amount !== undefined) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['amount'],
+        message: 'Amount tidak boleh diisi untuk pembayaran online',
+      });
+    }
+  });
 
 export const UpdateOrderStatusSchema = z.object({
   id: NumberSchema,

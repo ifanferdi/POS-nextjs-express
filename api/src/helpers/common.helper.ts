@@ -1,6 +1,5 @@
 import config from '@/config/config';
 import AppError from '@/helpers/error.helper';
-import { Decimal } from '@/infrastructure/database/prisma/generated/internal/prismaNamespace';
 import arp from '@network-utils/arp-lookup';
 import { Request } from 'express';
 import _ from 'lodash';
@@ -57,11 +56,11 @@ export const calculateAge = (dateOfBirth: Date) => moment().diff(moment(dateOfBi
  * Contoh: 20.921 → { rounding: 79, total: 21.000 }
  */
 export function calculateRounding(
-  subtotal: Decimal,
+  subtotal: number,
   roundTo: number = 100,
-): { rounding: Decimal; total: Decimal } {
-  const total = subtotal.div(roundTo).ceil().mul(roundTo);
-  const rounding = total.minus(subtotal);
+): { rounding: number; total: number } {
+  const total = Math.ceil(subtotal / roundTo) * roundTo;
+  const rounding = total - subtotal;
 
   return { rounding, total };
 }

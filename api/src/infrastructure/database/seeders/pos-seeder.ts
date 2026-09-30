@@ -8,7 +8,6 @@ import {
   Product,
   ProductHasCategory,
 } from '@/infrastructure/database/prisma/generated/client';
-import { Decimal } from '@/infrastructure/database/prisma/generated/internal/prismaNamespace';
 import {
   OrderCreateManyInput,
   OrderItemCreateManyInput,
@@ -207,9 +206,7 @@ export default class PosSeeder implements Seeder {
                 : PaymentStatus.PENDING;
 
         const { rounding, total: totalRounding } =
-          paymentMethod === PaymentMethod.CASH
-            ? calculateRounding(new Decimal(total))
-            : { rounding: 0, total };
+          paymentMethod === PaymentMethod.CASH ? calculateRounding(total) : { rounding: 0, total };
 
         const paidAt = paymentStatus !== PaymentStatus.SUCCESS ? undefined : faker.date.anytime();
         const orderNumber = `INV-${String(id).padStart(6, '0')}`;
@@ -233,7 +230,6 @@ export default class PosSeeder implements Seeder {
           total: totalRounding,
           amount: totalRounding,
           method: paymentMethod,
-          reference: paymentMethod === PaymentMethod.CASH ? null : orderNumber,
           status: paymentStatus,
           paidAt,
         });
