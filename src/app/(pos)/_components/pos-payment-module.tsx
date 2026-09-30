@@ -1,13 +1,14 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import { app } from '@/config/config';
 import { CreatedOrder, Payment, PaymentStatus } from '@/domain';
 import { getPaymentMethod, PaymentMethod, PaymentMidtrans } from '@/domain/payment.types';
-import { getPaymentByOrderId } from '@/features/payments/action';
+import { getPaymentByOrderId, mockMidtransPaymentAction } from '@/features/payments/action';
 import { useSSE } from '@/hooks/use-sse';
 import { formatDateTime } from '@/lib/helper';
 import { cn } from '@/lib/utils';
-import { Check, Loader2Icon } from 'lucide-react';
+import { Loader2Icon } from 'lucide-react';
 import moment from 'moment';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
@@ -30,7 +31,6 @@ export function PosPaymentModule({
   onPaid,
   onExpired,
 }: PosPaymentModuleProps) {
-  const [copied, setCopied] = useState(false);
   const [isPaymentStatusLoading, setIsPaymentStatusLoading] = useState(false);
 
   useSSE<CreatedOrder>({
@@ -45,8 +45,6 @@ export function PosPaymentModule({
   function handleCopyVA() {
     if (payment.midtransDetail.vaNumber) {
       navigator.clipboard.writeText(payment.midtransDetail.vaNumber);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
       toast.success('VA number copied!');
     }
   }
@@ -99,7 +97,6 @@ export function PosPaymentModule({
                   )}
                   aria-label="Copy virtual account number"
                 >
-                  {copied ? <Check className="mr-2 inline size-5 text-success" /> : null}
                   {payment.midtransDetail.vaNumber}
                 </button>
                 <p className="mt-2 text-xs text-muted-foreground">Click account number to copy</p>
@@ -114,10 +111,51 @@ export function PosPaymentModule({
               isPaymentStatusLoading={isPaymentStatusLoading}
               setIsPaymentStatusLoading={setIsPaymentStatusLoading}
             />
+            {app.env !== 'production' && (
+              <MockMidtransPaymentButton
+                orderNumber={orderNumber}
+                onPaid={onPaid}
+                paymentMethod={paymentMethod}
+                grossAmount={payment.amount}
+              />
+            )}
           </div>
         ) : null}
       </div>
     </div>
+  );
+}
+
+function MockMidtransPaymentButton({
+  orderNumber,
+  paymentMethod,
+  grossAmount,
+  onPaid,
+}: {
+  orderNumber: string;
+  paymentMethod: PaymentMethod;
+  grossAmount: number;
+  onPaid: () => void;
+}) {
+  const [isLoading, setIsLoading] = useState(false);
+
+  const onClick = async () => {
+    setIsLoading(true);
+    const result = await mockMidtransPaymentAction({ orderNumber, paymentMethod, grossAmount });
+    setIsLoading(false);
+
+    if (!result.success) {
+      toast.error(result.error ?? 'Failed to mock payment.');
+      return;
+    }
+
+    onPaid();
+  };
+
+  return (
+    <Button variant="secondary" onClick={onClick} disabled={isLoading}>
+      {isLoading ? <Loader2Icon className="animate-spin" /> : 'Mock Midtrans Payment'}
+    </Button>
   );
 }
 

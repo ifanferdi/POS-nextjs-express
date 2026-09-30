@@ -1,23 +1,16 @@
 'use server';
 
-import {
-  ActionResult,
-  Order,
-  OrderApiResponse,
-  OrderDetail,
-  OrderList,
-  PaginatedResponse,
-} from '@/domain';
+import { ActionResult, Order, OrderApiResponse, OrderDetail, PaginatedResponse } from '@/domain';
 import * as api from '@/features/orders/api';
 import {
   CreateOrderInput,
   CreateOrderSchema,
   GetAllOrderParams,
-  GetAllOrderSchema,
   OrderRelationParams,
   UpdateOrderInput,
   UpdateOrderSchema,
 } from '@/features/orders/schema';
+import { defaultPaginatedResponse } from '@/lib/helper';
 import { revalidatePath } from 'next/cache';
 
 export async function createOrderAction(
@@ -39,36 +32,23 @@ export async function createOrderAction(
   }
 }
 
-export async function getOrdersAction(
+export async function getOrdersAction<T = Order>(
   params: GetAllOrderParams,
-): Promise<ActionResult<PaginatedResponse<OrderList>>> {
-  const validate = GetAllOrderSchema.safeParse(params);
-  if (!validate.success) return { success: false, error: 'Invalid params.' };
-
+): Promise<PaginatedResponse<T>> {
   try {
-    const response = await api.getAllOrders<OrderList>(validate.data);
-    return { success: true, data: response };
+    const response = await api.getAllOrders<T>(params);
+    return response;
   } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Failed to fetch orders.',
-    };
+    console.error(error);
+    return defaultPaginatedResponse;
   }
 }
 
-export async function getOrderByIdAction(
+export async function getOrderByIdAction<T = OrderDetail>(
   id: number,
   relation?: OrderRelationParams,
-): Promise<ActionResult<OrderDetail>> {
-  try {
-    const order = await api.getOrderById<OrderDetail>(id, relation);
-    return { success: true, data: order };
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Failed to fetch order.',
-    };
-  }
+): Promise<T> {
+  return api.getOrderById<T>(id, relation);
 }
 
 export async function updateOrderAction(

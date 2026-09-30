@@ -114,7 +114,6 @@ export function PosCheckoutDialog({
         form.reset();
         setCheckoutOpen(false);
       } else {
-
         setPendingPayment({ ...result.data.order.payment, snapshot });
       }
     });
@@ -232,17 +231,17 @@ export function PosCheckoutDialog({
                           id="amountTendered"
                           type="text"
                           inputMode="numeric"
-                          pattern="[0-9]*"
+                          pattern="[0-9.]*"
                           placeholder="0"
                           disabled={isPending || isPaymentMode}
                           aria-invalid={fieldState.invalid}
                           className="font-mono text-lg tabular-nums"
                           value={!field.value ? '' : field.value.toLocaleString('id-ID')}
-                          onFocus={(e) => e.target.select()}
                           onChange={(e) => {
                             const raw = e.target.value.replace(/\D/g, '');
                             field.onChange(raw === '' ? 0 : Number(raw));
                           }}
+                          onFocus={(e) => e.target.select()}
                         />
                         {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
                         <div className="flex items-center justify-between mt-1">

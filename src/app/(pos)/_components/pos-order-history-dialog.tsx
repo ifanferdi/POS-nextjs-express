@@ -112,7 +112,7 @@ export function PosOrderHistoryDialog({ open, setOpen }: PosOrderHistoryDialogPr
     const id = ++fetchIdRef.current;
     const fetchOrders = async () => {
       setIsLoading(true);
-      const result = await getOrdersAction({
+      const result = await getOrdersAction<OrderList>({
         page: 1,
         limit: PAGE_SIZE,
         q: query || undefined,
@@ -122,14 +122,13 @@ export function PosOrderHistoryDialog({ open, setOpen }: PosOrderHistoryDialogPr
       });
       if (id !== fetchIdRef.current) return;
 
-      if (!result.success || !result.data) {
-        toast.error(result.error ?? 'Failed to load orders.');
+      if (!result) {
+        toast.error('Failed to load orders.');
         setOrders([]);
         setTotal(0);
       } else {
-        const data = result.data;
-        setOrders(data.data);
-        setTotal(data.total);
+        setOrders(result.data);
+        setTotal(result.total);
         setPage(1);
       }
       setIsLoading(false);
@@ -142,7 +141,7 @@ export function PosOrderHistoryDialog({ open, setOpen }: PosOrderHistoryDialogPr
     const id = ++fetchIdRef.current;
     if (append) setIsLoadingMore(true);
     else setIsLoading(true);
-    const result = await getOrdersAction({
+    const result = await getOrdersAction<OrderList>({
       page: nextPage,
       limit: PAGE_SIZE,
       q: query || undefined,
@@ -152,16 +151,15 @@ export function PosOrderHistoryDialog({ open, setOpen }: PosOrderHistoryDialogPr
     });
     if (id !== fetchIdRef.current) return;
 
-    if (!result.success || !result.data) {
-      toast.error(result.error ?? 'Failed to load orders.');
+    if (!result) {
+      toast.error('Failed to load orders.');
       if (!append) {
         setOrders([]);
         setTotal(0);
       }
     } else {
-      const data = result.data;
-      setOrders((prev) => (append ? [...prev, ...data.data] : data.data));
-      setTotal(data.total);
+      setOrders((prev) => (append ? [...prev, ...result.data] : result.data));
+      setTotal(result.total);
       setPage(nextPage);
     }
     setIsLoading(false);
@@ -176,7 +174,7 @@ export function PosOrderHistoryDialog({ open, setOpen }: PosOrderHistoryDialogPr
     setDetail(null);
     setMode('detail');
     setIsDetailLoading(true);
-    const result = await getOrderByIdAction(order.id, [
+    const result = await getOrderByIdAction<OrderDetail>(order.id, [
       OrderRelation.ORDER_ITEMS_PRODUCT,
       OrderRelation.USER_PROFILE,
       OrderRelation.PAYMENT,
@@ -184,12 +182,12 @@ export function PosOrderHistoryDialog({ open, setOpen }: PosOrderHistoryDialogPr
     ]);
     setIsDetailLoading(false);
 
-    if (!result.success || !result.data) {
-      toast.error(result.error ?? 'Failed to load order.');
+    if (!result) {
+      toast.error('Failed to load order.');
       setMode('table');
       return;
     }
-    setDetail(result.data);
+    setDetail(result);
   }
 
   async function handlePay(order: OrderList) {

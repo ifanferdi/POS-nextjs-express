@@ -1,4 +1,4 @@
-import { ActionResult, ApiResponse, Order, OrderApiResponse, OrderStatusResponse, PaginatedResponse } from '@/domain';
+import { ActionResult, ApiResponse, Order, OrderApiResponse, PaginatedResponse } from '@/domain';
 import {
   CreateOrderInput,
   GetAllOrderParams,
@@ -29,13 +29,6 @@ export async function getOrderById<T = Order>(id: number, relation?: OrderRelati
 export async function createOrder(input: CreateOrderInput) {
   const api = await createServerApiClient();
   const response = await api.post<OrderApiResponse>('/v1/orders', input);
-
-  return response.data;
-}
-
-export async function getOrderStatus(id: number) {
-  const api = await createServerApiClient();
-  const response = await api.get<OrderStatusResponse>(`/v1/orders/${id}/status`);
 
   return response.data;
 }
