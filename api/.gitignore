@@ -7,6 +7,7 @@
 /src/infrastructure/database/migrations/
 .vercel
 .env*
-AGENTS.md
-PRD.md
+!Readme.md
+*.md
 /sql/
+/reports/
