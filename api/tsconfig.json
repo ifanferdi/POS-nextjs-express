@@ -1,0 +1,46 @@
+{
+  "compilerOptions": {
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+    "outDir": "./dist",
+    "module": "node16",
+    "moduleResolution": "node16",
+    "target": "es2016",
+    "strict": true,
+    "esModuleInterop": true,
+    "noImplicitAny": true,
+    "sourceMap": true,
+    "removeComments": true,
+    "preserveConstEnums": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "experimentalDecorators": true,
+    "strictPropertyInitialization": false,
+    "emitDecoratorMetadata": true,
+    "rootDir": ".",
+    "typeRoots": ["./node_modules/@types"]
+  },
+  "include": ["src/**/*", "global.d.ts"],
+  "exclude": ["node_modules", "**/*.spec.ts"],
+  "ts-node": {
+    "files": true,
+    "transpileOnly": true,
+    "compilerOptions": {
+      "module": "node16",
+      "esModuleInterop": true,
+      "target": "es2016",
+      "noImplicitAny": true,
+      "moduleResolution": "node16",
+      "sourceMap": true,
+      "preserveConstEnums": true,
+      "skipLibCheck": true,
+      "rootDir": ".",
+      "forceConsistentCasingInFileNames": true,
+      "experimentalDecorators": true,
+      "strict": true,
+      "strictPropertyInitialization": false,
+      "emitDecoratorMetadata": true
+    }
+  }
+}

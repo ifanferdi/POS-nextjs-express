@@ -1,0 +1,2277 @@
+openapi: 3.0.3
+info:
+  title: POS API
+  version: 1.0.0
+  description: |
+    Point of Sale API — Product Categories, Products, Orders, Payments, Dashboard, Users, Roles, Permissions.
+    Base URL: `http://localhost:8000/api/v1`
+
+servers:
+  - url: http://localhost:8000/api/v1
+    description: Local development
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Auth
+    description: Authentication endpoints
+  - name: Dashboard
+    description: POS dashboard statistics
+  - name: Users
+    description: User management
+  - name: Roles
+    description: Role management
+  - name: Permissions
+    description: Permission management
+  - name: Product Categories
+    description: Product category CRUD
+  - name: Products
+    description: Product CRUD with soft delete and image upload
+  - name: Orders
+    description: Order management with items and status
+  - name: Payments
+    description: Payment management for orders
+
+paths:
+  # ═══════════════════════════════════════════════════════════
+  # AUTH
+  # ═══════════════════════════════════════════════════════════
+  /auth/sign-in:
+    post:
+      tags: [Auth]
+      summary: Sign in
+      description: |
+        Returns user + JWT token. In stateful mode (AUTH_MODE=stateful), also returns refreshToken and exp.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password]
+              properties:
+                username:
+                  type: string
+                  minLength: 3
+                  maxLength: 255
+                password:
+                  type: string
+                  maxLength: 255
+      responses:
+        '200':
+          description: Signed in successfully (stateless mode by default)
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [message, token, user]
+                properties:
+                  message:
+                    type: string
+                    example: Success
+                  token:
+                    type: string
+                  refreshToken:
+                    type: string
+                    description: Only returned in stateful mode
+                  exp:
+                    type: number
+                    description: Only returned in stateful mode
+                  user:
+                    $ref: '#/components/schemas/User'
+        '400':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /auth/sign-out:
+    post:
+      tags: [Auth]
+      summary: Sign out
+      description: In stateless mode this is a no-op; in stateful mode destroys the token pair in Redis.
+      responses:
+        '200':
+          description: Signed out successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessMessage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/refresh-token:
+    post:
+      tags: [Auth]
+      summary: Refresh access token
+      description: Only available in stateful mode (AUTH_MODE=stateful).
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refreshToken]
+              properties:
+                refreshToken:
+                  type: string
+                  description: The refresh token from sign-in
+      responses:
+        '200':
+          description: Token refreshed
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [message, token, refreshToken, exp, user]
+                properties:
+                  message:
+                    type: string
+                    example: Success
+                  token:
+                    type: string
+                  refreshToken:
+                    type: string
+                  exp:
+                    type: number
+                  user:
+                    $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ═══════════════════════════════════════════════════════════
+  # DASHBOARD
+  # ═══════════════════════════════════════════════════════════
+  /dashboard:
+    get:
+      tags: [Dashboard]
+      summary: Get POS dashboard statistics
+      responses:
+        '200':
+          description: Dashboard data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  totalProducts:
+                    type: integer
+                  totalOrdersToday:
+                    type: integer
+                  totalRevenueToday:
+                    type: number
+                  recentOrders:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Order'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ═══════════════════════════════════════════════════════════
+  # USERS
+  # ═══════════════════════════════════════════════════════════
+  /users/my-account:
+    get:
+      tags: [Users]
+      summary: Get current user profile
+      parameters:
+        - $ref: '#/components/parameters/withUsers'
+      responses:
+        '200':
+          description: Current user data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /users:
+    get:
+      tags: [Users]
+      summary: List users (paginated)
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/orderBy'
+        - $ref: '#/components/parameters/q'
+        - $ref: '#/components/parameters/columns'
+        - $ref: '#/components/parameters/withUsers'
+        - $ref: '#/components/parameters/ids'
+        - $ref: '#/components/parameters/notId'
+        - name: username
+          in: query
+          schema:
+            type: string
+        - name: roleId
+          in: query
+          schema:
+            type: integer
+        - name: isActive
+          in: query
+          schema:
+            type: string
+            enum: ['true', 'false']
+        - name: email
+          in: query
+          schema:
+            type: string
+        - name: role
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Paginated user list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/User'
+                  - $ref: '#/components/schemas/PaginatedMeta'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags: [Users]
+      summary: Create user with profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password, confirmPassword, isActive, roleId]
+              properties:
+                username:
+                  type: string
+                  minLength: 3
+                  maxLength: 255
+                password:
+                  type: string
+                  maxLength: 255
+                confirmPassword:
+                  type: string
+                isActive:
+                  type: boolean
+                roleId:
+                  type: integer
+                profile:
+                  type: object
+                  required: [fullName, placeOfBirth, dateOfBirth, gender]
+                  properties:
+                    fullName:
+                      type: string
+                      maxLength: 255
+                    placeOfBirth:
+                      type: string
+                      maxLength: 255
+                    dateOfBirth:
+                      type: string
+                      format: date
+                    gender:
+                      type: string
+                      enum: [male, female]
+                    imagePath:
+                      type: string
+      responses:
+        '201':
+          description: User created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success.
+                  user:
+                    $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /users/get:
+    post:
+      tags: [Users]
+      summary: List users (POST body-based filters)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/PaginationBody'
+                - type: object
+                  properties:
+                    ids:
+                      type: array
+                      items:
+                        type: integer
+                    username:
+                      type: string
+                    roleId:
+                      type: integer
+                    isActive:
+                      type: boolean
+                    email:
+                      type: string
+                    role:
+                      type: string
+      responses:
+        '200':
+          description: Paginated user list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/User'
+                  - $ref: '#/components/schemas/PaginatedMeta'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /users/profile/upload:
+    post:
+      tags: [Users]
+      summary: Upload profile image
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [image]
+              properties:
+                image:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Image uploaded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success.
+                  imagePath:
+                    type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /users/{id}:
+    get:
+      tags: [Users]
+      summary: Get user by ID
+      parameters:
+        - $ref: '#/components/parameters/id'
+        - $ref: '#/components/parameters/withUsers'
+      responses:
+        '200':
+          description: User data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [Users]
+      summary: Update user
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, isActive, roleId]
+              properties:
+                username:
+                  type: string
+                  minLength: 3
+                  maxLength: 255
+                isActive:
+                  type: boolean
+                roleId:
+                  type: integer
+                password:
+                  type: string
+                  maxLength: 255
+                confirmPassword:
+                  type: string
+                oldPassword:
+                  type: string
+                profile:
+                  type: object
+                  required: [fullName, placeOfBirth, dateOfBirth, gender]
+                  properties:
+                    fullName:
+                      type: string
+                      maxLength: 255
+                    placeOfBirth:
+                      type: string
+                      maxLength: 255
+                    dateOfBirth:
+                      type: string
+                      format: date
+                    gender:
+                      type: string
+                      enum: [male, female]
+                    imagePath:
+                      type: string
+      responses:
+        '200':
+          description: User updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success.
+                  user:
+                    $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    delete:
+      tags: [Users]
+      summary: Soft delete user
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: User soft-deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessMessage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /users/{id}/permanently:
+    delete:
+      tags: [Users]
+      summary: Permanently delete user
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: User permanently deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessMessage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /users/{id}/restore:
+    post:
+      tags: [Users]
+      summary: Restore soft-deleted user
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: User restored
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessMessage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  # ═══════════════════════════════════════════════════════════
+  # ROLES
+  # ═══════════════════════════════════════════════════════════
+  /roles:
+    get:
+      tags: [Roles]
+      summary: List roles (paginated)
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/orderBy'
+        - $ref: '#/components/parameters/q'
+        - $ref: '#/components/parameters/columns'
+        - $ref: '#/components/parameters/ids'
+        - $ref: '#/components/parameters/notId'
+        - name: name
+          in: query
+          schema:
+            type: string
+        - name: userId
+          in: query
+          schema:
+            type: integer
+        - name: permissionId
+          in: query
+          schema:
+            type: integer
+        - name: with
+          in: query
+          schema:
+            type: string
+            enum: [users, permissions]
+      responses:
+        '200':
+          description: Paginated role list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Role'
+                  - $ref: '#/components/schemas/PaginatedMeta'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags: [Roles]
+      summary: Create role
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                  maxLength: 255
+                permissionIds:
+                  type: array
+                  items:
+                    type: integer
+                permissions:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '201':
+          description: Role created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success.
+                  role:
+                    $ref: '#/components/schemas/Role'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /roles/get:
+    post:
+      tags: [Roles]
+      summary: List roles (POST body-based filters)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/PaginationBody'
+                - type: object
+                  properties:
+                    ids:
+                      type: array
+                      items:
+                        type: integer
+                    name:
+                      type: string
+                    userId:
+                      type: integer
+                    permissionId:
+                      type: integer
+      responses:
+        '200':
+          description: Paginated role list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Role'
+                  - $ref: '#/components/schemas/PaginatedMeta'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /roles/assign-permissions:
+    post:
+      tags: [Roles]
+      summary: Assign or revoke permissions on a role
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [roleId]
+              properties:
+                roleId:
+                  type: integer
+                permissionIds:
+                  type: array
+                  items:
+                    type: integer
+                permissions:
+                  type: array
+                  items:
+                    type: string
+                addPermissions:
+                  type: array
+                  items:
+                    type: string
+                removePermissions:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: Permissions assigned
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success.
+                  role:
+                    $ref: '#/components/schemas/Role'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /roles/{id}:
+    get:
+      tags: [Roles]
+      summary: Get role by ID
+      parameters:
+        - $ref: '#/components/parameters/id'
+        - name: with
+          in: query
+          schema:
+            type: string
+            enum: [users, permissions]
+      responses:
+        '200':
+          description: Role data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Role'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    put:
+      tags: [Roles]
+      summary: Update role
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                  maxLength: 255
+                permissionIds:
+                  type: array
+                  items:
+                    type: integer
+                permissions:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: Role updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success.
+                  role:
+                    $ref: '#/components/schemas/Role'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    delete:
+      tags: [Roles]
+      summary: Delete role
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: Role deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessMessage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  # ═══════════════════════════════════════════════════════════
+  # PERMISSIONS
+  # ═══════════════════════════════════════════════════════════
+  /permissions:
+    get:
+      tags: [Permissions]
+      summary: List permissions (paginated)
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/orderBy'
+        - $ref: '#/components/parameters/q'
+        - $ref: '#/components/parameters/columns'
+        - $ref: '#/components/parameters/ids'
+        - $ref: '#/components/parameters/notId'
+        - name: name
+          in: query
+          schema:
+            type: string
+        - name: roleId
+          in: query
+          schema:
+            type: integer
+        - name: with
+          in: query
+          schema:
+            type: string
+            enum: [roles]
+      responses:
+        '200':
+          description: Paginated permission list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Permission'
+                  - $ref: '#/components/schemas/PaginatedMeta'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags: [Permissions]
+      summary: Create permission
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                  maxLength: 255
+      responses:
+        '201':
+          description: Permission created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success.
+                  data:
+                    $ref: '#/components/schemas/Permission'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /permissions/get:
+    post:
+      tags: [Permissions]
+      summary: List permissions (POST body-based filters)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/PaginationBody'
+                - type: object
+                  properties:
+                    ids:
+                      type: array
+                      items:
+                        type: integer
+                    name:
+                      type: string
+                    roleId:
+                      type: integer
+      responses:
+        '200':
+          description: Paginated permission list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Permission'
+                  - $ref: '#/components/schemas/PaginatedMeta'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /permissions/check-valid-permissions:
+    post:
+      tags: [Permissions]
+      summary: Check if a user has specific permissions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId, permissions]
+              properties:
+                userId:
+                  type: integer
+                permissions:
+                  oneOf:
+                    - type: string
+                    - type: array
+                      items:
+                        type: string
+      responses:
+        '200':
+          description: Permission check result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  isValid:
+                    type: boolean
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /permissions/{id}:
+    get:
+      tags: [Permissions]
+      summary: Get permission by ID
+      parameters:
+        - $ref: '#/components/parameters/id'
+        - name: with
+          in: query
+          schema:
+            type: string
+            enum: [roles]
+      responses:
+        '200':
+          description: Permission data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Permission'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    put:
+      tags: [Permissions]
+      summary: Update permission
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                  maxLength: 255
+      responses:
+        '200':
+          description: Permission updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success.
+                  data:
+                    $ref: '#/components/schemas/Permission'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    delete:
+      tags: [Permissions]
+      summary: Delete permission
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: Permission deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessMessage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  # ═══════════════════════════════════════════════════════════
+  # PRODUCT CATEGORIES
+  # ═══════════════════════════════════════════════════════════
+  /product-categories:
+    get:
+      tags: [Product Categories]
+      summary: List product categories (paginated)
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/orderBy'
+        - $ref: '#/components/parameters/q'
+        - name: with[]
+          in: query
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+              enum: [products]
+      responses:
+        '200':
+          description: Paginated list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ProductCategory'
+                  - $ref: '#/components/schemas/PaginatedMeta'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      tags: [Product Categories]
+      summary: Create product category
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                  maxLength: 255
+                description:
+                  type: string
+      responses:
+        '201':
+          description: Category created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductCategory'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /product-categories/get:
+    post:
+      tags: [Product Categories]
+      summary: List product categories (POST body-based filters)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/PaginationBody'
+                - type: object
+                  properties:
+                    q:
+                      type: string
+                    with:
+                      type: array
+                      items:
+                        type: string
+                        enum: [products]
+      responses:
+        '200':
+          description: Paginated list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ProductCategory'
+                  - $ref: '#/components/schemas/PaginatedMeta'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /product-categories/{id}:
+    get:
+      tags: [Product Categories]
+      summary: Get product category by ID
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: Category data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductCategory'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [Product Categories]
+      summary: Update product category
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  maxLength: 255
+                description:
+                  type: string
+      responses:
+        '200':
+          description: Category updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductCategory'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    delete:
+      tags: [Product Categories]
+      summary: Delete product category
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: Category deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessMessage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ═══════════════════════════════════════════════════════════
+  # PRODUCTS
+  # ═══════════════════════════════════════════════════════════
+  /products:
+    get:
+      tags: [Products]
+      summary: List products (paginated)
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/orderBy'
+        - $ref: '#/components/parameters/q'
+        - name: isActive
+          in: query
+          schema:
+            type: string
+            enum: ['true', 'false']
+        - name: categoryId
+          in: query
+          schema:
+            type: integer
+        - name: barcode
+          in: query
+          schema:
+            type: string
+        - name: sku
+          in: query
+          schema:
+            type: string
+        - name: with[]
+          in: query
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+              enum: [categories]
+      responses:
+        '200':
+          description: Paginated list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Product'
+                  - $ref: '#/components/schemas/PaginatedMeta'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      tags: [Products]
+      summary: Create product
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, price]
+              properties:
+                name:
+                  type: string
+                  maxLength: 255
+                description:
+                  type: string
+                price:
+                  type: number
+                cost:
+                  type: number
+                sku:
+                  type: string
+                  maxLength: 100
+                barcode:
+                  type: string
+                  maxLength: 100
+                stock:
+                  type: integer
+                  default: 0
+                isActive:
+                  type: boolean
+                  default: true
+                categoryIds:
+                  type: array
+                  items:
+                    type: integer
+      responses:
+        '201':
+          description: Product created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /products/get:
+    post:
+      tags: [Products]
+      summary: List products (POST body-based filters)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/PaginationBody'
+                - type: object
+                  properties:
+                    q:
+                      type: string
+                    isActive:
+                      type: boolean
+                    categoryId:
+                      type: integer
+                    barcode:
+                      type: string
+                    sku:
+                      type: string
+                    with:
+                      type: array
+                      items:
+                        type: string
+                        enum: [categories]
+      responses:
+        '200':
+          description: Paginated list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Product'
+                  - $ref: '#/components/schemas/PaginatedMeta'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /products/upload:
+    post:
+      tags: [Products]
+      summary: Upload product image
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [image]
+              properties:
+                image:
+                  type: string
+                  format: binary
+                  description: Image file (jpg/png)
+      responses:
+        '200':
+          description: Image uploaded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Success.
+                  imagePath:
+                    type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /products/{id}:
+    get:
+      tags: [Products]
+      summary: Get product by ID
+      parameters:
+        - $ref: '#/components/parameters/id'
+        - name: with[]
+          in: query
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+              enum: [categories]
+      responses:
+        '200':
+          description: Product data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [Products]
+      summary: Update product
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  maxLength: 255
+                description:
+                  type: string
+                price:
+                  type: number
+                cost:
+                  type: number
+                sku:
+                  type: string
+                  maxLength: 100
+                barcode:
+                  type: string
+                  maxLength: 100
+                stock:
+                  type: integer
+                isActive:
+                  type: boolean
+                categoryIds:
+                  type: array
+                  items:
+                    type: integer
+      responses:
+        '200':
+          description: Product updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    delete:
+      tags: [Products]
+      summary: Soft delete product
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: Product soft-deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessMessage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /products/{id}/permanently:
+    delete:
+      tags: [Products]
+      summary: Permanently delete product
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: Product permanently deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessMessage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /products/{id}/restore:
+    post:
+      tags: [Products]
+      summary: Restore soft-deleted product
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: Product restored
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessMessage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ═══════════════════════════════════════════════════════════
+  # ORDERS
+  # ═══════════════════════════════════════════════════════════
+  /orders:
+    get:
+      tags: [Orders]
+      summary: List orders (paginated)
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/orderBy'
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/OrderStatus'
+        - name: paymentMethod
+          in: query
+          schema:
+            $ref: '#/components/schemas/PaymentMethod'
+        - name: customerId
+          in: query
+          schema:
+            type: integer
+        - name: userId
+          in: query
+          schema:
+            type: integer
+        - name: createdAtDay
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: with[]
+          in: query
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+              enum: [customer, user, orderItems, payments]
+      responses:
+        '200':
+          description: Paginated list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Order'
+                  - $ref: '#/components/schemas/PaginatedMeta'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      tags: [Orders]
+      summary: Create order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [paymentMethod, items]
+              properties:
+                customerId:
+                  type: integer
+                userId:
+                  type: integer
+                paymentMethod:
+                  $ref: '#/components/schemas/PaymentMethod'
+                notes:
+                  type: string
+                paymentReference:
+                  type: string
+                  maxLength: 255
+                items:
+                  type: array
+                  minItems: 1
+                  items:
+                    type: object
+                    required: [productId, quantity]
+                    properties:
+                      productId:
+                        type: integer
+                      quantity:
+                        type: integer
+                        minimum: 1
+      responses:
+        '201':
+          description: Order created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /orders/get:
+    post:
+      tags: [Orders]
+      summary: List orders (POST body-based filters)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/PaginationBody'
+                - type: object
+                  properties:
+                    status:
+                      $ref: '#/components/schemas/OrderStatus'
+                    paymentMethod:
+                      $ref: '#/components/schemas/PaymentMethod'
+                    customerId:
+                      type: integer
+                    userId:
+                      type: integer
+                    createdAtDay:
+                      type: string
+                      format: date
+                    with:
+                      type: array
+                      items:
+                        type: string
+                        enum: [customer, user, orderItems, payments]
+      responses:
+        '200':
+          description: Paginated list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Order'
+                  - $ref: '#/components/schemas/PaginatedMeta'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /orders/{id}:
+    get:
+      tags: [Orders]
+      summary: Get order by ID
+      parameters:
+        - $ref: '#/components/parameters/id'
+        - name: with[]
+          in: query
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
+              enum: [customer, user, orderItems, payments]
+      responses:
+        '200':
+          description: Order data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /orders/{id}/status:
+    put:
+      tags: [Orders]
+      summary: Update order status
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  $ref: '#/components/schemas/OrderStatus'
+      responses:
+        '200':
+          description: Status updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /orders/{id}/cancel:
+    post:
+      tags: [Orders]
+      summary: Cancel order
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: Order cancelled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ═══════════════════════════════════════════════════════════
+  # PAYMENTS
+  # ═══════════════════════════════════════════════════════════
+  /payments:
+    get:
+      tags: [Payments]
+      summary: List payments (paginated)
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/orderBy'
+        - name: orderId
+          in: query
+          schema:
+            type: integer
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/PaymentStatus'
+        - name: method
+          in: query
+          schema:
+            $ref: '#/components/schemas/PaymentMethod'
+      responses:
+        '200':
+          description: Paginated list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Payment'
+                  - $ref: '#/components/schemas/PaginatedMeta'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      tags: [Payments]
+      summary: Create payment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [orderId, amount, method]
+              properties:
+                orderId:
+                  type: integer
+                amount:
+                  type: number
+                method:
+                  $ref: '#/components/schemas/PaymentMethod'
+                reference:
+                  type: string
+                  maxLength: 255
+      responses:
+        '201':
+          description: Payment created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /payments/get:
+    post:
+      tags: [Payments]
+      summary: List payments (POST body-based filters)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/PaginationBody'
+                - type: object
+                  properties:
+                    orderId:
+                      type: integer
+                    status:
+                      $ref: '#/components/schemas/PaymentStatus'
+                    method:
+                      $ref: '#/components/schemas/PaymentMethod'
+      responses:
+        '200':
+          description: Paginated list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Payment'
+                  - $ref: '#/components/schemas/PaginatedMeta'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /payments/{id}:
+    get:
+      tags: [Payments]
+      summary: Get payment by ID
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        '200':
+          description: Payment data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    id:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+    page:
+      name: page
+      in: query
+      schema:
+        type: integer
+        default: 1
+        example: 1
+    limit:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        default: 10
+        example: 10
+    orderBy:
+      name: orderBy[]
+      in: query
+      style: form
+      explode: true
+      schema:
+        type: array
+        items:
+          type: string
+          pattern: '^\w+:(asc|desc)$'
+        example: ['createdAt:desc']
+      description: 'Array of field:direction pairs, e.g. id:asc or createdAt:desc'
+    q:
+      name: q
+      in: query
+      schema:
+        type: string
+      description: Search term
+    columns:
+      name: columns
+      in: query
+      schema:
+        type: array
+        items:
+          type: string
+      description: Fields to return
+    ids:
+      name: ids
+      in: query
+      schema:
+        type: array
+        items:
+          type: integer
+      description: Filter by IDs
+    notId:
+      name: notId
+      in: query
+      schema:
+        type: integer
+      description: Exclude by ID
+    withUsers:
+      name: with
+      in: query
+      schema:
+        type: string
+        enum: [profile, role, role.permissions, permissions]
+
+  schemas:
+    SuccessMessage:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Success.
+
+    ErrorMessage:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Username atau password tidak valid.
+
+    PaginatedMeta:
+      type: object
+      properties:
+        meta:
+          type: object
+          properties:
+            page:
+              type: integer
+            limit:
+              type: integer
+            total:
+              type: integer
+            totalPages:
+              type: integer
+
+    PaginationBody:
+      type: object
+      properties:
+        page:
+          type: integer
+          default: 1
+          example: 1
+        limit:
+          type: integer
+          default: 10
+          example: 10
+        orderBy:
+          type: array
+          items:
+            type: string
+            pattern: '^\w+:(asc|desc)$'
+          example: ['createdAt:desc']
+        q:
+          type: string
+        columns:
+          type: array
+          items:
+            type: string
+        with:
+          type: array
+          items:
+            type: string
+
+    # ── Enums ────────────────────────────────────────────────
+    OrderStatus:
+      type: string
+      enum: [pending, processing, completed, cancelled]
+    PaymentMethod:
+      type: string
+      enum: [cash, card, qris, transfer]
+    PaymentStatus:
+      type: string
+      enum: [pending, completed, failed, refunded]
+    Gender:
+      type: string
+      enum: [male, female]
+
+    # ── Profile ─────────────────────────────────────────────
+    Profile:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        fullName:
+          type: string
+        placeOfBirth:
+          type: string
+        dateOfBirth:
+          type: string
+          format: date
+        gender:
+          $ref: '#/components/schemas/Gender'
+        age:
+          type: integer
+        imagePath:
+          type: string
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+        address:
+          type: string
+          nullable: true
+        imageUrl:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    # ── User ────────────────────────────────────────────────
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        email:
+          type: string
+          nullable: true
+        isActive:
+          type: boolean
+        roleId:
+          type: integer
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        deletedAt:
+          type: string
+          format: date-time
+          nullable: true
+        profile:
+          $ref: '#/components/schemas/Profile'
+        role:
+          $ref: '#/components/schemas/Role'
+        permissions:
+          type: array
+          items:
+            type: object
+            properties:
+              permission:
+                $ref: '#/components/schemas/Permission'
+
+    # ── Role ────────────────────────────────────────────────
+    Role:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        permissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Permission'
+        users:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+
+    # ── Permission ──────────────────────────────────────────
+    Permission:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    # ── Product Category ────────────────────────────────────
+    ProductCategory:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        products:
+          type: array
+          items:
+            $ref: '#/components/schemas/Product'
+
+    # ── Product ─────────────────────────────────────────────
+    Product:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        price:
+          type: number
+        cost:
+          type: number
+          nullable: true
+        sku:
+          type: string
+          nullable: true
+        barcode:
+          type: string
+          nullable: true
+        imagePath:
+          type: string
+          nullable: true
+        imageUrl:
+          type: string
+        isActive:
+          type: boolean
+        stock:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        deletedAt:
+          type: string
+          format: date-time
+          nullable: true
+        categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductCategory'
+
+    # ── Order ───────────────────────────────────────────────
+    OrderItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        orderId:
+          type: integer
+        productId:
+          type: integer
+          nullable: true
+        quantity:
+          type: integer
+        unitPrice:
+          type: number
+        totalPrice:
+          type: number
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        product:
+          $ref: '#/components/schemas/Product'
+
+    Order:
+      type: object
+      properties:
+        id:
+          type: integer
+        customerId:
+          type: integer
+          nullable: true
+        userId:
+          type: integer
+          nullable: true
+        orderNumber:
+          type: string
+        subtotal:
+          type: number
+        tax:
+          type: number
+        discount:
+          type: number
+        total:
+          type: number
+        status:
+          $ref: '#/components/schemas/OrderStatus'
+        paymentMethod:
+          $ref: '#/components/schemas/PaymentMethod'
+        notes:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        customer:
+          $ref: '#/components/schemas/User'
+        user:
+          $ref: '#/components/schemas/User'
+        orderItems:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItem'
+        payments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Payment'
+
+    # ── Payment ─────────────────────────────────────────────
+    Payment:
+      type: object
+      properties:
+        id:
+          type: integer
+        orderId:
+          type: integer
+        amount:
+          type: number
+        method:
+          $ref: '#/components/schemas/PaymentMethod'
+        reference:
+          type: string
+          nullable: true
+        status:
+          $ref: '#/components/schemas/PaymentStatus'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        order:
+          type: object
+          properties:
+            id:
+              type: integer
+            orderNumber:
+              type: string
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+    Unauthorized:
+      description: Unauthorized — missing or invalid token
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: Authorization header with Bearer token is required.
+    Forbidden:
+      description: Forbidden — insufficient permissions
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: You don't have the permission to access this resource!
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string

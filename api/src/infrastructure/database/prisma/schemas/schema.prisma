@@ -1,0 +1,245 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Gender {
+  male
+  female
+}
+
+enum OrderStatus {
+  pending
+  paid
+  completed
+  cancelled
+  expired
+}
+
+enum PaymentStatus {
+  pending
+  success
+  failed
+  expired
+  cancelled
+  refunded
+}
+
+// -----------------------------------------------------------------------------
+// USER AND PROFILE MODELS
+// -----------------------------------------------------------------------------
+
+model User {
+  id        Int       @id @default(autoincrement())
+  username  String    @unique @db.VarChar(255)
+  email     String?   @unique @db.VarChar(255)
+  password  String    @db.VarChar(255)
+  isActive  Boolean   @default(true)
+  roleId    Int?
+  createdAt DateTime  @default(now()) @db.Timestamptz
+  updatedAt DateTime  @updatedAt @db.Timestamptz
+  deletedAt DateTime?
+
+  profile        Profile?
+  role           Role?    @relation(fields: [roleId], references: [id], onDelete: SetNull)
+  customerOrders Order[]  @relation("OrderCustomer")
+  cashierOrders  Order[]  @relation("OrderCashier")
+
+  @@index([username], name: "users_username_index")
+  @@index([email], map: "users_email_index")
+  @@map("users")
+}
+
+model Profile {
+  id           Int      @id @default(autoincrement())
+  userId       Int      @unique
+  fullName     String   @db.VarChar(255)
+  placeOfBirth String   @db.VarChar(255)
+  dateOfBirth  DateTime @db.Date
+  gender       Gender
+  age          Int
+  imagePath    String?  @db.VarChar(255)
+  phone        String?  @db.VarChar(50)
+  address      String?  @db.Text
+  createdAt    DateTime @default(now()) @db.Timestamptz
+  updatedAt    DateTime @updatedAt @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([fullName], name: "profiles_full_name_index")
+  @@map("profiles")
+}
+
+model Role {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  roleHasPermissions RoleHasPermission[]
+  users              User[]
+
+  @@index([name], map: "roles_name_index")
+  @@map("roles")
+}
+
+model Permission {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  roleHasPermissions RoleHasPermission[]
+
+  @@index([name], map: "permissions_name_index")
+  @@map("permissions")
+}
+
+model RoleHasPermission {
+  roleId       Int
+  permissionId Int
+
+  role       Role       @relation(fields: [roleId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@map("role_has_permissions")
+}
+
+// -----------------------------------------------------------------------------
+// POS MODELS
+// -----------------------------------------------------------------------------
+
+model Category {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique @db.VarChar(255)
+  description String?  @db.Text
+  createdAt   DateTime @default(now()) @db.Timestamptz
+  updatedAt   DateTime @updatedAt @db.Timestamptz
+
+  productHasCategories ProductHasCategory[]
+
+  @@map("product_categories")
+}
+
+model Product {
+  id          Int       @id @default(autoincrement())
+  name        String    @db.VarChar(255)
+  description String?   @db.Text
+  price       Int
+  cost        Int?
+  sku         String?   @unique @db.VarChar(100)
+  barcode     String?   @unique @db.VarChar(100)
+  imagePath   String?   @db.VarChar(255)
+  isActive    Boolean   @default(true)
+  stock       Int       @default(0)
+  createdAt   DateTime  @default(now()) @db.Timestamptz
+  updatedAt   DateTime  @updatedAt @db.Timestamptz
+  deletedAt   DateTime?
+
+  productHasCategories ProductHasCategory[]
+  orderItems           OrderItem[]
+
+  @@index([name], name: "products_name_index")
+  @@map("products")
+}
+
+model ProductHasCategory {
+  productId  Int
+  categoryId Int
+
+  product  Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([productId, categoryId])
+  @@map("product_has_categories")
+}
+
+model Order {
+  id          Int         @id @default(autoincrement())
+  customerId  Int?
+  userId      Int?
+  orderNumber String      @unique @db.VarChar(50)
+  subtotal    Int         @default(0)
+  tax         Int         @default(0)
+  discount    Int         @default(0)
+  total       Int         @default(0)
+  status      OrderStatus @default(pending)
+  notes       String?     @db.Text
+  meta        Json?
+  createdAt   DateTime    @default(now()) @db.Timestamptz
+  updatedAt   DateTime    @updatedAt @db.Timestamptz
+
+  customer   User?       @relation("OrderCustomer", fields: [customerId], references: [id], onDelete: SetNull)
+  user       User?       @relation("OrderCashier", fields: [userId], references: [id], onDelete: SetNull)
+  orderItems OrderItem[]
+  payment    Payment?
+
+  @@index([orderNumber], name: "orders_order_number_index")
+  @@map("orders")
+}
+
+model OrderItem {
+  id         Int      @id @default(autoincrement())
+  orderId    Int
+  productId  Int?
+  quantity   Int      @default(1)
+  unitPrice  Int
+  totalPrice Int
+  meta       Json?
+  createdAt  DateTime @default(now()) @db.Timestamptz
+  updatedAt  DateTime @updatedAt @db.Timestamptz
+
+  order   Order?   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@map("order_items")
+}
+
+model Payment {
+  id        Int           @id @default(autoincrement())
+  orderId   Int           @unique
+  subtotal  Int // sebelum rounding
+  rounding  Int           @default(0) // nilai pembulatan
+  total     Int // subtotal + rounding
+  amount    Int // yang dibayar
+  change    Int           @default(0)
+  method    String        @db.VarChar(30)
+  status    PaymentStatus @default(pending)
+  paidAt    DateTime?
+  expiredAt DateTime?
+  createdAt DateTime      @default(now()) @db.Timestamptz
+  updatedAt DateTime      @updatedAt @db.Timestamptz
+
+  order          Order                  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  midtransDetail MidtransPaymentDetail?
+
+  @@map("payments")
+}
+
+model MidtransPaymentDetail {
+  id                Int      @id @default(autoincrement())
+  paymentId         Int      @unique
+  midtransOrderId   String   @unique @db.VarChar(50)
+  transactionId     String?  @unique @db.VarChar(100)
+  paymentType       String?  @db.VarChar(30)
+  transactionStatus String?  @db.VarChar(30)
+  fraudStatus       String?  @db.VarChar(30)
+  vaNumber          String?  @db.VarChar(50)
+  qrCodeUrl         String?  @db.VarChar(500)
+  signatureVerified Boolean  @default(false)
+  rawNotification   Json?
+  createdAt         DateTime @default(now()) @db.Timestamptz
+  updatedAt         DateTime @updatedAt @db.Timestamptz
+
+  payment Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+
+  @@index([midtransOrderId])
+  @@map("midtrans_payment_details")
+}
