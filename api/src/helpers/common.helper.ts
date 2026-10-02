@@ -5,6 +5,7 @@ import { Request } from 'express';
 import _ from 'lodash';
 import moment from 'moment';
 import ms, { StringValue } from 'ms';
+import crypto from 'node:crypto';
 import z from 'zod';
 
 export const isLink = (string: string) => z.string().url().safeParse(string).success;
@@ -63,4 +64,8 @@ export function calculateRounding(
   const rounding = total - subtotal;
 
   return { rounding, total };
+}
+
+export function createMidtransSignatureKey(string: string) {
+  return crypto.createHash('sha512').update(string).digest('hex');
 }

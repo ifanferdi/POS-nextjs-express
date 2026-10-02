@@ -41,9 +41,7 @@ export default class PaymentRepository extends DatabaseBaseRepository {
     });
   }
 
-  async findOne<T = Payment>(params: FindOnePaymentDto) {
-    console.log(params);
-
+  findOne<T = Payment>(params: FindOnePaymentDto) {
     return this.prisma.payment.findFirst({
       where: this.queryPaymentRepository.handleWhere(params),
       select: {
@@ -51,6 +49,19 @@ export default class PaymentRepository extends DatabaseBaseRepository {
         ...this.queryPaymentRepository.handleInclude(params?.with),
       },
     }) as Promise<T | null>;
+  }
+
+  /**
+   * Atomic status transition guard: only succeeds if the row is currently `from`.
+   * `count === 1` means this caller won the claim; `count === 0` means a concurrent notification
+   * already transitioned it. Used to serialize webhook handling (refund/order update exactly once).
+   */
+  async claimStatus(id: number, from: PaymentStatus, to: PaymentStatus) {
+    const result = await this.prisma.payment.updateMany({
+      where: { id, status: from },
+      data: { status: to },
+    });
+    return result.count === 1;
   }
 
   store<T = Payment>(data: CreatePaymentDto) {

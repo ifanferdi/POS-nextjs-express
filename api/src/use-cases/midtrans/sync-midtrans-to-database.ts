@@ -27,28 +27,27 @@ export default class SyncMidtransToDatabase extends BaseUseCase {
 
     let { order, payment } = checkOrder;
 
-    const next = this.mapStatus(notification);
+    const status = this.mapStatus(notification);
+    if (status === PaymentStatus.PENDING) return;
 
-    const paymentData = await this.repositories.paymentRepository.findOne({
-      id: payment.id,
-      columns: ['id', 'status'],
-    });
-    let orderStatus = this.handleGetOrderStatus(next);
+    const orderStatus = this.handleGetOrderStatus(status);
 
-    // HANDLE IF MIDTRANS PAYMENT SUCCESS
-    if (
-      !paymentData ||
-      paymentData.status === next ||
-      this.validPaymentStatus.has(paymentData.status)
-    )
-      return;
+    // Atomic claim: only ONE concurrent notification may transition the payment out of `pending`.
+    // Losers get count 0 and return, so the order update and stock refund happen exactly once.
+    // payment success or expired would be update here
+    const claimed = await this.repositories.paymentRepository.claimStatus(
+      payment.id,
+      PaymentStatus.PENDING,
+      status,
+    );
+    if (!claimed) return;
 
     await this.repositories.orderRepository.midtransPaymentSuccess(
       { id: order.id, status: orderStatus },
       {
         id: payment.id,
-        status: next,
-        paidAt: next === PaymentStatus.SUCCESS ? new Date() : undefined,
+        status: status,
+        paidAt: status === PaymentStatus.SUCCESS ? new Date() : undefined,
         midtransDetail: {
           midtransOrderId: notification.order_id,
           transactionId: notification.transaction_id,

@@ -88,17 +88,28 @@ export default class OrderRepository
         },
       });
 
+      // Merge duplicate lines + sort by productId so every transaction takes row locks in the same
+      // order (deterministic lock order → no ABBA deadlock), and fewer round-trips.
+      const productDecrements = new Map<number, number>();
+      for (const item of items)
+        productDecrements.set(
+          item.productId,
+          (productDecrements.get(item.productId) ?? 0) + item.quantity,
+        );
+
       // Atomic check + decrement: cegah race condition (TOCTOU)
       // UPDATE products SET stock = stock - ? WHERE id = ? AND stock >= ?
-      for (const item of items) {
+      for (const [productId, quantity] of [...productDecrements.entries()].sort(
+        (a, b) => a[0] - b[0],
+      )) {
         const result = await tx.product.updateMany({
-          where: { id: item.productId, stock: { gte: item.quantity } },
-          data: { stock: { decrement: item.quantity } },
+          where: { id: productId, stock: { gte: quantity } },
+          data: { stock: { decrement: quantity } },
         });
 
         // 0 row ter-update → stok tidak cukup → throw → transaction rollback
         if (result.count === 0) {
-          throw new AppError(`Stok produk ID ${item.productId} tidak mencukupi.`);
+          throw new AppError(`Stok produk ID ${productId} tidak mencukupi.`);
         }
       }
       return order;

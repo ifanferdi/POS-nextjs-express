@@ -1,8 +1,8 @@
 import config from '@/config/config';
-import { PaymentMethod } from '@/domain/entities/enums/payment.enum';
 import { MidtransWebhookPayload } from '@/domain/infrastructures/midtrans.interface';
+import { createMidtransSignatureKey } from '@/helpers/common.helper';
 import MidtransRepository from '@/repositories/midtrans/midtrans-repository';
-import { MockMidtransWebhook } from '@/validations/midtrans.validation';
+import { MockMidtransSchema } from '@/validations/midtrans.validation';
 import { Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
 import moment from 'moment';
@@ -26,44 +26,43 @@ export default class MidtransController extends BaseController {
     res.sendStatus(200);
   });
 
-  // ponytail: dev-only, marks an order as settled without real Midtrans. Guarded by env.
+  // Dev-only: crafts a signed Midtrans notification and runs it through the real production sync
+  // path (signature verified, no isMock bypass). Guarded by env (404 in production).
   mock = asyncHandler(async (req: Request, res: Response) => {
     if (config.app.env === 'production') {
       res.sendStatus(404);
       return;
     }
 
-    MockMidtransWebhook.parse(req.body);
+    const body = MockMidtransSchema.parse(req.body);
+    const grossAmount = String(body.grossAmount);
+    const statusCode = '200';
 
-    const orderNumber = String(req.body.orderNumber);
-    const order = await this.useCases.midtransUseCase.syncMidtransToDatabase.execute(
-      {
-        orderNumber,
-        notification: {
-          order_id: orderNumber,
-          transaction_id: crypto.randomUUID(),
-          transaction_time: moment().format('MMMM-YY-DD HH:MM:ss'),
-          transaction_status: 'settlement',
-          settlement_time: moment().format('MMMM-YY-DD HH:MM:ss'),
-          fraud_status: 'accept',
-          status_code: '200',
-          status_message: 'midtrans mock payment notification',
-          payment_type:
-            req.body.paymentType === PaymentMethod.QRIS
-              ? 'qris'
-              : req.body.paymentType === PaymentMethod.VA_MANDIRI
-                ? 'echannel'
-                : 'bank_transfer',
-          merchant_id: 'mock',
-          gross_amount: String(req.body.grossAmount),
-          currency: 'IDR',
-          signature_key: 'mock',
-          customer_details: {},
-        },
-      },
-      true,
+    const signatureKey = createMidtransSignatureKey(
+      `${body.orderNumber}${statusCode}${grossAmount}${config.midtrans.serverKey}`,
     );
 
-    res.json(order);
+    const notification: MidtransWebhookPayload = {
+      order_id: body.orderNumber,
+      transaction_id: `mock-${body.orderNumber}`,
+      transaction_time: moment().format('YYYY-MM-DD HH:mm:ss'),
+      transaction_status: body.transactionStatus,
+      fraud_status: 'accept',
+      status_code: statusCode,
+      status_message: 'midtrans mock notification',
+      payment_type: 'qris',
+      merchant_id: 'mock',
+      gross_amount: grossAmount,
+      currency: 'IDR',
+      signature_key: signatureKey,
+      customer_details: {},
+    };
+
+    const order = await this.useCases.midtransUseCase.syncMidtransToDatabase.execute({
+      orderNumber: body.orderNumber,
+      notification,
+    });
+
+    res.json(order ?? { message: 'no operations' });
   });
 }

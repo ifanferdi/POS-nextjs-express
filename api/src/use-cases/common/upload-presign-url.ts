@@ -9,7 +9,7 @@ export default class GeneratePresignUrl extends BaseUseCase {
     const key = `${body.fileType}/${new Date().getFullYear()}/${randomUUID()}.${ext}`;
 
     const expiresIn = config.storage.expiredTime;
-    const presignUrl = await this.repositories.storageRepository?.getPresignUrl(key, );
+    const presignUrl = await this.repositories.storageRepository?.getPresignUrl(key, body.fileSize);
 
     return { key, presignUrl, expiresIn };
   }

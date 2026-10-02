@@ -4,9 +4,9 @@ import {
   MidtransChargeResponse,
   MidtransWebhookPayload,
 } from '@/domain/infrastructures/midtrans.interface';
+import { createMidtransSignatureKey } from '@/helpers/common.helper';
 import AppError from '@/helpers/error.helper';
 import axios from 'axios';
-import crypto from 'node:crypto';
 
 const baseURL = config.midtrans.baseUrl;
 const api = axios.create({ baseURL, auth: { username: config.midtrans.serverKey, password: '' } });
@@ -39,6 +39,6 @@ export default class MidtransRepository {
     },
   ) {
     const value = `${payload.order_id}${payload.status_code}${payload.gross_amount}${config.midtrans.serverKey}`;
-    return crypto.createHash('sha512').update(value).digest('hex') === payload.signature_key;
+    return createMidtransSignatureKey(value) === payload.signature_key;
   }
 }
