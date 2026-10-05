@@ -51,8 +51,6 @@ export default class SignIn extends BaseUseCase {
     const redisDataAuth: RedisDataAuth = { token, refreshToken, createdAt: new Date() };
     await this.storeTokenToRedis(redisDataAuth, user.id);
 
-    console.log(exp);
-
     return { token, refreshToken, exp, user };
   }
 

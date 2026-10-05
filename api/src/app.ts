@@ -19,7 +19,7 @@ const PORT = config.app.port || 8000;
   const shutdown = async () => {
     console.log('Shutting down gracefully...');
     server.close(); // stop nerima request baru
-    await closeSSERedisBridge(); // tutup koneksi Redis
+    // await closeSSERedisBridge(); // tutup koneksi Redis
     process.exit(0);
   };
 

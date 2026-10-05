@@ -1,6 +1,6 @@
-const isProduction = process.env.APP_ENV
-  ? process.env.APP_ENV.toLowerCase() === 'production'
-  : process.env.MIDTRANS_IS_PRODUCTION?.toLowerCase() === 'true';
+const isProduction =
+  process.env.APP_ENV.toLowerCase() === 'production' &&
+  process.env.MIDTRANS_IS_PRODUCTION?.toLowerCase() === 'true';
 
 export default {
   serverKey: process.env.MIDTRANS_SERVER_KEY || '',

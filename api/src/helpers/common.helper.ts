@@ -69,3 +69,10 @@ export function calculateRounding(
 export function createMidtransSignatureKey(string: string) {
   return crypto.createHash('sha512').update(string).digest('hex');
 }
+
+export function createS3SignatureKey(path: string, expires: number) {
+  return crypto
+    .createHmac('sha256', config.storage.storageSecret)
+    .update(`${path}:${expires}`)
+    .digest('hex');
+}

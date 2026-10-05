@@ -1,6 +1,5 @@
-import config from '@/config/config';
 import { HttpStatusCode } from '@/constants/http-status.constant';
-import crypto from 'crypto';
+import { createS3SignatureKey } from '@/helpers/common.helper';
 import e from 'express';
 
 export function verifySignedUrl(
@@ -19,10 +18,7 @@ export function verifySignedUrl(
     return res.status(HttpStatusCode.GONE).send('URL expired');
   }
 
-  const expectedSig = crypto
-    .createHmac('sha256', config.storage.storageSecret)
-    .update(`${filePath}:${expires}`)
-    .digest('hex');
+  const expectedSig = createS3SignatureKey(filePath, Number(expires));
 
   if (sig !== expectedSig) {
     return res.status(HttpStatusCode.FORBIDDEN).send('Invalid signature');

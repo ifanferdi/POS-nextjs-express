@@ -1,9 +1,8 @@
-import crypto from 'crypto';
+import config from '@/config/config';
+import { createS3SignatureKey, reformatStorageKey } from '@/helpers/common.helper';
+import { ErrorBadRequest } from '@/helpers/error.helper';
 import fs from 'fs';
 import { dirname as getDirName } from 'path';
-import config from '@/config/config';
-import { reformatStorageKey } from '@/helpers/common.helper';
-import { ErrorBadRequest } from '@/helpers/error.helper';
 
 const STORAGE_DIR = config.storage.localDir;
 const APP_URL = config.app.url;
@@ -53,10 +52,7 @@ export default class LocalStorageRepository {
     expiresInSeconds = config.storage.expiredTime, // 5 menit
   ) {
     const expires = Math.floor(Date.now() / 1000) + expiresInSeconds;
-    const signature = crypto
-      .createHmac('sha256', config.storage.storageSecret)
-      .update(`${path}:${expires}`)
-      .digest('hex');
+    const signature = createS3SignatureKey(path, expires);
 
     return `${APP_URL}/public/files/${path}?expires=${expires}&sig=${signature}`;
   }
