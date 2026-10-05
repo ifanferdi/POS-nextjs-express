@@ -47,7 +47,7 @@ export const options = {
     { label: 'Active', value: 'true' },
     { label: 'Inactive', value: 'false' },
   ],
-  posProductLength: process.env.POS_PRODUCT_LENGTH ? Number(process.env.POS_PRODUCT_LENGTH) : 15,
+  posProductLength: process.env.POS_PRODUCT_LENGTH ? Number(process.env.POS_PRODUCT_LENGTH) : 16,
 };
 
 export const icons = {

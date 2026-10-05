@@ -17,7 +17,8 @@ export async function getAllProducts<T = Product>(params: GetAllProductParams) {
     const api = await createServerApiClient();
     const response = await api.get<PaginatedResponse<T>>('/v1/products', { params });
     return response.data;
-  } catch {
+  } catch (e) {
+    console.error('Error fetching products:', e);
     return defaultPaginatedResponse;
   }
 }

@@ -1,14 +1,15 @@
 'use client';
 
+import { Button } from '@/components/shared/button';
 import { Input } from '@/components/ui/input';
 import { options } from '@/config/config';
-import { CategoryOption, Product, ProductDetail, ProductRelation } from '@/domain';
-import { getAllProducts } from '@/features/products/api';
+import { CategoryOption, Product, ProductList, ProductRelation } from '@/domain';
+import { getAllProductsAction } from '@/features/products/action';
 import { useSSE } from '@/hooks/use-sse';
 import { cn } from '@/lib/utils';
 import _ from 'lodash';
 import { SearchIcon, XIcon } from 'lucide-react';
-import { Dispatch, RefObject, SetStateAction, useEffect, useMemo, useRef, useState } from 'react';
+import { RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { CartItem, useCartStore } from '../../../store/pos-cart-store';
 import { ProductCard } from './pos-product-card';
@@ -17,7 +18,7 @@ import { SkeletonCard } from './pos-product-grid-skeleton';
 const PAGE_SIZE = options.posProductLength;
 
 interface PosProductGridProps {
-  products: ProductDetail[];
+  products: ProductList[];
   totalProducts: number;
   categories: CategoryOption[];
   onAdd: (item: Omit<CartItem, 'quantity'>, quantity?: number) => void;
@@ -29,7 +30,7 @@ export function PosProductGrid({
   categories,
   onAdd,
 }: PosProductGridProps) {
-  const [products, setProducts] = useState<ProductDetail[]>(initialProducts);
+  const [products, setProducts] = useState<ProductList[]>(initialProducts);
   const [total, setTotal] = useState<number>(initialTotal);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [query, setQuery] = useState('');
@@ -107,16 +108,29 @@ export function PosProductGrid({
   }
 
   const hasMore = products.length < total;
-  useLoadingOnScroll(
-    isLoadingMore,
-    hasMore,
-    sentinelRef,
-    scrollRef,
-    setIsLoadingMore,
-    products,
-    setProducts,
-    setTotal,
-  );
+
+  const loadMore = useCallback(() => {
+    if (isLoadingMore || !hasMore) return;
+
+    setIsLoadingMore(true);
+    getAllProductsAction<ProductList>({
+      isActive: true,
+      page: Math.ceil(products.length / PAGE_SIZE) + 1,
+      limit: PAGE_SIZE,
+      orderBy: ['name:asc'],
+      with: [ProductRelation.CATEGORIES],
+    })
+      .then(({ data: newProducts, total: newTotal }) => {
+        setProducts([...products, ...newProducts]);
+        setTotal(newTotal);
+      })
+      .catch((err) => {
+        toast.error(err instanceof Error ? err.message : 'Failed to load products.');
+      })
+      .finally(() => setIsLoadingMore(false));
+  }, [isLoadingMore, hasMore, products]);
+
+  useLoadingOnScroll(loadMore, isLoadingMore, hasMore, sentinelRef, scrollRef);
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -222,8 +236,15 @@ export function PosProductGrid({
                 ))}
             </div>
             {hasMore && (
-              <div ref={sentinelRef} className="py-4 text-center text-xs text-muted-foreground">
-                {isLoadingMore ? 'Load more...' : 'Scroll to load more'}
+              <div ref={sentinelRef} className="flex justify-center pt-4">
+                <Button
+                  variant="outline"
+                  onClick={loadMore}
+                  className="bg-theme"
+                  disabled={isLoadingMore}
+                >
+                  {isLoadingMore ? 'Loading...' : 'Load more'}
+                </Button>
               </div>
             )}
           </>
@@ -259,14 +280,11 @@ function CategoryPill({
 }
 
 function useLoadingOnScroll(
+  loadMore: () => void,
   isLoadingMore: boolean,
   hasMore: boolean,
   sentinelRef: RefObject<HTMLDivElement | null>,
   scrollRef: RefObject<HTMLDivElement | null>,
-  setIsLoadingMore: Dispatch<SetStateAction<boolean>>,
-  products: Product[],
-  setProducts: Dispatch<SetStateAction<ProductDetail[]>>,
-  setTotal: Dispatch<SetStateAction<number>>,
 ) {
   useEffect(() => {
     if (isLoadingMore || !hasMore) return;
@@ -275,38 +293,21 @@ function useLoadingOnScroll(
     const root = scrollRef.current;
     if (!sentinel || !root) return;
 
+    let timeout: ReturnType<typeof setTimeout>;
+
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0]?.isIntersecting) {
-          setIsLoadingMore(true);
-          getAllProducts<ProductDetail>({
-            isActive: true,
-            limit: products.length + PAGE_SIZE,
-            orderBy: ['name:asc'],
-            with: [ProductRelation.CATEGORIES],
-          })
-            .then(({ data: newProducts, total: newTotal }) => {
-              setProducts(newProducts);
-              setTotal(newTotal);
-            })
-            .catch((err) => {
-              toast.error(err instanceof Error ? err.message : 'Failed to load products.');
-            })
-            .finally(() => setIsLoadingMore(false));
+          clearTimeout(timeout);
+          timeout = setTimeout(loadMore, 500);
         }
       },
       { root, rootMargin: '100px' },
     );
     observer.observe(sentinel);
-    return () => observer.disconnect();
-  }, [
-    products.length,
-    isLoadingMore,
-    hasMore,
-    sentinelRef,
-    scrollRef,
-    setIsLoadingMore,
-    setProducts,
-    setTotal,
-  ]);
+    return () => {
+      clearTimeout(timeout);
+      observer.disconnect();
+    };
+  }, [loadMore, isLoadingMore, hasMore, sentinelRef, scrollRef]);
 }

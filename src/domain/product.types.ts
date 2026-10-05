@@ -17,13 +17,11 @@ export interface Product {
   deletedAt: Date | null;
 }
 
-export interface ProductDetail extends Product {
-  categories: Category[];
-}
-
 export interface ProductList extends Product {
   categories: Category[];
 }
+
+export type ProductDetail = ProductList;
 
 export enum ProductRelation {
   CATEGORIES = 'categories',

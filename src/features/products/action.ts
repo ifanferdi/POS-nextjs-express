@@ -1,10 +1,11 @@
 'use server';
 
-import { ActionResult, Product } from '@/domain';
+import { ActionResult, PaginatedResponse, Product } from '@/domain';
 import * as api from '@/features/products/api';
 import {
   CreateProductInput,
   CreateProductSchema,
+  GetAllProductParams,
   UpdateProductInput,
   UpdateProductSchema,
 } from '@/features/products/schema';
@@ -60,5 +61,15 @@ export async function deleteProductAction(id: number): Promise<ActionResult<Prod
       success: false,
       error: error instanceof Error ? error.message : 'Failed to delete product.',
     };
+  }
+}
+
+export async function getAllProductsAction<T = Product>(
+  params: GetAllProductParams,
+): Promise<PaginatedResponse<T>> {
+  try {
+    return await api.getAllProducts(params);
+  } catch (error) {
+    throw new Error(error instanceof Error ? error.message : 'Failed to fetch products.');
   }
 }

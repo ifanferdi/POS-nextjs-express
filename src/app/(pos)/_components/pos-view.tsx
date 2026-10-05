@@ -3,12 +3,12 @@
 import { PosCart } from '@/app/(pos)/_components/pos-cart';
 import { PosProductGrid } from '@/app/(pos)/_components/pos-product-grid';
 import { PosReceipt } from '@/app/(pos)/_components/pos-receipt';
-import { CategoryOption, PosLastOrder, ProductDetail } from '@/domain';
+import { CategoryOption, PosLastOrder, ProductList } from '@/domain';
 import { useState } from 'react';
 import { CartItem, useCartStore } from '../../../store/pos-cart-store';
 
 interface PosViewProps {
-  products: ProductDetail[];
+  products: ProductList[];
   totalProducts: number;
   categories: CategoryOption[];
 }
