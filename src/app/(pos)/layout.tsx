@@ -10,7 +10,8 @@ import { TopBar } from '../(protected)/_components/app-header';
 export default async function PosLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
 
-  if (!session || session.error === 'RefreshTokenError') redirect('/login');
+  if (!session) redirect('/login');
+  if (session.error === 'RefreshTokenError') redirect('/login?reason=expired');
 
   const username = session.user?.username ?? 'Cashier';
 

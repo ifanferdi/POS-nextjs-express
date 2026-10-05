@@ -1,7 +1,7 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  allowedDevOrigins: ['192.168.110.138'],
+  allowedDevOrigins: ['192.168.111.169'],
   images: {
     remotePatterns: [
       new URL('https://api.midtrans.com/**'),

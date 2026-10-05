@@ -7,13 +7,13 @@ import { app as config } from '@/config/config';
 import { loginAction } from '@/features/auth/action';
 import { LoginInput, LoginSchema } from '@/features/auth/schema';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Eye, EyeOff, Loader2, LogIn, Store, User } from 'lucide-react';
+import { AlertCircle, Eye, EyeOff, Loader2, LogIn, Store, User } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
-export function LoginForm() {
+export function LoginForm({ sessionExpired }: { sessionExpired?: boolean }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [showPassword, setShowPassword] = useState(false);
@@ -52,6 +52,13 @@ export function LoginForm() {
           </p>
         </div>
       </div>
+
+      {sessionExpired && (
+        <div className="flex items-start gap-2 rounded-lg border border-warning/30 bg-warning/10 px-3 py-2.5 text-sm text-warning">
+          <AlertCircle className="mt-0.5 size-4 shrink-0" />
+          <p>Your session expired. Please sign in again.</p>
+        </div>
+      )}
 
       <form id="form-login" onSubmit={form.handleSubmit(onSubmit)}>
         <FieldGroup>

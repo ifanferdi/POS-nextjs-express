@@ -7,6 +7,7 @@ import {
 } from '@/features/products/schema';
 import { createServerApiClient } from '@/lib/api-server';
 import { defaultPaginatedResponse } from '@/lib/helper';
+import { unstable_rethrow } from 'next/navigation';
 
 interface ProductApiResponse extends ApiResponse {
   product: Product;
@@ -18,6 +19,7 @@ export async function getAllProducts<T = Product>(params: GetAllProductParams) {
     const response = await api.get<PaginatedResponse<T>>('/v1/products', { params });
     return response.data;
   } catch (e) {
+    unstable_rethrow(e);
     console.error('Error fetching products:', e);
     return defaultPaginatedResponse;
   }

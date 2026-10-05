@@ -3,7 +3,7 @@ import { UserProfile } from '@/domain/user.types';
 export interface LoginResponseDto {
   token: string;
   refreshToken: string;
-  tokenExpiry: number;
+  exp: number;
   user: UserProfile;
 }
 

@@ -9,6 +9,7 @@ import {
   UpdateCategorySchema,
 } from '@/features/categories/schema';
 import { revalidatePath } from 'next/cache';
+import { unstable_rethrow } from 'next/navigation';
 
 export async function createCategoryAction(
   input: CreateCategoryInput,
@@ -22,6 +23,7 @@ export async function createCategoryAction(
 
     return { success: true, data };
   } catch (error) {
+    unstable_rethrow(error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to create category.',
@@ -42,6 +44,7 @@ export async function updateCategoryAction(
 
     return { success: true };
   } catch (error) {
+    unstable_rethrow(error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to change Category.',
@@ -56,6 +59,7 @@ export async function deleteCategoryAction(id: number): Promise<ActionResult<Cat
 
     return { success: true };
   } catch (error) {
+    unstable_rethrow(error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to delete Category.',

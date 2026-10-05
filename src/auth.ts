@@ -28,15 +28,18 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.id = user.id;
         token.accessToken = user.token;
         token.refreshToken = user.refreshToken;
-        token.tokenExpiry = user.tokenExpiry;
+        token.tokenExpiry = user.exp;
         token.user = user.user;
+        token.error = undefined;
+
         return token;
       }
 
       // Request berikutnya — cek proaktif apakah token perlu di-refresh
       const bufferMs = authConfig.refreshBufferSeconds * 1000;
-      const tokenExpired = token.tokenExpiry ?? token.exp;
-      const isExpiringSoon = Date.now() > tokenExpired - bufferMs;
+      const tokenExpiry = token.tokenExpiry;
+      // tokenExpiry undefined (cookie lama) → paksa refresh
+      const isExpiringSoon = !tokenExpiry || Date.now() > tokenExpiry * 1000 - bufferMs;
 
       if (!isExpiringSoon) {
         return token; // token masih fresh, gak perlu refresh
@@ -48,8 +51,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.id = refreshed.user.id;
         token.accessToken = refreshed.token;
         token.refreshToken = refreshed.refreshToken;
-        token.tokenExpiry = refreshed.tokenExpiry;
+        token.tokenExpiry = refreshed.exp;
         token.user = refreshed.user;
+        token.error = undefined;
         // token.role = myAccount.role; // ← role terbaru dari backend
         // token.permissions = myAccount.permissions; // ← permissions terbaru dari backend
 
@@ -72,6 +76,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
      */
     async session({ session, token }) {
       session.accessToken = token.accessToken;
+      session.tokenExpiry = token.tokenExpiry;
       session.user.id = token.sub as string;
       session.user = token.user;
       session.error = token.error; // propagate RefreshTokenError ke session

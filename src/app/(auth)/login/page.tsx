@@ -6,10 +6,16 @@ import { app as config } from '@/config/config';
 import { Store } from 'lucide-react';
 import { redirect } from 'next/navigation';
 
-export default async function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ reason?: string }>;
+}) {
+  const { reason } = await searchParams;
+  const sessionExpired = reason === 'expired';
   const session = await auth();
 
-  if (session && !session.error) redirect('/dashboard');
+  if (session && !session.error && !sessionExpired) redirect('/dashboard');
 
   return (
     <div className="grid min-h-screen lg:grid-cols-[46%_54%]">
@@ -29,7 +35,7 @@ export default async function LoginPage() {
         </header>
 
         <main className="relative z-10 flex flex-1 items-center justify-center py-10">
-          <LoginForm />
+          <LoginForm sessionExpired={sessionExpired} />
         </main>
       </div>
 

@@ -7,6 +7,7 @@ import {
 } from '@/features/users/schema';
 import { createServerApiClient } from '@/lib/api-server';
 import { defaultPaginatedResponse } from '@/lib/helper';
+import { unstable_rethrow } from 'next/navigation';
 
 interface UserApiResponse extends ApiResponse {
   user: User;
@@ -17,7 +18,9 @@ export async function getAllUser<T = User>(params: GetAllUserParams) {
     const api = await createServerApiClient();
     const response = await api.get<PaginatedResponse<T>>('/v1/users', { params });
     return response.data;
-  } catch {
+  } catch (e) {
+    console.error('Error fetching users:', e);
+    unstable_rethrow(e);
     return defaultPaginatedResponse;
   }
 }

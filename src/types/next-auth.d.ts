@@ -10,13 +10,14 @@ import 'next-auth/jwt';
  * begitu file ini ter-include di tsconfig.json.
  *
  * Field di sini ada 2 kategori:
- * - GENERIC (reusable di project lain): accessToken, refreshToken, tokenExpiry
+ * - GENERIC (reusable di project lain): accessToken, refreshToken, exp
  * - PROJECT-SPECIFIC (khusus DigiPro RBAC): role, permissions
  */
 
 declare module 'next-auth' {
   interface Session {
     accessToken: string;
+    tokenExpiry: number; // unix seconds — expiry accessToken backend
     error?: 'RefreshTokenError';
     user: {
       id: string;
@@ -30,7 +31,7 @@ declare module 'next-auth' {
   interface User {
     token: string;
     refreshToken: string;
-    tokenExpiry: number;
+    exp: number;
     user: {
       id: number;
       username: string;
@@ -48,7 +49,7 @@ declare module 'next-auth/jwt' {
   interface JWT {
     accessToken: string;
     refreshToken: string;
-    tokenExpiry: number; // generic — dipakai logic refresh proaktif
+    tokenExpiry: number; // unix seconds — JANGAN pakai `exp` (reserved, ditimpa Auth.js)
     user: User;
     role: string; //todo
     permissions: string[];

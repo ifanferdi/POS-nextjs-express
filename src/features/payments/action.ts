@@ -2,6 +2,7 @@
 
 import { ActionResult, Payment } from '@/domain';
 import * as api from '@/features/payments/api';
+import { unstable_rethrow } from 'next/navigation';
 import {
   GetPaymentByOrderIdInput,
   MockMidtransPaymentInput,
@@ -13,6 +14,7 @@ export async function getPaymentByOrderId<T = Payment>(input: GetPaymentByOrderI
     const response = await api.getPaymentByOrderId<T>(input);
     return response;
   } catch (error) {
+    unstable_rethrow(error);
     throw new Error(error instanceof Error ? error.message : 'Failed to load payment.');
   }
 }
@@ -27,6 +29,7 @@ export async function mockMidtransPaymentAction(
     await api.mockMidtransPayment(validate.data);
     return { success: true };
   } catch (error) {
+    unstable_rethrow(error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to mock midtrans payment.',

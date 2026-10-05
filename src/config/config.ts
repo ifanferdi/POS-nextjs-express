@@ -39,7 +39,7 @@ export const api = {
 
 export const auth = {
   secret: process.env.NEXTAUTH_SECRET ?? '',
-  refreshBufferSeconds: Number(process.env.AUTH_REFRESH_BUFFER_SECONDS ?? 60),
+  refreshBufferSeconds: Number(process.env.AUTH_REFRESH_BUFFER_SECONDS ?? 60 * 30), // 30 menit
 };
 
 export const options = {

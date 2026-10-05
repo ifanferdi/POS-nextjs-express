@@ -7,13 +7,15 @@ import {
 } from '@/features/orders/schema';
 import { createServerApiClient } from '@/lib/api-server';
 import { defaultPaginatedResponse } from '@/lib/helper';
+import { unstable_rethrow } from 'next/navigation';
 
 export async function getAllOrders<T = Order>(params: GetAllOrderParams) {
   try {
     const api = await createServerApiClient();
     const response = await api.get<PaginatedResponse<T>>('/v1/orders', { params });
     return response.data;
-  } catch {
+  } catch (e) {
+    unstable_rethrow(e);
     return defaultPaginatedResponse;
   }
 }

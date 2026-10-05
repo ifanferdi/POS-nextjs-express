@@ -13,7 +13,7 @@ export async function loginRequest(username: string, password: string) {
     username,
     password,
   });
-  return response.data; // { accessToken, refreshToken, tokenExpiry, ... }
+  return response.data; // { accessToken, refreshToken, exp, ... }
 }
 
 export async function refreshTokenRequest(refreshToken: string) {

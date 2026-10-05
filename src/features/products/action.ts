@@ -10,6 +10,7 @@ import {
   UpdateProductSchema,
 } from '@/features/products/schema';
 import { revalidatePath } from 'next/cache';
+import { unstable_rethrow } from 'next/navigation';
 
 export async function createProductAction(
   input: CreateProductInput,
@@ -23,6 +24,7 @@ export async function createProductAction(
 
     return { success: true };
   } catch (error) {
+    unstable_rethrow(error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to create product.',
@@ -43,6 +45,7 @@ export async function updateProductAction(
 
     return { success: true };
   } catch (error) {
+    unstable_rethrow(error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to change product.',
@@ -57,6 +60,7 @@ export async function deleteProductAction(id: number): Promise<ActionResult<Prod
 
     return { success: true };
   } catch (error) {
+    unstable_rethrow(error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to delete product.',
@@ -70,6 +74,7 @@ export async function getAllProductsAction<T = Product>(
   try {
     return await api.getAllProducts(params);
   } catch (error) {
+    unstable_rethrow(error);
     throw new Error(error instanceof Error ? error.message : 'Failed to fetch products.');
   }
 }

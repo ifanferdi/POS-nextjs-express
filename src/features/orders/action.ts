@@ -12,6 +12,7 @@ import {
 } from '@/features/orders/schema';
 import { defaultPaginatedResponse } from '@/lib/helper';
 import { revalidatePath } from 'next/cache';
+import { unstable_rethrow } from 'next/navigation';
 
 export async function createOrderAction(
   input: CreateOrderInput,
@@ -25,6 +26,7 @@ export async function createOrderAction(
 
     return { success: true, data: response.order };
   } catch (error) {
+    unstable_rethrow(error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to create order.',
@@ -39,6 +41,7 @@ export async function getOrdersAction<T = Order>(
     const response = await api.getAllOrders<T>(params);
     return response;
   } catch (error) {
+    unstable_rethrow(error);
     console.error(error);
     return defaultPaginatedResponse;
   }
@@ -64,6 +67,7 @@ export async function updateOrderAction(
 
     return { success: true };
   } catch (error) {
+    unstable_rethrow(error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to update order.',
@@ -78,6 +82,7 @@ export async function deleteOrderAction(id: number): Promise<ActionResult<Order>
 
     return { success: true };
   } catch (error) {
+    unstable_rethrow(error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to delete order.',

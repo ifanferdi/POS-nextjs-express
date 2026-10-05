@@ -7,6 +7,7 @@ import {
 } from '@/features/categories/schema';
 import { createServerApiClient } from '@/lib/api-server';
 import { defaultPaginatedResponse } from '@/lib/helper';
+import { unstable_rethrow } from 'next/navigation';
 
 interface CategoryApiResponse extends ApiResponse {
   category: Category;
@@ -18,7 +19,8 @@ export async function getAllCategories<T = Category>(params: GetAllCategoryParam
     const response = await api.get<PaginatedResponse<T>>('/v1/categories', { params });
 
     return response.data;
-  } catch {
+  } catch (e) {
+    unstable_rethrow(e);
     return defaultPaginatedResponse;
   }
 }

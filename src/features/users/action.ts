@@ -10,6 +10,7 @@ import {
   UpdateUserSchema,
 } from '@/features/users/schema';
 import { revalidatePath } from 'next/cache';
+import { unstable_rethrow } from 'next/navigation';
 
 export async function createUserAction(input: CreateUserInput): Promise<ActionResult<User>> {
   const validate = CreateUserSchema.safeParse(input);
@@ -21,6 +22,7 @@ export async function createUserAction(input: CreateUserInput): Promise<ActionRe
 
     return { success: true };
   } catch (error) {
+    unstable_rethrow(error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to create user.',
@@ -41,6 +43,7 @@ export async function updateUserAction(
 
     return { success: true };
   } catch (error) {
+    unstable_rethrow(error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to change user.',
@@ -55,6 +58,7 @@ export async function deleteUserAction(id: number): Promise<ActionResult<User>> 
 
     return { success: true };
   } catch (error) {
+    unstable_rethrow(error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to delete user.',
