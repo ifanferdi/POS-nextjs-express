@@ -17,9 +17,13 @@ const paymentMethods = [
 
 export function LoginBrandPanel() {
   return (
-    <div className="relative flex h-full flex-col justify-center overflow-hidden bg-primary p-10 text-primary-foreground xl:p-14">
-      <div className="absolute -top-32 -right-24 size-96 rounded-full bg-white/10 blur-3xl" />
-      <div className="absolute -bottom-40 -left-24 size-96 rounded-full bg-white/5 blur-3xl" />
+    <div className="relative flex h-full flex-col justify-center overflow-hidden p-10 text-primary-foreground xl:p-14">
+      <div
+        aria-hidden
+        className="absolute inset-0 bg-[linear-gradient(160deg,oklch(0.55_0.14_175),oklch(0.62_0.15_140)_55%,oklch(0.68_0.16_90))]"
+      />
+      <div className="absolute -top-32 -right-24 size-96 rounded-full bg-[oklch(0.62_0.15_140)/30] blur-3xl" />
+      <div className="absolute -bottom-40 -left-24 size-96 rounded-full bg-[oklch(0.68_0.16_90)/25] blur-3xl" />
 
       <div className="relative mx-auto w-full max-w-md space-y-6">
         <div className="flex items-center justify-between rounded-t-2xl border border-white/15 border-b-transparent bg-white/10 px-4 py-3 backdrop-blur-md">
