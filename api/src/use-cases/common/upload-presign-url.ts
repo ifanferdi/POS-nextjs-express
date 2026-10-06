@@ -6,7 +6,8 @@ import { randomUUID } from 'crypto';
 export default class GeneratePresignUrl extends BaseUseCase {
   async execute(body: UploadDto) {
     const ext = body.filename.split('.').pop();
-    const key = `${body.fileType}/${new Date().getFullYear()}/${randomUUID()}.${ext}`;
+    const folder = body.folder ?? body.fileType;
+    const key = `${folder}/${new Date().getFullYear()}/${randomUUID()}.${ext}`;
 
     const expiresIn = config.storage.expiredTime;
     const presignUrl = await this.repositories.storageRepository?.getPresignUrl(key, body.fileSize);

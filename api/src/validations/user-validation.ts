@@ -3,7 +3,6 @@ import { USER_FIELD } from '@/domain/entities/models/user';
 import { JwtData } from '@/domain/entities/types/auth.types';
 import { SoftDeleteFields } from '@/domain/entities/types/database.types';
 import { calculateAge } from '@/helpers/common.helper';
-import AppError from '@/helpers/error.helper';
 import {
   BaseFindById,
   BasePagination,
@@ -118,13 +117,6 @@ export const ChangePasswordSchema = z.object({
   oldPassword: Password.optional(),
   password: Password.optional(),
   confirmPassword: Password.optional(),
-});
-
-export const ProfileImageSchema = z.object({
-  image: z.any().refine((file) => {
-    if (!file) throw new AppError('Column image: Required');
-    return file;
-  }),
 });
 
 // Data Transfer Object All Validation

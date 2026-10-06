@@ -3,7 +3,6 @@ import DeleteUser from '@/use-cases/user/delete-user';
 import FindAllUser from '@/use-cases/user/find-all-user';
 import FindByIdUser from '@/use-cases/user/find-by-id-user';
 import MyAccount from '@/use-cases/user/my-account';
-import ProfileImage from '@/use-cases/user/profile-image';
 import RestoreUser from '@/use-cases/user/restore-user';
 import UpdateUser from '@/use-cases/user/update-user';
 
@@ -15,5 +14,4 @@ export interface UserUseCase {
   updateUser: UpdateUser;
   deleteUser: DeleteUser;
   restoreUser: RestoreUser;
-  profileImage: ProfileImage;
 }

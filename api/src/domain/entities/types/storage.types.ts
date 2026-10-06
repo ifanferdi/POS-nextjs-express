@@ -6,3 +6,8 @@ export enum FileType {
 }
 
 export const ALL_FILE_TYPES = Object.values(FileType);
+
+export enum UploadEntity {
+  PRODUCTS = 'products',
+  PROFILES = 'profiles',
+}

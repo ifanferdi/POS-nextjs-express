@@ -29,6 +29,8 @@ export default {
     accessKeyId: process.env.S3_ACCESS,
     secretAccessKey: process.env.S3_SECRET,
     endpoint: process.env.S3_ENDPOINT!,
+    publicEndpoint:
+      process.env.S3_PUBLIC_ENDPOINT || process.env.S3_ENDPOINT || 'http://localhost:9000',
     forcePathStyle: true,
     bucket: process.env.S3_BUCKET!,
   },

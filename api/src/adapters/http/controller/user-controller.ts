@@ -1,9 +1,6 @@
 import BaseController from '@/adapters/http/controller/_base-controller';
-import config from '@/config/config';
 import { HttpStatusCode } from '@/constants/http-status.constant';
-import { FileType } from '@/domain/entities/types/storage.types';
 import { handleNumberOrArrayRequest, handleOrderByRequest } from '@/helpers/common.helper';
-import uploadFile from '@/helpers/multer.helper';
 import { BaseFindById } from '@/validations/base-validation';
 import {
   ChangePasswordDto,
@@ -14,7 +11,6 @@ import {
   FindAllUserSchema,
   FindByIdUserDto,
   FindByIdUserSchema,
-  ProfileImageSchema,
   UpdateUserProfileDto,
   UpdateUserProfileSchema,
 } from '@/validations/user-validation';
@@ -96,26 +92,48 @@ export default class UserController extends BaseController {
     const id = Number(req.params.id);
     await this.handleFindOne({ id });
 
+    await this.handleUpdate(req.body, id, { isActive: req.body.isActive, roleId: req.body.roleId }, res);
+  });
+
+  updateMyAccount = asyncHandler(async (req: e.Request & Record<string, any>, res: e.Response) => {
+    const id = req.user.id;
+    const current = await this.handleFindOne({ id });
+
+    // ponytail: role & active status locked to current values so self-update can't escalate
+    await this.handleUpdate(
+      req.body,
+      id,
+      { isActive: current.isActive, roleId: current.roleId! },
+      res,
+    );
+  });
+
+  private async handleUpdate(
+    body: Record<string, any>,
+    id: number,
+    access: { isActive: boolean; roleId: number },
+    res: e.Response,
+  ) {
     let payload: UpdateUserProfileDto = {
       id,
-      username: req.body.username,
-      isActive: req.body.isActive,
-      roleId: req.body.roleId,
+      username: body.username,
+      isActive: access.isActive,
+      roleId: access.roleId,
     };
-    if (req.body.profile)
+    if (body.profile)
       payload.profile = {
-        fullName: req.body.profile.fullName,
-        placeOfBirth: req.body.profile.placeOfBirth,
-        dateOfBirth: req.body.profile.dateOfBirth,
-        gender: req.body.profile.gender,
-        age: req.body.profile.age,
-        imagePath: req.body.profile.imagePath,
+        fullName: body.profile.fullName,
+        placeOfBirth: body.profile.placeOfBirth,
+        dateOfBirth: body.profile.dateOfBirth,
+        gender: body.profile.gender,
+        age: body.profile.age,
+        imagePath: body.profile.imagePath,
       };
 
     const payloadPassword: ChangePasswordDto = {
-      password: req.body.password,
-      confirmPassword: req.body.confirmPassword,
-      oldPassword: req.body.oldPassword,
+      password: body.password,
+      confirmPassword: body.confirmPassword,
+      oldPassword: body.oldPassword,
     };
 
     /** Request Validation **/
@@ -126,7 +144,7 @@ export default class UserController extends BaseController {
     const user = await this.useCases.userUseCase.updateUser.execute(payload, payloadPassword);
 
     res.send({ message: 'Success.', user });
-  });
+  }
 
   destroy = asyncHandler(async (req: e.Request, res: e.Response) => {
     const params = { id: Number(req.params.id) };
@@ -158,20 +176,6 @@ export default class UserController extends BaseController {
     this.useCases.userUseCase.restoreUser.execute(params as BaseFindById);
 
     res.send({ message: 'Success.' });
-  });
-
-  upload = uploadFile(config.storage.defaultMaxSize, [FileType.IMAGE]).single('image');
-
-  uploadImage = asyncHandler(async (req: e.Request, res: e.Response) => {
-    const image = req.file;
-
-    ProfileImageSchema.parse({ image });
-
-    const imagePath = await this.useCases.userUseCase?.profileImage.execute(
-      image as Express.Multer.File,
-    );
-
-    res.send({ message: 'Success.', imagePath });
   });
 
   myAccount = asyncHandler(async (req: e.Request & Record<string, any>, res) => {
