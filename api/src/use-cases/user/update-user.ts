@@ -2,6 +2,7 @@ import { IUserWithPassword } from '@/domain/entities/models/user';
 import { ErrorBadRequest } from '@/helpers/error.helper';
 import * as password from '@/helpers/password.helper';
 import BaseUseCase from '@/use-cases/_base-use-case';
+import ResetCachePermission from '@/use-cases/permission/reset-cache-permission';
 import { ChangePasswordDto, UpdateUserProfileDto } from '@/validations/user-validation';
 
 export default class UpdateUser extends BaseUseCase {
@@ -18,7 +19,11 @@ export default class UpdateUser extends BaseUseCase {
 
     payload.password = hashPassword;
 
-    return this.repositories.userRepository.update(payload);
+    const user = await this.repositories.userRepository.update(payload);
+
+    await new ResetCachePermission(this.redisClient).execute({ userId: payload.id });
+
+    return user;
   }
 
   private async checkUniqueUsername(payload: UpdateUserProfileDto) {

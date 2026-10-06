@@ -2,11 +2,7 @@ import BaseController from '@/adapters/http/controller/_base-controller';
 import config from '@/config/config';
 import { HttpStatusCode } from '@/constants/http-status.constant';
 import { FileType } from '@/domain/entities/types/storage.types';
-import {
-  extractUserId,
-  handleNumberOrArrayRequest,
-  handleOrderByRequest,
-} from '@/helpers/common.helper';
+import { handleNumberOrArrayRequest, handleOrderByRequest } from '@/helpers/common.helper';
 import uploadFile from '@/helpers/multer.helper';
 import { BaseFindById } from '@/validations/base-validation';
 import {
@@ -178,10 +174,11 @@ export default class UserController extends BaseController {
     res.send({ message: 'Success.', imagePath });
   });
 
-  myAccount = asyncHandler(async (req: e.Request, res: e.Response) => {
-    const params = { id: extractUserId(req), with: req.query.with } as FindByIdUserDto;
+  myAccount = asyncHandler(async (req: e.Request & Record<string, any>, res) => {
+    const result = await this.useCases.userUseCase.myAccount.execute({
+      id: req.user.id,
+    });
 
-    const result = await this.handleFindOne(params);
     res.send(result);
   });
 }

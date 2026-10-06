@@ -27,6 +27,7 @@ export function extractRelationDataUser(
 
   if (params.with?.includes(UserRelation.PERMISSIONS) && user.role) {
     _handlePermissions(user);
+    delete user.role.roleHasPermissions;
     if (
       !params.with.includes(UserRelation.ROLE) &&
       !params.with.includes(UserRelation.ROLE_PERMISSIONS)

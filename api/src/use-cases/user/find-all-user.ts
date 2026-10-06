@@ -1,4 +1,3 @@
-import { UserRelationData } from '@/domain/entities/models/user';
 import { extractRelationDataUser, handleProfileImageUrl } from '@/helpers/data-extractor';
 import paginate from '@/helpers/paginate.helper';
 import BaseUseCase from '@/use-cases/_base-use-case';
@@ -14,7 +13,7 @@ export default class FindAllUser extends BaseUseCase {
     await Promise.all(
       data.map(async (user) => {
         await handleProfileImageUrl(this.repositories.storageRepository, user);
-        extractRelationDataUser(params, user as unknown as UserRelationData);
+        extractRelationDataUser(params, user);
       }),
     );
 

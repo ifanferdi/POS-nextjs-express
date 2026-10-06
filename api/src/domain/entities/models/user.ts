@@ -9,7 +9,7 @@ export interface IUser extends Omit<User, 'password'> {}
 
 export interface UserRelationData extends IUser {
   role: Role & {
-    roleHasPermissions: Array<{ permission: Permission }>;
+    roleHasPermissions?: Array<{ permission: Permission }>;
     permissions: Array<Permission>;
   };
   permissions: Array<Permission>;

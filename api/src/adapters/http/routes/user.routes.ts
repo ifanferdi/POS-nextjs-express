@@ -5,7 +5,7 @@ import UserController from '@/adapters/http/controller/user-controller';
 export default function UserRoutes(controller: UserController, auth: Authorization) {
   const router = express.Router();
 
-  router.get('/my-account', controller.myAccount);
+  router.get('/me', controller.myAccount);
 
   const showRoutes = express
     .Router()
