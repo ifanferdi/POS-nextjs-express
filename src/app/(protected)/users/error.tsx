@@ -1,7 +1,8 @@
 'use client';
 
+import { StatusPage } from '@/components/shared/status-page';
 import { Button } from '@/components/ui/button';
-import { AlertCircleIcon } from 'lucide-react';
+import { RotateCcwIcon } from 'lucide-react';
 import { useEffect } from 'react';
 
 export default function UsersError({
@@ -16,17 +17,17 @@ export default function UsersError({
   }, [error]);
 
   return (
-    <div className="flex flex-col items-center justify-center gap-4 rounded-lg border border-dashed py-20">
-      <div className="flex size-12 items-center justify-center rounded-full bg-destructive/10">
-        <AlertCircleIcon className="size-6 text-destructive" />
-      </div>
-      <div className="space-y-1 text-center">
-        <p className="text-sm font-medium">Failed to load users</p>
-        <p className="text-sm text-muted-foreground">Something went wrong. Please try again.</p>
-      </div>
-      <Button variant="outline" onClick={reset}>
-        Try again
-      </Button>
-    </div>
+    <StatusPage
+      className="min-h-[50vh]"
+      code={500}
+      title="Failed to load users"
+      description="We couldn't fetch the user list. This is usually temporary — give it another try."
+      action={
+        <Button onClick={reset}>
+          <RotateCcwIcon />
+          Try again
+        </Button>
+      }
+    />
   );
 }

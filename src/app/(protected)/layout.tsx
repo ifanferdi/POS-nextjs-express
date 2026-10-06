@@ -15,7 +15,7 @@ export default async function ProtectedLayout({ children }: { children: React.Re
 
   return (
     <SidebarProvider>
-      <AppSidebar username={session.user?.username} />
+      <AppSidebar username={session.user?.username} permissions={session.user?.permissions} />
       <SidebarInset>
         <AppHeader username={session.user?.username} />
         <main className="flex-1 p-4 md:p-6 lg:p-8">

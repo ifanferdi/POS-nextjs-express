@@ -2,8 +2,11 @@ import { CategoryFormDialog } from '@/app/(protected)/categories/_components/cat
 import { CategorySearch } from '@/app/(protected)/categories/_components/category-search';
 import { CategoriesTableSection } from '@/app/(protected)/categories/_components/category-table';
 import { CategoryTableSkeleton } from '@/app/(protected)/categories/_components/category-table-skeleton';
+import { auth } from '@/auth';
 import { Skeleton } from '@/components/ui/skeleton';
 import { GetAllCategoryParams } from '@/features/categories/schema';
+import { hasPermission, PERMISSION } from '@/lib/permission';
+import { forbidden } from 'next/navigation';
 import { Suspense } from 'react';
 
 export default async function CategoriesPage({
@@ -11,6 +14,9 @@ export default async function CategoriesPage({
 }: {
   searchParams: Promise<{ page?: string; q?: string }>;
 }) {
+  const session = await auth();
+  if (!hasPermission(session?.user.permissions, [PERMISSION.SHOW_CATEGORY])) forbidden();
+
   const { page, q } = await searchParams;
   const pageNum = Number(page ?? 1);
   const params: GetAllCategoryParams = { page: pageNum, q, orderBy: ['name:asc'] };

@@ -15,6 +15,7 @@ const nextConfig: NextConfig = {
   experimental: {
     workerThreads: false, // matikan worker threads eksperimental
     cpus: 1, // batasi CPU usage compiler
+    authInterrupts: true, // aktifkan forbidden()/unauthorized()
   },
 };
 

@@ -3,11 +3,14 @@ import { UserFormDialog } from '@/app/(protected)/users/_components/user-form-di
 import { UserSearch } from '@/app/(protected)/users/_components/user-search';
 import { UserTableSection } from '@/app/(protected)/users/_components/user-table';
 import { UserTableSkeleton } from '@/app/(protected)/users/_components/user-table-skeleton';
+import { auth } from '@/auth';
 import { ParamsError } from '@/components/shared/error';
 import { Skeleton } from '@/components/ui/skeleton';
 import { RoleOption, UserRelation } from '@/domain';
 import { getAllRoles } from '@/features/roles/api';
 import { GetAllUserParams, GetAllUserSchema } from '@/features/users/schema';
+import { hasPermission, PERMISSION } from '@/lib/permission';
+import { forbidden } from 'next/navigation';
 import { Suspense } from 'react';
 import z from 'zod';
 
@@ -21,6 +24,10 @@ interface UsersPageProps {
 }
 
 export default async function UsersPage({ searchParams }: UsersPageProps) {
+  const session = await auth();
+  if (!hasPermission(session?.user.permissions, [PERMISSION.SHOW_USER, PERMISSION.SHOW_TRAINEE]))
+    forbidden();
+
   const { page, q, roleId, isActive } = await searchParams;
   const pageNum = Number(page ?? 1);
   const roleIdNum = roleId ? Number(roleId) : undefined;

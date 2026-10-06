@@ -1,5 +1,6 @@
 'use server';
 
+import { auth } from '@/auth';
 import { ActionResult, PaginatedResponse, Product } from '@/domain';
 import * as api from '@/features/products/api';
 import {
@@ -9,6 +10,7 @@ import {
   UpdateProductInput,
   UpdateProductSchema,
 } from '@/features/products/schema';
+import { PERMISSION, requirePermission } from '@/lib/permission';
 import { revalidatePath } from 'next/cache';
 import { unstable_rethrow } from 'next/navigation';
 
@@ -19,6 +21,9 @@ export async function createProductAction(
   if (!validate.success) return { success: false, error: 'Invalid input.' };
 
   try {
+    const session = await auth();
+    requirePermission(session?.user.permissions, [PERMISSION.MANAGE_PRODUCT]);
+
     await api.createProduct(validate.data);
     revalidatePath('/products');
 
@@ -40,6 +45,9 @@ export async function updateProductAction(
   if (!validate.success) return { success: false, error: 'Invalid input.' };
 
   try {
+    const session = await auth();
+    requirePermission(session?.user.permissions, [PERMISSION.MANAGE_PRODUCT]);
+
     await api.updateProduct(id, validate.data);
     revalidatePath('/products');
 
@@ -55,6 +63,9 @@ export async function updateProductAction(
 
 export async function deleteProductAction(id: number): Promise<ActionResult<Product>> {
   try {
+    const session = await auth();
+    requirePermission(session?.user.permissions, [PERMISSION.MANAGE_PRODUCT]);
+
     await api.deleteProduct(id);
     revalidatePath('/products');
 

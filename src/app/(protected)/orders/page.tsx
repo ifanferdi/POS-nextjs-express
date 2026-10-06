@@ -2,9 +2,12 @@ import { OrderFilter } from '@/app/(protected)/orders/_components/order-filter';
 import { OrderSearch } from '@/app/(protected)/orders/_components/order-search';
 import { OrderTableSection } from '@/app/(protected)/orders/_components/order-table';
 import { OrderTableSkeleton } from '@/app/(protected)/orders/_components/order-table-skeleton';
+import { auth } from '@/auth';
 import { Skeleton } from '@/components/ui/skeleton';
 import { OrderRelation, OrderStatus, PaymentMethod } from '@/domain';
 import { GetAllOrderParams } from '@/features/orders/schema';
+import { hasPermission, PERMISSION } from '@/lib/permission';
+import { forbidden } from 'next/navigation';
 import { Suspense } from 'react';
 
 interface OrdersPageProps {
@@ -24,6 +27,9 @@ function coerceEnum<T extends string>(
 }
 
 export default async function OrdersPage({ searchParams }: OrdersPageProps) {
+  const session = await auth();
+  if (!hasPermission(session?.user.permissions, [PERMISSION.SHOW_ORDER])) forbidden();
+
   const { page, q, status, paymentMethod } = await searchParams;
   const pageNum = Number(page ?? 1);
   const statusEnum = coerceEnum(status, Object.values(OrderStatus));

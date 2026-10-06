@@ -1,12 +1,17 @@
 import { OrderDetailCard } from '@/app/(protected)/orders/_components/order-detail-card';
+import { auth } from '@/auth';
 import { Button } from '@/components/ui/button';
 import { OrderDetail, OrderRelation } from '@/domain';
 import { getOrderById } from '@/features/orders/api';
+import { hasPermission, PERMISSION } from '@/lib/permission';
 import { ArrowLeftIcon } from 'lucide-react';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { forbidden, notFound } from 'next/navigation';
 
 export default async function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const session = await auth();
+  if (!hasPermission(session?.user.permissions, [PERMISSION.SHOW_ORDER])) forbidden();
+
   const { id } = await params;
   const order = await getOrderById<OrderDetail>(Number(id), [
     OrderRelation.ORDER_ITEMS_PRODUCT,

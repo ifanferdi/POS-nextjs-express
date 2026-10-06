@@ -1,14 +1,21 @@
+import { auth } from '@/auth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { UserDetail, UserRelation } from '@/domain';
 import { getUserById } from '@/features/users/api';
+import { hasPermission, PERMISSION } from '@/lib/permission';
 import _ from 'lodash';
 import { ArrowLeftIcon } from 'lucide-react';
 import moment from 'moment';
 import Link from 'next/link';
+import { forbidden } from 'next/navigation';
 
 export default async function UserDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const session = await auth();
+  if (!hasPermission(session?.user.permissions, [PERMISSION.SHOW_USER, PERMISSION.SHOW_TRAINEE]))
+    forbidden();
+
   const { id } = await params;
   const user = await getUserById<UserDetail>(Number(id), [UserRelation.PROFILE, UserRelation.ROLE]);
 

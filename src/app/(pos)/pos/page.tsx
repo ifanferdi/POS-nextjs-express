@@ -1,15 +1,21 @@
 import { PosProductGridSkeleton } from '@/app/(pos)/_components/pos-product-grid-skeleton';
 import { PosView } from '@/app/(pos)/_components/pos-view';
+import { auth } from '@/auth';
 import { Skeleton } from '@/components/ui/skeleton';
 import { options } from '@/config/config';
 import { CategoryOption, ProductList, ProductRelation } from '@/domain';
 import { getAllCategories } from '@/features/categories/api';
 import { getAllProducts } from '@/features/products/api';
+import { hasPermission, PERMISSION } from '@/lib/permission';
+import { forbidden } from 'next/navigation';
 import { Suspense } from 'react';
 
 const PAGE_SIZE = options.posProductLength;
 
 export default async function PosPage() {
+  const session = await auth();
+  if (!hasPermission(session?.user.permissions, [PERMISSION.MANAGE_ORDER])) forbidden();
+
   return (
     <Suspense fallback={<PosViewSkeleton />}>
       <PosViewLoader />

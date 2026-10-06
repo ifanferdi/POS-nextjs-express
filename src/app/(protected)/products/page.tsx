@@ -3,9 +3,12 @@ import { ProductFormDialog } from '@/app/(protected)/products/_components/produc
 import { ProductSearch } from '@/app/(protected)/products/_components/product-search';
 import { ProductTableSection } from '@/app/(protected)/products/_components/product-table';
 import { ProductTableSkeleton } from '@/app/(protected)/products/_components/product-table-skeleton';
+import { auth } from '@/auth';
 import { CategoryOption, ProductRelation } from '@/domain';
 import { getAllCategories } from '@/features/categories/api';
 import { GetAllProductParams } from '@/features/products/schema';
+import { hasPermission, PERMISSION } from '@/lib/permission';
+import { forbidden } from 'next/navigation';
 import { Suspense } from 'react';
 
 interface ProductsPageProps {
@@ -18,6 +21,9 @@ interface ProductsPageProps {
 }
 
 export default async function ProductsPage({ searchParams }: ProductsPageProps) {
+  const session = await auth();
+  if (!hasPermission(session?.user.permissions, [PERMISSION.SHOW_PRODUCT])) forbidden();
+
   const { page, q, isActive, ...props } = await searchParams;
   const categoryIds =
     typeof props['categoryId[]'] === 'string' ? [props['categoryId[]']] : props['categoryId[]'];

@@ -1,11 +1,13 @@
 import { ProductActions } from '@/app/(protected)/products/_components/product-actions';
 import { BarcodeDisplay } from '@/app/(protected)/products/_components/product-barcode';
+import { auth } from '@/auth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { ProductDetail, ProductRelation } from '@/domain';
 import { getProductById } from '@/features/products/api';
 import { formatCurrency } from '@/lib/helper';
+import { hasPermission, PERMISSION } from '@/lib/permission';
 import {
   ArrowLeftIcon,
   BarcodeIcon,
@@ -18,9 +20,12 @@ import {
 import moment from 'moment';
 import Image from 'next/image';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { forbidden, notFound } from 'next/navigation';
 
 export default async function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const session = await auth();
+  if (!hasPermission(session?.user.permissions, [PERMISSION.SHOW_PRODUCT])) forbidden();
+
   const { id } = await params;
   const product = await getProductById<ProductDetail>(Number(id), [ProductRelation.CATEGORIES]);
 

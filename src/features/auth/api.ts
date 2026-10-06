@@ -1,6 +1,5 @@
 import { api as configApi } from '@/config/config';
-import { User, UserRelation } from '@/domain';
-import { LoginResponseDto, RefreshTokenResponseDto } from '@/features/auth/dto';
+import { LoginResponseDto, MeResponseDto, RefreshTokenResponseDto } from '@/features/auth/dto';
 import axios from 'axios';
 
 /**
@@ -24,9 +23,8 @@ export async function refreshTokenRequest(refreshToken: string) {
   return response.data;
 }
 
-export async function getMyAccountRequest(accessToken: string, params?: { with: UserRelation[] }) {
-  const response = await axios.get<User>(`${configApi.baseUrl}/v1/user/my-account`, {
-    params,
+export async function getMe(accessToken: string) {
+  const response = await axios.get<MeResponseDto>(`${configApi.baseUrl}/v1/users/me`, {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
   return response.data;

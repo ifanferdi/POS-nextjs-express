@@ -1,11 +1,11 @@
 import { auth } from '@/auth';
+import { TopBar } from '@/components/shared/top-bar';
 import { Button } from '@/components/ui/button';
 import { app } from '@/config/config';
 import { ArrowLeftIcon } from 'lucide-react';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import React from 'react';
-import { TopBar } from '../(protected)/_components/app-header';
 
 export default async function PosLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();

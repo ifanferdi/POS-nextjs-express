@@ -16,27 +16,54 @@ import {
   SidebarSeparator,
 } from '@/components/ui/sidebar';
 import { app, icons } from '@/config/config';
+import { Permission } from '@/domain';
 import { getInitials } from '@/lib/helper';
+import { hasPermission, PERMISSION } from '@/lib/permission';
 import { Store } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 const navItems = [
-  { title: 'Dashboard', href: '/dashboard', icon: icons.dashboard },
-  { title: 'Users', href: '/users', icon: icons.user },
-  { title: 'Categories', href: '/categories', icon: icons.category },
-  { title: 'Products', href: '/products', icon: icons.product },
-  { title: 'Orders', href: '/orders', icon: icons.order },
+  { title: 'Dashboard', href: '/dashboard', icon: icons.dashboard, permission: null },
+  {
+    title: 'Users',
+    href: '/users',
+    icon: icons.user,
+    permission: [PERMISSION.SHOW_USER, PERMISSION.SHOW_TRAINEE],
+  },
+  {
+    title: 'Categories',
+    href: '/categories',
+    icon: icons.category,
+    permission: [PERMISSION.SHOW_CATEGORY],
+  },
+  {
+    title: 'Products',
+    href: '/products',
+    icon: icons.product,
+    permission: [PERMISSION.SHOW_PRODUCT],
+  },
+  {
+    title: 'Orders',
+    href: '/orders',
+    icon: icons.order,
+    permission: [PERMISSION.SHOW_ORDER],
+  },
 ];
 
 interface AppSidebarProps {
   username?: string;
+  permissions?: Permission[];
 }
 
-export function AppSidebar({ username }: AppSidebarProps) {
+export function AppSidebar({ username, permissions }: AppSidebarProps) {
   const pathname = usePathname();
   const initials = username ? getInitials(username) : '';
   const displayName = username ?? 'Admin';
+
+  const visibleItems = navItems.filter(
+    (item) => !item.permission || hasPermission(permissions, item.permission),
+  );
 
   return (
     <Sidebar collapsible="icon">
@@ -67,7 +94,7 @@ export function AppSidebar({ username }: AppSidebarProps) {
           <SidebarGroupLabel className="px-0">Management</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu className="gap-1">
-              {navItems.map((item) => {
+              {visibleItems.map((item) => {
                 const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
                 return (
                   <SidebarMenuItem key={item.title}>

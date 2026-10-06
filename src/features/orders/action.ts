@@ -1,5 +1,6 @@
 'use server';
 
+import { auth } from '@/auth';
 import { ActionResult, Order, OrderApiResponse, OrderDetail, PaginatedResponse } from '@/domain';
 import * as api from '@/features/orders/api';
 import {
@@ -11,6 +12,7 @@ import {
   UpdateOrderSchema,
 } from '@/features/orders/schema';
 import { defaultPaginatedResponse } from '@/lib/helper';
+import { PERMISSION, requirePermission } from '@/lib/permission';
 import { revalidatePath } from 'next/cache';
 import { unstable_rethrow } from 'next/navigation';
 
@@ -21,6 +23,9 @@ export async function createOrderAction(
   if (!validate.success) return { success: false, error: 'Invalid input.' };
 
   try {
+    const session = await auth();
+    requirePermission(session?.user.permissions, [PERMISSION.MANAGE_ORDER]);
+
     const response = await api.createOrder(validate.data);
     revalidatePath('/orders');
 
@@ -62,6 +67,9 @@ export async function updateOrderAction(
   if (!validate.success) return { success: false, error: 'Invalid input.' };
 
   try {
+    const session = await auth();
+    requirePermission(session?.user.permissions, [PERMISSION.MANAGE_ORDER]);
+
     await api.updateOrder(id, validate.data);
     revalidatePath('/orders');
 
@@ -77,6 +85,9 @@ export async function updateOrderAction(
 
 export async function deleteOrderAction(id: number): Promise<ActionResult<Order>> {
   try {
+    const session = await auth();
+    requirePermission(session?.user.permissions, [PERMISSION.MANAGE_ORDER]);
+
     await api.deleteOrder(id);
     revalidatePath('/orders');
 

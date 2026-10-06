@@ -1,10 +1,18 @@
 import { auth as authConfig } from '@/config/config';
-import { loginRequest, refreshTokenRequest } from '@/features/auth/api';
+import { getMe, loginRequest, refreshTokenRequest } from '@/features/auth/api';
 import { RefreshTokenResponseDto } from '@/features/auth/dto';
 import { LoginSchema } from '@/features/auth/schema';
 import axios from 'axios';
 import NextAuth from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
+import { redirect } from 'next/navigation';
+import { cache } from 'react';
+
+/**
+ * Dedupe fetch /me per page request (Server Component + Server Action
+ * dalam satu render berbagi hasil yang sama).
+ */
+const getMeCached = cache((accessToken: string) => getMe(accessToken));
 
 /**
  * Generic: fungsi refresh token, bisa dipakai project lain
@@ -54,8 +62,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.tokenExpiry = refreshed.exp;
         token.user = refreshed.user;
         token.error = undefined;
-        // token.role = myAccount.role; // ← role terbaru dari backend
-        // token.permissions = myAccount.permissions; // ← permissions terbaru dari backend
 
         return token;
       } catch (error) {
@@ -77,9 +83,25 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async session({ session, token }) {
       session.accessToken = token.accessToken;
       session.tokenExpiry = token.tokenExpiry;
-      session.user.id = token.sub as string;
-      session.user = token.user;
       session.error = token.error; // propagate RefreshTokenError ke session
+      session.user.id = token.sub ?? '';
+      session.user.username = token.user?.username ?? '';
+      session.user.name = token.user?.profile?.fullName ?? token.user?.username ?? '';
+
+      try {
+        const me = await getMeCached(token.accessToken);
+        session.user.role = me.role;
+        session.user.permissions = me.permissions;
+        session.user.name = me.profile?.fullName ?? me.username;
+      } catch (error) {
+        if (axios.isAxiosError(error)) {
+          const status = error.response?.status;
+          // Auth.js menelan throw NEXT_REDIRECT ini (session action punya try/catch),
+          // sehingga session jadi null + cookie dibersihkan; layout tetap redirect /login.
+          if (status === 401 || status === 404) redirect('/login');
+        }
+        throw error; // 500 / network error → biarkan error boundary tangani
+      }
 
       return session;
     },

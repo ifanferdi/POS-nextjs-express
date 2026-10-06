@@ -1,5 +1,6 @@
 'use server';
 
+import { auth } from '@/auth';
 import { ActionResult, Category } from '@/domain';
 import * as api from '@/features/categories/api';
 import {
@@ -8,6 +9,7 @@ import {
   UpdateCategoryInput,
   UpdateCategorySchema,
 } from '@/features/categories/schema';
+import { PERMISSION, requirePermission } from '@/lib/permission';
 import { revalidatePath } from 'next/cache';
 import { unstable_rethrow } from 'next/navigation';
 
@@ -18,6 +20,9 @@ export async function createCategoryAction(
   if (!validate.success) return { success: false, error: 'Invalid input.' };
 
   try {
+    const session = await auth();
+    requirePermission(session?.user.permissions, [PERMISSION.MANAGE_CATEGORY]);
+
     const { category: data } = await api.createCategory(validate.data);
     revalidatePath('/categories');
 
@@ -39,6 +44,9 @@ export async function updateCategoryAction(
   if (!validate.success) return { success: false, error: 'Invalid input.' };
 
   try {
+    const session = await auth();
+    requirePermission(session?.user.permissions, [PERMISSION.MANAGE_CATEGORY]);
+
     await api.updateCategory(id, validate.data);
     revalidatePath('/categories');
 
@@ -54,6 +62,9 @@ export async function updateCategoryAction(
 
 export async function deleteCategoryAction(id: number): Promise<ActionResult<Category>> {
   try {
+    const session = await auth();
+    requirePermission(session?.user.permissions, [PERMISSION.MANAGE_CATEGORY]);
+
     await api.deleteCategory(id);
     revalidatePath('/categories');
 

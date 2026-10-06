@@ -1,4 +1,4 @@
-import { Role } from '@/domain';
+import { Permission, Role } from '@/domain';
 import 'next-auth';
 import 'next-auth/jwt';
 
@@ -23,8 +23,8 @@ declare module 'next-auth' {
       id: string;
       name: string; // eksplisit, jangan andalkan DefaultSession saja
       username: string;
-      role: Role; //todo
-      permissions: Permissions[];
+      role: Role;
+      permissions: Permission[];
     };
   }
 
