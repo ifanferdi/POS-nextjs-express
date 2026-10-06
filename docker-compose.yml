@@ -1,0 +1,189 @@
+name: pos
+
+x-api-env: &api-env
+  APP_NAME: ${APP_NAME:-POS API}
+  APP_ENV: ${APP_ENV:-development}
+  APP_PORT: "8000"
+  APP_URL: http://localhost:${API_PORT:-8000}
+  DB_USER: ${DB_USER:-postgres}
+  DB_PASS: ${DB_PASS:-1234}
+  DB_NAME: ${DB_NAME:-expressjs}
+  DB_HOST: postgres
+  DB_PORT: "5432"
+  DB_USE_SSL: "false"
+  REDIS_URL: redis://redis:6379
+  RABBITMQ_URL: amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASS:-guest}@rabbitmq:5672
+  RABBITMQ_EXCHANGE: ${RABBITMQ_EXCHANGE:-exchange}
+  FILESYSTEM: s3
+  STORAGE_SECRET: ${STORAGE_SECRET:-supersecretstoragekey}
+  S3_REGION: ${S3_REGION:-us-east-1}
+  S3_ACCESS: ${S3_ACCESS:-minioadmin}
+  S3_SECRET: ${S3_SECRET:-minioadmin}
+  S3_ENDPOINT: http://minio:9000
+  S3_BUCKET: ${S3_BUCKET:-expressjs}
+  AUTH_MODE: ${AUTH_MODE:-stateful}
+  AUTH_TOKEN_TIMEOUT: ${AUTH_TOKEN_TIMEOUT:-1d}
+  AUTH_REFRESH_TOKEN_TIMEOUT: ${AUTH_REFRESH_TOKEN_TIMEOUT:-604800000}
+  HASH_SECRET: ${HASH_SECRET:-change-me-in-production}
+  MIDTRANS_SERVER_KEY: ${MIDTRANS_SERVER_KEY:-}
+  MIDTRANS_CLIENT_KEY: ${MIDTRANS_CLIENT_KEY:-}
+
+x-app-env: &app-env
+  NODE_ENV: production
+  APP_NAME: ${APP_NAME:-POS Apps}
+  APP_SUBTITLE: ${APP_SUBTITLE:-Point Of Sale Apps}
+  APP_URL: http://localhost:${APP_PORT:-3000}
+  API_BASE_URL: http://api:8000/api
+  AUTH_SECRET: ${AUTH_SECRET:-change-me-in-production}
+  NEXTAUTH_SECRET: ${AUTH_SECRET:-change-me-in-production}
+  AUTH_TRUST_HOST: "true"
+  AUTH_REFRESH_BUFFER_SECONDS: ${AUTH_REFRESH_BUFFER_SECONDS:-60}
+  POS_PRODUCT_LENGTH: ${POS_PRODUCT_LENGTH:-15}
+  NEXT_PUBLIC_MIDTRANS_CLIENT_KEY: ${NEXT_PUBLIC_MIDTRANS_CLIENT_KEY:-}
+  NEXT_PUBLIC_MIDTRANS_IS_PRODUCTION: ${NEXT_PUBLIC_MIDTRANS_IS_PRODUCTION:-false}
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASS:-1234}
+      POSTGRES_DB: ${DB_NAME:-expressjs}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-expressjs}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  rabbitmq:
+    build:
+      context: ./apps/api
+      dockerfile: plugins/rabbitmq/Dockerfile
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:-guest}
+    ports:
+      - "${RABBITMQ_PORT:-5672}:5672"
+      - "${RABBITMQ_MGMT_PORT:-15672}:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  minio:
+    # minio/minio was deleted from Docker Hub/Quay in Sept 2026; pgsty/minio is a drop-in fork.
+    image: pgsty/minio:latest
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${S3_ACCESS:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET:-minioadmin}
+    ports:
+      - "${S3_PORT:-9010}:9000"
+      - "${S3_CONSOLE_PORT:-9011}:9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  minio-init:
+    image: pgsty/mc:latest
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 ${S3_ACCESS:-minioadmin} ${S3_SECRET:-minioadmin};
+      mc mb --ignore-existing local/${S3_BUCKET:-expressjs};
+      mc anonymous set download local/${S3_BUCKET:-expressjs};
+      exit 0;
+      "
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    restart: unless-stopped
+    environment: *api-env
+    ports:
+      - "${API_PORT:-8000}:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+
+  app:
+    build:
+      context: .
+      dockerfile: apps/app/Dockerfile
+      args:
+        NEXT_PUBLIC_MIDTRANS_CLIENT_KEY: ${NEXT_PUBLIC_MIDTRANS_CLIENT_KEY:-}
+        NEXT_PUBLIC_MIDTRANS_IS_PRODUCTION: ${NEXT_PUBLIC_MIDTRANS_IS_PRODUCTION:-false}
+    restart: unless-stopped
+    environment: *app-env
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    depends_on:
+      api:
+        condition: service_started
+
+  # One-shot: push Prisma schema + seed. Run with:
+  #   docker compose --profile setup run --rm api-init
+  api-init:
+    profiles: ["setup"]
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+      target: builder
+    environment: *api-env
+    command: sh -c "bunx prisma db push && bun src/infrastructure/database/seeders/index.ts"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  redis_data:
+  rabbitmq_data:
+  minio_data:
+
+# Single shared network — all services talk to each other by service name
+# (e.g. frontend -> http://api:8000/api, api -> postgres:5432, minio:9000).
+networks:
+  default:
+    name: pos-network
+    driver: bridge

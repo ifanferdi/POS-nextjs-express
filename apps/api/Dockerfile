@@ -1,36 +1,37 @@
-# ---- Stage 1: Build ----
-FROM oven/bun:1 AS builder
+# syntax=docker/dockerfile:1
 
-WORKDIR /app
+# Backend (Express + Prisma) — build context = repo root (Bun workspace).
 
+# ---- deps: workspace deps for @pos/api (incl. dev: prisma, typescript) ----
+FROM oven/bun:1 AS deps
+WORKDIR /repo
 COPY package.json bun.lock ./
-RUN bun install --frozen-lockfile --production
+COPY apps/api/package.json apps/api/package.json
+COPY apps/app/package.json apps/app/package.json
+RUN bun install --frozen-lockfile --filter @pos/api
 
-COPY tsconfig.json prisma.config.ts ./
-COPY src/ src/
-COPY global.d.ts ./
-
+# ---- builder: generate Prisma client (also reused for db push/seed via compose) ----
+FROM deps AS builder
+ENV APP_ENV=production
+COPY apps/api ./apps/api
+WORKDIR /repo/apps/api
 RUN bunx prisma generate
-RUN bun run build
 
-# ---- Stage 2: Production ----
+# ---- runner: production image ----
 FROM oven/bun:1-slim AS runner
-
-WORKDIR /app
-
-RUN apt-get update -y && apt-get install -y --no-install-recommends ca-certificates && \
-  rm -rf /var/lib/apt/lists/*
-
-COPY --from=builder /app/package.json /app/bun.lock* ./
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/src/infrastructure/database/prisma/generated ./src/infrastructure/database/prisma/generated
-COPY --from=builder /app/src/infrastructure/database/migrations ./src/infrastructure/database/migrations
-COPY --from=builder /app/src/infrastructure/database/prisma/schemas ./src/infrastructure/database/prisma/schemas
-COPY --from=builder /app/prisma.config.ts ./
-
+WORKDIR /repo
 ENV NODE_ENV=production
 
-EXPOSE 3000
+COPY package.json bun.lock ./
+COPY apps/api/package.json apps/api/package.json
+COPY apps/app/package.json apps/app/package.json
+RUN bun install --frozen-lockfile --production --filter @pos/api && bun pm cache rm
 
-CMD ["bun", "dist/app.js"]
+COPY --from=builder /repo/apps/api/tsconfig.json /repo/apps/api/prisma.config.ts ./apps/api/
+COPY --from=builder /repo/apps/api/src ./apps/api/src
+COPY --from=builder /repo/apps/api/docs ./apps/api/docs
+
+WORKDIR /repo/apps/api
+EXPOSE 8000
+
+CMD ["bun", "src/app.ts"]

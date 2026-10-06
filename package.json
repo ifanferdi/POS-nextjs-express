@@ -1,0 +1,13 @@
+{
+  "name": "pos-nextjs-express",
+  "private": true,
+  "workspaces": ["apps/*", "packages/*"],
+  "trustedDependencies": ["argon2"],
+  "scripts": {
+    "dev:api": "cd apps/api && bun run dev",
+    "dev:app": "cd apps/app && bun run dev",
+    "build:api": "cd apps/api && bun run build",
+    "build:app": "cd apps/app && bun run build",
+    "lint": "cd apps/app && bun run lint"
+  }
+}
