@@ -2,7 +2,7 @@ name: pos
 
 x-api-env: &api-env
   APP_NAME: ${APP_NAME:-POS API}
-  APP_ENV: ${APP_ENV:-development}
+  APP_ENV: ${APP_ENV:-production}
   APP_PORT: "8000"
   APP_URL: http://localhost:${API_PORT:-8000}
   DB_USER: ${DB_USER:-postgres}
@@ -12,8 +12,8 @@ x-api-env: &api-env
   DB_PORT: "5432"
   DB_USE_SSL: "false"
   REDIS_URL: redis://redis:6379
-  RABBITMQ_URL: amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASS:-guest}@rabbitmq:5672
-  RABBITMQ_EXCHANGE: ${RABBITMQ_EXCHANGE:-exchange}
+  # RABBITMQ_URL: amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASS:-guest}@rabbitmq:5672
+  # RABBITMQ_EXCHANGE: ${RABBITMQ_EXCHANGE:-exchange}
   FILESYSTEM: s3
   STORAGE_SECRET: ${STORAGE_SECRET:-supersecretstoragekey}
   S3_REGION: ${S3_REGION:-us-east-1}
@@ -73,24 +73,24 @@ services:
       timeout: 5s
       retries: 5
 
-  rabbitmq:
-    build:
-      context: ./apps/api
-      dockerfile: plugins/rabbitmq/Dockerfile
-    restart: unless-stopped
-    environment:
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:-guest}
-    ports:
-      - "${RABBITMQ_PORT:-5672}:5672"
-      - "${RABBITMQ_MGMT_PORT:-15672}:15672"
-    volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
-    healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+  # rabbitmq:
+  #   build:
+  #     context: ./apps/api
+  #     dockerfile: plugins/rabbitmq/Dockerfile
+  #   restart: unless-stopped
+  #   environment:
+  #     RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
+  #     RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:-guest}
+  #   ports:
+  #     - "${RABBITMQ_PORT:-5672}:5672"
+  #     - "${RABBITMQ_MGMT_PORT:-15672}:15672"
+  #   volumes:
+  #     - rabbitmq_data:/var/lib/rabbitmq
+  #   healthcheck:
+  #     test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
 
   minio:
     # minio/minio was deleted from Docker Hub/Quay in Sept 2026; pgsty/minio is a drop-in fork.
@@ -137,8 +137,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
+      # rabbitmq:
+      #   condition: service_healthy
       minio-init:
         condition: service_completed_successfully
 
@@ -172,8 +172,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      rabbitmq:
-        condition: service_healthy
+      # rabbitmq:
+      #   condition: service_healthy
 
 volumes:
   postgres_data:

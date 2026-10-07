@@ -8,7 +8,7 @@ WORKDIR /repo
 COPY package.json bun.lock ./
 COPY apps/api/package.json apps/api/package.json
 COPY apps/app/package.json apps/app/package.json
-RUN bun install --frozen-lockfile --filter @pos/api
+RUN bun install --frozen-lockfile --filter ./apps/api
 
 # ---- builder: generate Prisma client (also reused for db push/seed via compose) ----
 FROM deps AS builder
@@ -25,7 +25,7 @@ ENV NODE_ENV=production
 COPY package.json bun.lock ./
 COPY apps/api/package.json apps/api/package.json
 COPY apps/app/package.json apps/app/package.json
-RUN bun install --frozen-lockfile --production --filter @pos/api && bun pm cache rm
+RUN bun install --frozen-lockfile --production --filter ./apps/api && bun pm cache rm
 
 COPY --from=builder /repo/apps/api/tsconfig.json /repo/apps/api/prisma.config.ts ./apps/api/
 COPY --from=builder /repo/apps/api/src ./apps/api/src

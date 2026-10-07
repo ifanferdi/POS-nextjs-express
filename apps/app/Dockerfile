@@ -8,7 +8,7 @@ WORKDIR /repo
 COPY package.json bun.lock ./
 COPY apps/app/package.json apps/app/package.json
 COPY apps/api/package.json apps/api/package.json
-RUN bun install --frozen-lockfile --filter @pos/app
+RUN bun install --frozen-lockfile --filter ./apps/app
 
 # ---- builder: next build (NEXT_PUBLIC_* inlined here) ----
 FROM deps AS builder
@@ -29,7 +29,7 @@ ENV NODE_ENV=production
 COPY package.json bun.lock ./
 COPY apps/app/package.json apps/app/package.json
 COPY apps/api/package.json apps/api/package.json
-RUN bun install --frozen-lockfile --production --filter @pos/app && bun pm cache rm
+RUN bun install --frozen-lockfile --production --filter ./apps/app && bun pm cache rm
 
 COPY --from=builder /repo/apps/app/.next ./apps/app/.next
 COPY --from=builder /repo/apps/app/public ./apps/app/public
