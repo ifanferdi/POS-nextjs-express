@@ -15,7 +15,7 @@ import {
   MidtransChargePayload,
 } from '@/domain/infrastructures/midtrans.interface';
 import { calculateRounding } from '@/helpers/common.helper';
-import { ErrorBadRequest } from '@/helpers/error.helper';
+import { ErrorBadRequest, ErrorConflict } from '@/helpers/error.helper';
 import { Product } from '@/infrastructure/database/prisma/generated/client';
 import { publishSSEEvent } from '@/infrastructure/event-stream/sse-redis-bridge';
 import BaseUseCase from '@/use-cases/_base-use-case';
@@ -24,6 +24,13 @@ import FindAllProduct from '../product/find-all-product';
 import FindByIdUser from '../user/find-by-id-user';
 
 const EXPIRY_IN_MINUTES = config.midtrans.expiryMinutes;
+
+const IDEMPOTENCY_TTL = config.redis.idempotencyKeyTtl;
+const IDEMPOTENCY_IN_PROGRESS = '__IN_PROGRESS__';
+const IDEMPOTENCY_POLL_TIMEOUT_MS = 5_000;
+const IDEMPOTENCY_POLL_INTERVAL_MS = 100;
+
+type OrderResponse = { message: string; order: StoreOrderResponse };
 
 export default class CreateOrder extends BaseUseCase {
   private findByIdUser = new FindByIdUser(this.redisClient);
@@ -34,6 +41,50 @@ export default class CreateOrder extends BaseUseCase {
   }
 
   async execute(payload: CreateOrderDto) {
+    const key = this.idempotencyKey(payload.userId, payload.idempotencyKey);
+
+    const cached = await this.repositories.redisRepository.findOne(key);
+    if (cached && cached !== IDEMPOTENCY_IN_PROGRESS)
+      return { isIdempoten: true, data: cached as OrderResponse };
+
+    const claimed = await this.repositories.redisRepository.storeNX(
+      key,
+      IDEMPOTENCY_IN_PROGRESS,
+      IDEMPOTENCY_TTL,
+    );
+    if (!claimed) return { isIdempoten: true, data: await this.waitForIdempotency(key) };
+
+    try {
+      const result = await this.createOrderInternal(payload);
+      const data: OrderResponse = { message: 'Success.', order: result.order };
+      await this.repositories.redisRepository.store({
+        key,
+        value: data,
+        expired: IDEMPOTENCY_TTL,
+        logging: false,
+      });
+      return { isIdempoten: false, data };
+    } catch (error) {
+      await this.repositories.redisRepository.destroy(key);
+      throw error;
+    }
+  }
+
+  private idempotencyKey(userId: number, key: string) {
+    return `order:idempotency:${userId}:${key}`;
+  }
+
+  private async waitForIdempotency(key: string): Promise<OrderResponse> {
+    const deadline = Date.now() + IDEMPOTENCY_POLL_TIMEOUT_MS;
+    while (Date.now() < deadline) {
+      await new Promise((r) => setTimeout(r, IDEMPOTENCY_POLL_INTERVAL_MS));
+      const value = await this.repositories.redisRepository.findOne(key);
+      if (value && value !== IDEMPOTENCY_IN_PROGRESS) return value as OrderResponse;
+    }
+    throw new ErrorConflict('Permintaan serupa sedang diproses. Silakan coba lagi.');
+  }
+
+  private async createOrderInternal(payload: CreateOrderDto) {
     const productIds = payload.items.map((i) => i.productId);
     const { data: products } = await this.findAllProducts.execute({
       ids: productIds,
