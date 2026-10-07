@@ -4,7 +4,7 @@ import { RefreshTokenResponseDto } from '@/features/auth/dto';
 import { LoginSchema } from '@/features/auth/schema';
 import axios from 'axios';
 import NextAuth from 'next-auth';
-import Credentials from 'next-auth/providers/credentials';
+import Credentials, { CredentialsConfig } from 'next-auth/providers/credentials';
 import { redirect } from 'next/navigation';
 import { cache } from 'react';
 
@@ -110,7 +110,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   pages: { signIn: '/login' },
 });
 
-function handleSignIn(): import('@auth/core/providers').Provider {
+function handleSignIn(): CredentialsConfig {
   return Credentials({
     name: 'Credentials',
     credentials: {
