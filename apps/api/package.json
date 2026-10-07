@@ -51,10 +51,10 @@
     "uuid": "^13.0.0",
     "yaml": "^2.9.0",
     "prisma": "^7.9.1",
+    "@faker-js/faker": "^9.9.0",
     "zod": "^3.21.4"
   },
   "devDependencies": {
-    "@faker-js/faker": "^9.9.0",
     "@trivago/prettier-plugin-sort-imports": "^5.2.2",
     "@types/amqplib": "^0.10.7",
     "@types/argon2": "^0.14.1",
