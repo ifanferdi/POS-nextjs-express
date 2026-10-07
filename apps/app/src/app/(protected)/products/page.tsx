@@ -1,0 +1,73 @@
+import { ProductFilter } from '@/app/(protected)/products/_components/product-filter';
+import { ProductFormDialog } from '@/app/(protected)/products/_components/product-form-dialog';
+import { ProductSearch } from '@/app/(protected)/products/_components/product-search';
+import { ProductTableSection } from '@/app/(protected)/products/_components/product-table';
+import { ProductTableSkeleton } from '@/app/(protected)/products/_components/product-table-skeleton';
+import { auth } from '@/auth';
+import { CategoryOption, ProductRelation } from '@/domain';
+import { getAllCategories } from '@/features/categories/api';
+import { GetAllProductParams } from '@/features/products/schema';
+import { hasPermission, PERMISSION } from '@/lib/permission';
+import { forbidden } from 'next/navigation';
+import { Suspense } from 'react';
+
+interface ProductsPageProps {
+  searchParams: Promise<{
+    page?: string;
+    q?: string;
+    'categoryId[]'?: string[];
+    isActive?: string;
+  }>;
+}
+
+export default async function ProductsPage({ searchParams }: ProductsPageProps) {
+  const session = await auth();
+  if (!hasPermission(session?.user.permissions, [PERMISSION.SHOW_PRODUCT])) forbidden();
+
+  const { page, q, isActive, ...props } = await searchParams;
+  const categoryIds =
+    typeof props['categoryId[]'] === 'string' ? [props['categoryId[]']] : props['categoryId[]'];
+
+  const pageNum = Number(page ?? 1);
+  const categoryIdsNum =
+    categoryIds && categoryIds.length > 0 ? categoryIds.map((val) => Number(val)) : undefined;
+  const isActiveBool = isActive === 'true' ? true : isActive === 'false' ? false : undefined;
+
+  const params: GetAllProductParams = {
+    page: pageNum,
+    q,
+    categoryId: categoryIdsNum,
+    isActive: isActiveBool,
+    with: [ProductRelation.CATEGORIES],
+    orderBy: ['name:asc'],
+  };
+
+  const { data: categories } = await getAllCategories<CategoryOption>({
+    limit: -1,
+    columns: ['id', 'name'],
+    orderBy: ['name:asc'],
+  });
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Products</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Manage your application products</p>
+        </div>
+        <ProductFormDialog mode="create" categories={categories} />
+      </div>
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <Suspense fallback={null}>
+          <ProductSearch />
+        </Suspense>
+        <Suspense fallback={null}>
+          <ProductFilter categories={categories} />{' '}
+        </Suspense>
+      </div>
+      <Suspense fallback={<ProductTableSkeleton />}>
+        <ProductTableSection categories={categories} params={params} />
+      </Suspense>
+    </div>
+  );
+}
