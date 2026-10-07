@@ -1,116 +1,97 @@
-# User Role Management — Next.js Boilerplate
+# @pos/app — Next.js frontend
 
-Boilerplate Next.js (App Router) untuk aplikasi dengan autentikasi, refresh token proaktif, dan RBAC (Role-Based Access Control). Didesain agar mudah dipakai ulang sebagai starter project lain — bagian generic (auth mechanism) dipisah dari bagian project-specific (RBAC fields).
+Boilerplate Next.js (App Router) for applications with authentication, proactive refresh-token handling, and RBAC (Role-Based Access Control). Designed to be reused as a starter: the generic parts (auth mechanism) are separated from the project-specific parts (RBAC fields).
 
 ## Stack
 
-| Kategori | Library |
+| Category | Library |
 |---|---|
-| Framework | Next.js (App Router, Turbopack) |
-| Bahasa | TypeScript |
-| Styling | Tailwind CSS + shadcn/ui (preset Nova, base Radix) |
-| Auth | NextAuth v5 (`5.0.0-beta.31`, Credentials Provider) |
-| Form & Validasi | React Hook Form + Zod |
-| Data fetching (client) | TanStack Query — dipakai terbatas, untuk skenario interaktif (search/filter/pagination) |
-| State management | Zustand — khusus UI state (modal, sidebar), BUKAN untuk token/session |
-| HTTP client | Axios — dipakai di server-side (auth callback, refresh token) |
+| Framework | Next.js 16 (App Router, Turbopack) |
+| Language | TypeScript |
+| Styling | Tailwind CSS v4 + shadcn/ui (preset Nova, base Radix) |
+| Auth | NextAuth v5 (`5.0.0-beta.31`, Credentials provider) |
+| Form & validation | React Hook Form + Zod |
+| Data fetching (client) | TanStack Query — limited, for interactive scenarios (search/filter/pagination) |
+| State management | Zustand — UI state only (modal, sidebar, POS cart), NOT tokens/session |
+| HTTP client | Axios — server-side (auth callback, refresh token, server API client) |
+| Realtime | SSE (server-sent events) via an API route proxy |
 | Package manager | Bun |
 
-## Filosofi Arsitektur
+## Architecture philosophy
 
-1. **Server Component first** — semua operasi *read* (GET) dilakukan di Server Component. Request ke backend terjadi server-to-server, sehingga endpoint, header, dan token **tidak terlihat** di Network tab browser.
-2. **Server Actions untuk mutasi** — operasi Create/Update/Delete memakai Server Actions (`'use server'`), tetap hidden dari client, tanpa perlu bikin API route terpisah.
-3. **Token tidak pernah ada di browser** — access token & refresh token disimpan di dalam JWT session NextAuth, terenkripsi dalam cookie httpOnly. Tidak ada token di localStorage maupun di state Zustand.
-4. **Refresh token proaktif** — dicek di callback `jwt()` NextAuth setiap session diakses, sebelum token dipakai, bukan reaktif menunggu response 401.
+1. **Server Components first** — all reads (GET) run in Server Components. Requests happen server-to-server, so endpoints, headers, and tokens are never visible in the browser's Network tab.
+2. **Server Actions for mutations** — Create/Update/Delete use Server Actions (`'use server'`), hidden from the client, without separate API routes.
+3. **Tokens never reach the browser** — access and refresh tokens live inside the NextAuth JWT session, encrypted in an httpOnly cookie. No tokens in localStorage or Zustand state.
+4. **Proactive refresh** — checked in the NextAuth `jwt()` callback every time the session is accessed, before the token is used, rather than reacting to a 401.
 
-## Struktur Folder
+## Folder structure
 
 ```
-src/
-├── app/                                  # Routing (App Router)
+apps/app/
+├── app/
 │   ├── (auth)/
-│   │   └── login/
-│   │       └── page.tsx                 # Server Component — render form login
+│   │   └── login/page.tsx           # Login page
 │   ├── (protected)/
-│   │   ├── layout.tsx                   # Server Component — cek session, redirect ke /login kalau belum auth
-│   │   ├── users/
-│   │   │   ├── page.tsx                 # Server Component — fetch list user
-│   │   │   └── [id]/
-│   │   │       └── page.tsx             # Server Component — fetch detail user
-│   │   ├── roles/
-│   │   │   └── page.tsx
-│   │   └── permissions/
-│   │       └── page.tsx
+│   │   ├── layout.tsx               # Session guard — redirects to /login if unauthenticated
+│   │   ├── dashboard/               # POS dashboard
+│   │   ├── users/                   # + _components/ (tables, dialogs)
+│   │   ├── products/
+│   │   ├── categories/
+│   │   └── orders/
+│   ├── (pos)/
+│   │   └── pos/                     # POS cart screen
 │   ├── api/
-│   │   └── auth/
-│   │       └── [...nextauth]/
-│   │           └── route.ts             # NextAuth handler — re-export dari src/auth.ts
-│   ├── layout.tsx                       # Root layout
-│   └── page.tsx                         # Landing — redirect ke /users atau /login
+│   │   ├── auth/[...nextauth]/route.ts   # NextAuth handler (re-exported from auth.ts)
+│   │   └── sse/route.ts             # SSE proxy to the backend
+│   ├── layout.tsx
+│   └── page.tsx                     # Landing — redirects to /dashboard or /login
 │
-├── features/                            # Feature-based modules (mirip module scoping di NestJS)
-│   ├── auth/
-│   │   ├── dto/
-│   │   │   └── login-response.dto.ts      # bentuk response dari POST /auth/login & /auth/refresh-token
-│   │   ├── actions/
-│   │   │   └── login.action.ts          # Server Action — panggil signIn()
-│   │   ├── lib/
-│   │   │   └── auth.config.ts           # Config Credentials Provider + JWT callback (refresh logic)
-│   │   └── components/
-│   │       └── login-form.tsx           # 'use client' — RHF + Zod
-│   │
+├── features/                        # Feature-based modules
+│   ├── auth/                        # schema.ts, dto.ts, api.ts, action.ts
 │   ├── users/
-│   │   ├── dto/                         # dto users feature 
-│   │   ├── actions/                     # create-user.action.ts, update-user.action.ts, delete-user.action.ts
-│   │   ├── lib/                         # user.queries.ts — fetch function untuk Server Component
-│   │   ├── schemas/                     # user.schema.ts — Zod schema
-│   │   ├── types/                       # user.types.ts — tipe domain User
-│   │   └── components/                 # user-table.tsx, user-form-dialog.tsx
-│   │
-│   ├── roles/                           # struktur identik dengan users/
-│   └── permissions/                     # struktur identik dengan users/
+│   ├── products/
+│   ├── categories/
+│   ├── orders/
+│   ├── payments/
+│   ├── roles/
+│   └── uploads/
 │
+├── domain/                          # Shared domain types (*.types.ts) + barrel index
 ├── components/
-│   ├── ui/                              # shadcn/ui components (Button, Dialog, Table, dll)
-│   └── shared/
-│       ├── require-permission.tsx       # Component show/hide berdasarkan permission user
-│       └── app-sidebar.tsx
-│
-├── lib/
-│   └── utils.ts                         # cn() dari shadcn, helper umum
-│
-├── stores/
-│   └── ui-store.ts                      # Zustand — HANYA UI state, bukan token/session
-│
-├── config/
-│   └── config.ts                       # Resolusi terpusat dari environment variable
-│
-├── types/
-│   └── next-auth.d.ts                  # Module augmentation untuk Session & JWT NextAuth
-│
-└── auth.ts                              # Root NextAuth config — export { auth, signIn, signOut, handlers }
+│   ├── ui/                          # shadcn/ui components (Button, Dialog, Table, ...)
+│   └── shared/                      # table-server, top-bar, filter, status-page, error, ...
+├── lib/                             # api-server, permission, sse-proxy, utils, base.schema, helper
+├── store/                           # Zustand — pos-cart-store (UI/cart state only)
+├── config/config.ts                 # Centralized env resolution (typed)
+├── types/next-auth.d.ts             # NextAuth Session & JWT module augmentation
+└── auth.ts                          # Root NextAuth config — exports { handlers, signIn, signOut, auth }
 ```
 
-## Penamaan File (Konvensi)
+## Feature file convention
 
-| Suffix | Arti | Dijalankan di |
+Each feature module holds flat, consistently named files:
+
+| File | Purpose | Runs on |
 |---|---|---|
-| `.action.ts` | Server Action | Server (dipanggil dari Client Component via `<form action={...}>` atau event handler) |
-| `.queries.ts` | Fetch function untuk data read | Server (dipanggil dari Server Component) |
-| `.schema.ts` | Zod schema validasi | Bisa dipakai di server (Server Action) maupun client (React Hook Form resolver) |
-| `.types.ts` | Tipe TypeScript domain-specific | Universal |
-| `.d.ts` | Module augmentation / global declaration | Tidak pernah di-import manual, otomatis terbaca TypeScript |
+| `schema.ts` | Zod validation schema | Server (action) and client (React Hook Form resolver) |
+| `api.ts` | Fetch functions for reads | Server (called from Server Components/actions) |
+| `action.ts` | Server Actions (mutations) | Server (called from Client Components) |
+| `dto.ts` | Request/response DTO types | Universal |
 
-## Generic vs Project-Specific
+Not every feature has all four files — add them as needed. Feature-specific UI components live in `app/(protected)/<feature>/_components/`.
 
-Karena boilerplate ini dimaksudkan untuk dipakai ulang, beberapa bagian sengaja dipisah:
+## Generic vs project-specific
 
-| Bagian | Sifat | Catatan |
+Because this is meant to be reused, some parts are deliberately separated:
+
+| Part | Nature | Notes |
 |---|---|---|
-| Refresh token mechanism (`jwt()` callback) | **Generic** | Bisa dipakai project lain tanpa modifikasi besar |
-| Server Component / Server Action pattern | **Generic** | Arsitektur dasar, tidak terikat domain |
-| Field `role`, `permissions` di session (`next-auth.d.ts`) | **Project-specific** | Khusus kebutuhan RBAC, bisa dihapus/disesuaikan untuk project tanpa RBAC |
-| Feature `users/roles/permissions` | **Reference implementation** | Contoh pola untuk ditiru saat menambah feature baru (misal `products`, `orders`) |
+| Refresh-token mechanism (`jwt()` callback) | Generic | Reusable in other projects without major changes |
+| Server Component / Server Action pattern | Generic | Base architecture, not domain-bound |
+| `createServerApiClient()` (`lib/api-server.ts`) | Generic | Injects the bearer token from the session |
+| `role` / `permissions` fields on the session (`next-auth.d.ts`) | Project-specific | RBAC-specific; remove/adjust for non-RBAC projects |
+| `PERMISSION` constants (`lib/permission.ts`) | Project-specific | Must match the backend routes |
+| Feature modules (`users`, `products`, ...) | Reference implementation | Pattern to copy when adding a new feature |
 
 ## Setup
 
@@ -118,32 +99,33 @@ Karena boilerplate ini dimaksudkan untuk dipakai ulang, beberapa bagian sengaja 
 # 1. Install dependencies
 bun install
 
-# 2. Copy environment variables
-cp .env.example .env
+# 2. Configure environment
+#    Defaults live in config/config.ts; override via .env
+#    Required: NEXTAUTH_SECRET, API_BASE_URL
 
 # 3. Generate NEXTAUTH_SECRET
 openssl rand -base64 32
-# Paste hasilnya ke NEXTAUTH_SECRET di .env
 
-# 4. Jalankan development server
+# 4. Run the development server
 bun run dev
 ```
 
-Buka `http://localhost:3000`.
+Open `http://localhost:3000`.
 
-## Environment Variables
+## Environment variables
 
-Lihat `.env.example` untuk daftar lengkap. Variable wajib diisi:
+See `config/config.ts` and the root `docker-compose.yml` (`x-app-env`) for the full list and defaults. Key variables:
 
-- `NEXTAUTH_SECRET` — secret untuk enkripsi JWT session, **wajib** ada isinya
-- `API_BASE_URL` — URL backend Express yang menjadi sumber data
+- `NEXTAUTH_SECRET` — secret for JWT session encryption, **must be set**
+- `API_BASE_URL` — the Express backend URL (default `http://localhost:8000/api`)
+- `NEXT_PUBLIC_MIDTRANS_CLIENT_KEY` / `NEXT_PUBLIC_MIDTRANS_IS_PRODUCTION` — Midtrans Snap
 
-## Menambah Feature Baru
+## Adding a new feature
 
-Ikuti pola yang sudah ada di `features/users/`:
+Follow the existing pattern (e.g. `features/products/`):
 
-1. Buat folder `features/<nama-feature>/` dengan subfolder: `actions`, `lib`, `schemas`, `types`, `components`
-2. Definisikan Zod schema di `schemas/`
-3. Tulis fetch function (untuk Server Component) di `lib/`
-4. Tulis Server Action (untuk mutasi) di `actions/`
-5. Buat halaman di `app/(protected)/<nama-feature>/page.tsx`, panggil fetch function dari `lib/`
+1. Create `features/<feature>/` with `schema.ts`, `api.ts`, and `action.ts` (add `dto.ts` if needed).
+2. Define the Zod schema in `schema.ts`.
+3. Write fetch functions (for Server Components) in `api.ts`.
+4. Write Server Actions (for mutations) in `action.ts`.
+5. Create the page under `app/(protected)/<feature>/page.tsx` and any components in `_components/`.
