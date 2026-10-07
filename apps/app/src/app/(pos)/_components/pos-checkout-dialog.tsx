@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { CreatedOrder, PaymentMethod, PaymentMidtrans, PosLastOrder } from '@/domain';
+import { OrderApiResponse, PaymentMethod, PaymentMidtrans, PosLastOrder } from '@/domain';
 import { createOrderAction } from '@/features/orders/action';
 import { PosCheckoutForm, PosCheckoutFormSchema } from '@/features/orders/schema';
 import { calculateRounding, formatCurrency } from '@/lib/helper';
@@ -65,7 +65,13 @@ export function PosCheckoutDialog({
     PaymentMidtrans & { snapshot: CartItem[] }
   >();
   const { rounding, total } = calculateRounding(subtotal);
-  const [createdOrder, setCreatedOrder] = useState<CreatedOrder>();
+  const [createdOrder, setCreatedOrder] = useState<OrderApiResponse['order']>();
+  const [idempotencyKey, setIdempotencyKey] = useState('');
+  const [wasOpen, setWasOpen] = useState(open);
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    if (open) setIdempotencyKey(crypto.randomUUID());
+  }
 
   const form = useForm<PosCheckoutForm>({
     resolver: zodResolver(PosCheckoutFormSchema),
@@ -88,33 +94,39 @@ export function PosCheckoutDialog({
         return;
       }
 
-      const result = await createOrderAction({
-        notes: data.notes || undefined,
-        items: snapshot.map((i) => ({ productId: i.productId, quantity: i.quantity })),
-        paymentMethod: data.paymentMethod,
-        ...(data.paymentMethod === PaymentMethod.CASH && { amount: amountTendered }),
-      });
+      const key = idempotencyKey || crypto.randomUUID();
+      if (!idempotencyKey) setIdempotencyKey(key);
+
+      const result = await createOrderAction(
+        {
+          notes: data.notes || undefined,
+          items: snapshot.map((i) => ({ productId: i.productId, quantity: i.quantity })),
+          paymentMethod: data.paymentMethod,
+          ...(data.paymentMethod === PaymentMethod.CASH && { amount: amountTendered }),
+        },
+        key,
+      );
 
       if (!result.success || !result.data) {
         toast.error(result.error ?? 'Failed to create order.');
         return;
       }
-      setCreatedOrder(result.data.order);
+      setCreatedOrder(result.data);
 
       const isCash = data.paymentMethod === PaymentMethod.CASH;
 
       if (isCash) {
-        toast.success(`Order ${result.data.order.orderNumber} created successfully.`);
+        toast.success(`Order ${result.data.orderNumber} created successfully.`);
         useCartStore.getState().clear();
         onCheckoutSuccess({
-          order: result.data.order,
+          order: result.data,
           items: snapshot,
           amountTendered,
         });
         form.reset();
         setCheckoutOpen(false);
       } else {
-        setPendingPayment({ ...result.data.order.payment, snapshot });
+        setPendingPayment({ ...result.data.payment, snapshot });
       }
     });
   }
