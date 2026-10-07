@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dialog';
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
+import { PasswordInput } from '@/components/ui/password-input';
 import {
   Select,
   SelectContent,
@@ -81,8 +82,8 @@ function UserForm(props: UserFormProps) {
   const isCreateMode = mode === 'create';
   const defaultValues = {
     username: !isCreateMode && user ? user.username : '',
-    password: undefined,
-    confirmPassword: undefined,
+    password: '',
+    confirmPassword: '',
     isActive: !isCreateMode && user ? user.isActive : true,
     roleId: !isCreateMode && user ? user.roleId : undefined,
     profile: {
@@ -189,10 +190,9 @@ function UserFormFields(props: UserFormFieldsProps) {
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
               <FieldLabel htmlFor="password">Password</FieldLabel>
-              <Input
+              <PasswordInput
                 {...field}
                 id="password"
-                type="password"
                 aria-invalid={fieldState.invalid}
                 placeholder={isEditMode ? 'Leave blank to keep current' : 'Password'}
                 autoComplete="off"
@@ -208,10 +208,9 @@ function UserFormFields(props: UserFormFieldsProps) {
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
               <FieldLabel htmlFor="confirmPassword">Confirm Password</FieldLabel>
-              <Input
+              <PasswordInput
                 {...field}
                 id="confirmPassword"
-                type="password"
                 aria-invalid={fieldState.invalid}
                 placeholder="Confirm Password"
                 autoComplete="off"

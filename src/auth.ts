@@ -12,7 +12,7 @@ import { cache } from 'react';
  * Dedupe fetch /me per page request (Server Component + Server Action
  * dalam satu render berbagi hasil yang sama).
  */
-const getMeCached = cache((accessToken: string) => getMe(accessToken));
+export const getMeCached = cache((accessToken: string) => getMe(accessToken));
 
 /**
  * Generic: fungsi refresh token, bisa dipakai project lain

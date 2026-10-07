@@ -37,32 +37,16 @@ import {
   CreateProductSchema,
   UpdateProductInput,
 } from '@/features/products/schema';
-import { generatePresignUrlAction } from '@/features/uploads/api';
-import { ImageFileSchema, PresignUrlInput, PresignUrlSchema } from '@/features/uploads/schema';
+import { ImageFileSchema } from '@/features/uploads/schema';
+import { uploadImageToS3 } from '@/lib/upload';
 import { cn } from '@/lib/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
-import axios from 'axios';
 import _ from 'lodash';
 import { ChevronDown, Loader2Icon, PlusIcon, XIcon } from 'lucide-react';
 import Image from 'next/image';
 import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { Controller, useForm, UseFormRegisterReturn, UseFormReturn } from 'react-hook-form';
 import { toast } from 'sonner';
-
-async function uploadImageToS3(file: File) {
-  const input: PresignUrlInput = {
-    filename: file.name,
-    fileType: 'image',
-    contentType: file.type as PresignUrlInput['contentType'],
-    fileSize: file.size,
-  };
-  PresignUrlSchema.parse(input);
-
-  const presign = await generatePresignUrlAction(input);
-  await axios.put(presign.presignUrl, file, { headers: { 'Content-Type': file.type } });
-
-  return presign.key;
-}
 
 type ProductFormValues = (CreateProductInput | UpdateProductInput) & { imageFile?: FileList };
 const ProductFormSchema = CreateProductSchema.extend({ imageFile: ImageFileSchema });

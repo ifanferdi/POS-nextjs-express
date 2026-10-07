@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { logoutAction } from '@/features/auth/action';
-import { LogOut, ShoppingCart } from 'lucide-react';
+import { LogOut, ShoppingCart, UserRound } from 'lucide-react';
 import Link from 'next/link';
 import { useTransition } from 'react';
 
@@ -50,6 +50,13 @@ export function TopBar({ isPosPage, username }: { isPosPage: boolean; username?:
               <span className="text-xs font-normal text-muted-foreground">Signed in</span>
             </div>
           </DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem asChild className="cursor-pointer">
+            <Link href="/account">
+              <UserRound />
+              <span>My Account</span>
+            </Link>
+          </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
             variant="destructive"
