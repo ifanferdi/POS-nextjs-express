@@ -18,6 +18,7 @@ import { unstable_rethrow } from 'next/navigation';
 
 export async function createOrderAction(
   input: CreateOrderInput,
+  idempotencyKey: string,
 ): Promise<ActionResult<OrderApiResponse['order']>> {
   const validate = CreateOrderSchema.safeParse(input);
   if (!validate.success) return { success: false, error: 'Invalid input.' };
@@ -26,7 +27,8 @@ export async function createOrderAction(
     const session = await auth();
     requirePermission(session?.user.permissions, [PERMISSION.MANAGE_ORDER]);
 
-    const response = await api.createOrder(validate.data);
+    const response = await api.createOrder(validate.data, idempotencyKey);
+
     revalidatePath('/orders');
 
     return { success: true, data: response.order };

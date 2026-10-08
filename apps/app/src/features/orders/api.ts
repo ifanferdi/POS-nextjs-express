@@ -28,9 +28,11 @@ export async function getOrderById<T = Order>(id: number, relation?: OrderRelati
   return response.data;
 }
 
-export async function createOrder(input: CreateOrderInput) {
+export async function createOrder(input: CreateOrderInput, idempotencyKey: string) {
   const api = await createServerApiClient();
-  const response = await api.post<OrderApiResponse>('/v1/orders', input);
+  const response = await api.post<OrderApiResponse>('/v1/orders', input, {
+    headers: { 'Idempotency-Key': idempotencyKey },
+  });
 
   return response.data;
 }

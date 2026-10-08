@@ -50,6 +50,7 @@ export function PosReceipt({ lastOrder, onNewTransaction }: PosReceiptProps) {
                 label="Payment"
                 value={order.payment.method ? getPaymentMethod(order.payment.method) : '-'}
               />
+              <ReceiptRow label="Cashier" value={order ? order.user.profile.fullName : '-'} />
             </div>
 
             <div className="space-y-1.5">

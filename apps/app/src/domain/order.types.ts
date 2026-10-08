@@ -71,7 +71,7 @@ export interface CreatedOrder extends Order {
 }
 
 export interface PosLastOrder {
-  order: CreatedOrder;
+  order: OrderApiResponse['order'];
   items: CartItem[];
   amountTendered?: number;
   qrCodeUrl?: string;
@@ -81,12 +81,10 @@ export interface PosLastOrder {
 }
 
 export interface OrderApiResponse extends ApiResponse {
-  order: {
-    order: CreatedOrder;
-    paymentType?: string;
-    vaNumber?: number;
-    qrCodeUrl?: string;
-    expiryTime?: string;
+  order: CreatedOrder & {
+    orderItems: OrderItem[];
+    payment: Payment & { midtransDetail: MidtransPaymentDetail };
+    user: UserProfile;
   };
 }
 
