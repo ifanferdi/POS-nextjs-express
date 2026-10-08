@@ -5,7 +5,7 @@ import axios from 'axios';
 /** Upload file ke storage lewat presigned URL, kembalikan `key` (imagePath). */
 export async function uploadImageToS3(
   file: File,
-  folder?: PresignUrlInput['folder'],
+  folder: PresignUrlInput['folder'],
 ): Promise<string> {
   const input: PresignUrlInput = {
     filename: file.name,
