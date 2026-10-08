@@ -137,7 +137,7 @@ function ProductForm(props: ProductFormProps) {
       try {
         const { imageFile, ...rest } = input;
         const imagePath = imageFile?.[0]
-          ? await uploadImageToS3(imageFile[0])
+          ? await uploadImageToS3(imageFile[0], 'products')
           : (rest.imagePath ?? null);
         const payload = { ...rest, imagePath } as CreateProductInput | UpdateProductInput;
 
