@@ -121,7 +121,7 @@ export default class OrderRepository
         include: {
           orderItems: { include: { product: true } },
           payment: { include: { midtransDetail: true } },
-          user: { include: { profile: true } },
+          user: { omit: { password: true }, include: { profile: true } },
         },
       })
       .finally() as Promise<T>;

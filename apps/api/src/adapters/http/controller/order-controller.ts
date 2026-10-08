@@ -60,6 +60,7 @@ export default class OrderController extends BaseController {
   create = asyncHandler(async (req: e.Request & Record<string, any>, res: e.Response) => {
     const payload: CreateOrderDto = {
       userId: req.user?.id,
+      idempotencyKey: String(req.headers['idempotency-key'] ?? ''),
       notes: req.body.notes,
       items: req.body.items,
       paymentMethod: req.body.paymentMethod,
@@ -68,9 +69,9 @@ export default class OrderController extends BaseController {
 
     CreateOrderSchema.parse(payload);
 
-    const order = await this.useCases.orderUseCase.createOrder.execute(payload);
+    const result = await this.useCases.orderUseCase.createOrder.execute(payload);
 
-    res.status(HttpStatusCode.CREATED).send({ message: 'Success.', order });
+    res.status(result.isIdempoten ? HttpStatusCode.OK : HttpStatusCode.CREATED).send(result.data);
   });
 
   updateStatus = asyncHandler(async (req: e.Request, res: e.Response) => {

@@ -47,6 +47,7 @@ const OrderItemSchema = z.object({
 export const CreateOrderSchema = z
   .object({
     userId: NumberSchema,
+    idempotencyKey: StringSchema.uuid('Idempotency-Key must be a valid UUID.'),
     notes: StringSchema.optional(),
     items: z.array(OrderItemSchema).min(1),
     paymentMethod: z.nativeEnum(PaymentMethod),

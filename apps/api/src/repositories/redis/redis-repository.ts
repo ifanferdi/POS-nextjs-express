@@ -35,6 +35,11 @@ export default class RedisRepository {
       console.info(`Success save data to redis key: ${key} & value: ${JSON.stringify(value)}`);
   }
 
+  async storeNX(key: string, value: string, expired: number): Promise<boolean> {
+    const result = await this.redis.set(key, value, { NX: true, EX: expired });
+    return result === 'OK';
+  }
+
   async destroy(key: string) {
     if (await this.redis.del(key)) console.info(`Success delete data from redis key: ${key}`);
   }
