@@ -20,6 +20,7 @@ x-api-env: &api-env
   S3_ACCESS: ${S3_ACCESS:-minioadmin}
   S3_SECRET: ${S3_SECRET:-minioadmin}
   S3_ENDPOINT: http://minio:9000
+  S3_PUBLIC_ENDPOINT: http://localhost:9010
   S3_BUCKET: ${S3_BUCKET:-expressjs}
   AUTH_MODE: ${AUTH_MODE:-stateful}
   AUTH_TOKEN_TIMEOUT: ${AUTH_TOKEN_TIMEOUT:-1d}
@@ -93,8 +94,8 @@ services:
   #     retries: 5
 
   minio:
-    # minio/minio was deleted from Docker Hub/Quay in Sept 2026; pgsty/minio is a drop-in fork.
-    image: pgsty/minio:latest
+    # minio/minio was deleted from Docker Hub/Quay in Sept 2026; pgsty/silo is a drop-in fork.
+    image: pgsty/silo:latest
     restart: unless-stopped
     command: server /data --console-address ":9001"
     environment:
