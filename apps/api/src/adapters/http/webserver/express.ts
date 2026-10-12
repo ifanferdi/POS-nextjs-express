@@ -20,9 +20,7 @@ export default function routes(app: Express, controllers: Controllers, useCases:
   app.use(express.urlencoded({ extended: true }));
   app.use(morgan('dev'));
 
-  app.use(
-    cors({ origin: ['http://localhost:3000', 'http://192.168.111.212:3000'], credentials: true }),
-  );
+  app.use(cors({ origin: ['http://localhost:3000', ...config.cors.origins], credentials: true }));
 
   // SWAGGER UI
   const swaggerDocument = parse(

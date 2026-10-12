@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc ",
-    "start": "bun dist/app.js",
+    "start": "bun src/app.ts",
     "dev": "bun --watch src/app.ts",
     "prisma": "bunx prisma generate",
     "db:drop": "bun run prisma && bunx prisma migrate reset --force",

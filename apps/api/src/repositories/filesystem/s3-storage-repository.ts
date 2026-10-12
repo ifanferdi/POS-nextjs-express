@@ -29,6 +29,7 @@ export default class S3StorageRepository {
         region,
         credentials: { accessKeyId, secretAccessKey },
         endpoint,
+        requestChecksumCalculation: 'WHEN_REQUIRED',
       });
     }
 

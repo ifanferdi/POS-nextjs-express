@@ -1,4 +1,4 @@
-# ---- Stage 1: Build ----
+# ---- Stage 1: Build (generate Prisma client) ----
 FROM oven/bun:1 AS builder
 
 WORKDIR /app
@@ -6,12 +6,11 @@ WORKDIR /app
 COPY package.json bun.lock ./
 RUN bun install --frozen-lockfile --production
 
-COPY tsconfig.json prisma.config.ts ./
+COPY tsconfig.json prisma.config.ts global.d.ts ./
 COPY src/ src/
-COPY global.d.ts ./
+COPY docs/openapi.yaml docs/openapi.yaml
 
 RUN bunx prisma generate
-RUN bun run build
 
 # ---- Stage 2: Production ----
 FROM oven/bun:1-slim AS runner
@@ -23,14 +22,12 @@ RUN apt-get update -y && apt-get install -y --no-install-recommends ca-certifica
 
 COPY --from=builder /app/package.json /app/bun.lock* ./
 COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/src/infrastructure/database/prisma/generated ./src/infrastructure/database/prisma/generated
-COPY --from=builder /app/src/infrastructure/database/migrations ./src/infrastructure/database/migrations
-COPY --from=builder /app/src/infrastructure/database/prisma/schemas ./src/infrastructure/database/prisma/schemas
-COPY --from=builder /app/prisma.config.ts ./
+COPY --from=builder /app/tsconfig.json /app/global.d.ts /app/prisma.config.ts ./
+COPY --from=builder /app/src ./src
+COPY --from=builder /app/docs ./docs
 
 ENV NODE_ENV=production
 
 EXPOSE 3000
 
-CMD ["bun", "dist/app.js"]
+CMD ["bun", "src/app.ts"]

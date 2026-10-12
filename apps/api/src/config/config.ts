@@ -4,17 +4,23 @@ import databaseConfig from './database.config';
 import midtransConfig from './midtrans.config';
 import storageConfig from './storage.config';
 
-const APP_PORT = process.env.APP_PORT || 3000;
+const APP_PORT = process.env.PORT || process.env.APP_PORT || 3000;
 const config = {
   app: {
     name: process.env.APP_NAME || 'ExpressJS Typescript',
     version: process.env.APP_VERSION || '1.0.0',
-    env: (process.env.APP_ENV.toLowerCase() || 'development') as
+    env: (process.env.APP_ENV || 'development').toLowerCase() as
       | 'development'
       | 'staging'
       | 'production',
     port: APP_PORT,
     url: process.env.APP_URL || `http://localhost:${APP_PORT}`,
+  },
+  cors: {
+    origins: (process.env.CORS_ORIGINS || 'http://localhost:3000')
+      .split(',')
+      .map((origin) => origin.trim())
+      .filter(Boolean),
   },
   database: databaseConfig,
   auth: authConfig,
