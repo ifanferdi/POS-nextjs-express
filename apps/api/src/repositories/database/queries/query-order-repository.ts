@@ -22,6 +22,8 @@ export default class QueryOrderRepository {
     if (relation?.includes(OrderRelation.ORDER_ITEMS_PRODUCT))
       include.orderItems = { include: { product: true } };
     if (relation?.includes(OrderRelation.PAYMENT)) include.payment = true;
+    if (relation?.includes(OrderRelation.PAYMENT))
+      include.payment = { include: { midtransDetail: true } };
 
     return Object.keys(include).length ? include : undefined;
   }
