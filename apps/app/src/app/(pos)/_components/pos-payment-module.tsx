@@ -1,7 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { app } from '@/config/config';
+import * as config from '@/config/config';
 import { CreatedOrder, Payment, PaymentStatus } from '@/domain';
 import { getPaymentMethod, PaymentMethod, PaymentMidtrans } from '@/domain/payment.types';
 import { getPaymentByOrderId, mockMidtransPaymentAction } from '@/features/payments/action';
@@ -74,6 +74,14 @@ export function PosPaymentModule({
             <p className="max-w-xs text-center text-xs text-muted-foreground">
               Open your e-wallet app and scan this code to complete payment
             </p>
+            {!config.midtrans.isProduction && (
+              <MockMidtransPaymentButton
+                orderNumber={orderNumber}
+                onPaid={onPaid}
+                paymentMethod={paymentMethod}
+                grossAmount={payment.amount}
+              />
+            )}
           </div>
         ) : payment.midtransDetail.vaNumber ? (
           <div className="flex w-full max-w-md flex-col items-center gap-6">
@@ -111,7 +119,7 @@ export function PosPaymentModule({
               isPaymentStatusLoading={isPaymentStatusLoading}
               setIsPaymentStatusLoading={setIsPaymentStatusLoading}
             />
-            {app.env !== 'production' && (
+            {!config.midtrans.isProduction && (
               <MockMidtransPaymentButton
                 orderNumber={orderNumber}
                 onPaid={onPaid}

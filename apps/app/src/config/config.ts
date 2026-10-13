@@ -86,6 +86,9 @@ export const files = {
 };
 
 export const midtrans = {
+  isProduction:
+    (process.env.APP_ENV || '').toLowerCase() === 'production' &&
+    process.env.MIDTRANS_IS_PRODUCTION?.toLowerCase() === 'true',
   clientKey: process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY ?? '',
   snapUrl:
     process.env.NEXT_PUBLIC_MIDTRANS_IS_PRODUCTION === 'true'
