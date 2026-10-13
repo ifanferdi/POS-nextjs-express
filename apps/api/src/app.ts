@@ -3,7 +3,6 @@ import config from '@/config/config';
 import 'dotenv/config';
 import express, { Express } from 'express';
 import * as http from 'http';
-import { closeSSERedisBridge } from './infrastructure/event-stream/sse-redis-bridge';
 import { startSupabaseKeepAlive } from './infrastructure/database/keep-alive';
 
 const PORT = config.app.port || 8000;

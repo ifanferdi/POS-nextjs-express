@@ -1,10 +1,8 @@
+import { SUPABASE_KEEPALIVE_INTERVAL_MS } from '@/config/database.config';
 import { prisma } from '@/infrastructure/database/prisma/prisma';
 
-const DEFAULT_INTERVAL_MS = 6 * 60 * 60 * 1000; // 6 jam
-
-// ponytail: cegah Supabase free tier di-pause (>7 hari idle) dengan ping berkala.
 export function startSupabaseKeepAlive() {
-  const intervalMs = Number(process.env.SUPABASE_KEEPALIVE_INTERVAL_MS) || DEFAULT_INTERVAL_MS;
+  const intervalMs = SUPABASE_KEEPALIVE_INTERVAL_MS;
 
   const ping = async () => {
     try {
