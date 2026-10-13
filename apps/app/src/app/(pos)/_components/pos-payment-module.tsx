@@ -21,7 +21,7 @@ interface PosPaymentModuleProps {
   payment: PaymentMidtrans;
   onPaid: () => void;
   onExpired: () => void;
-  onCheckoutSuccess: (result: PosLastOrder) => void;
+  onCheckoutSuccess?: (result: PosLastOrder) => void;
 }
 
 export function PosPaymentModule({
@@ -40,8 +40,7 @@ export function PosPaymentModule({
     onEvent: ({ data }) => {
       const paidOrder = data[0];
       if (paidOrder?.orderNumber !== orderNumber) return;
-      onCheckoutSuccess(paidOrder);
-      console.log(paidOrder);
+      if (onCheckoutSuccess) onCheckoutSuccess(paidOrder);
 
       onPaid();
     },
