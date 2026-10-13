@@ -10,6 +10,7 @@ declare namespace NodeJS {
     DB_NAME: string;
     DB_HOST: string;
     DB_PORT: string;
+    DATABASE_URL: string;
 
     GRPC_PORT: number;
 

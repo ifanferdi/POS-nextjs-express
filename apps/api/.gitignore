@@ -11,3 +11,4 @@
 !README.md
 /sql/
 /reports/
+/docs/*.sql
