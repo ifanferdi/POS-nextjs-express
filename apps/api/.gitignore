@@ -6,6 +6,7 @@
 /src/infrastructure/database/prisma/generated
 .vercel
 .env*
+!.env.example
 *.md
 !README.md
 /docs/*.sql

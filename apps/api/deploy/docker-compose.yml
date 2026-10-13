@@ -4,6 +4,8 @@ services:
     container_name: pos-api
     restart: unless-stopped
     env_file: .env
+    environment:
+      APP_PORT: '3000'
     expose:
       - '3000'
 

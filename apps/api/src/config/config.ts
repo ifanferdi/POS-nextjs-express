@@ -4,7 +4,7 @@ import databaseConfig from './database.config';
 import midtransConfig from './midtrans.config';
 import storageConfig from './storage.config';
 
-const APP_PORT = process.env.PORT || process.env.APP_PORT || 3000;
+const APP_PORT = process.env.APP_PORT || 3000;
 const config = {
   app: {
     name: process.env.APP_NAME || 'ExpressJS Typescript',
