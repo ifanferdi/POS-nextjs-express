@@ -1,6 +1,6 @@
 import { OrderRelation, OrderStatus } from '@/domain/entities/enums/order.enum';
 import { PaymentStatus } from '@/domain/entities/enums/payment.enum';
-import { OrderPayment } from '@/domain/entities/models/order';
+import { OrderPayment, StoreOrderResponse } from '@/domain/entities/models/order';
 import { MidtransWebhookPayload } from '@/domain/infrastructures/midtrans.interface';
 import { ErrorBadRequest } from '@/helpers/error.helper';
 import { publishSSEEvent } from '@/infrastructure/event-stream/sse-redis-bridge';
@@ -60,9 +60,9 @@ export default class SyncMidtransToDatabase extends BaseUseCase {
       },
     );
 
-    const updatedOrder = await this.repositories.orderRepository.findOne<OrderPayment>({
+    const updatedOrder = await this.repositories.orderRepository.findOne<StoreOrderResponse>({
       id: payment.orderId,
-      with: [OrderRelation.PAYMENT],
+      with: [OrderRelation.ORDER_ITEMS_PRODUCT, OrderRelation.PAYMENT, OrderRelation.USER_PROFILE],
     });
 
     await publishSSEEvent({
