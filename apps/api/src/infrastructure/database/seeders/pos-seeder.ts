@@ -15,11 +15,13 @@ import {
 } from '@/infrastructure/database/prisma/generated/models';
 import { faker } from '@faker-js/faker';
 import axios from 'axios';
+import 'dotenv/config';
 import _ from 'lodash';
 import Progress from 'ts-progress';
 
-const TOTAL_PRODUCTS = 500_000;
-const TOTAL_ORDERS = 250_000;
+const TOTAL_PRODUCTS = Number(process.env.TOTAL_PRODUCTS) || 500_000;
+const TOTAL_ORDERS = Number(process.env.TOTAL_ORDERS) || 250_000;
+
 const CHUNK = 1000;
 
 export default class PosSeeder implements Seeder {
