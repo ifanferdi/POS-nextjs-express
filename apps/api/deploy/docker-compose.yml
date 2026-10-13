@@ -8,6 +8,44 @@ services:
       APP_PORT: '3000'
     expose:
       - '3000'
+    networks:
+      - pos-net
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:17-alpine
+    container_name: pos-db
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      PGDATA: /var/lib/postgresql/data/pgdata
+    command:
+      - postgres
+      - -c
+      - shared_buffers=128MB
+      - -c
+      - effective_cache_size=256MB
+      - -c
+      - work_mem=4MB
+      - -c
+      - maintenance_work_mem=64MB
+      - -c
+      - max_connections=50
+      - -c
+      - wal_buffers=8MB
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    shm_size: '128mb'
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - pos-net
 
   caddy:
     image: caddy:2-alpine
@@ -22,9 +60,17 @@ services:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
       - caddy_config:/config
+    networks:
+      - pos-net
     depends_on:
       - api
+
+networks:
+  pos-net:
+    name: pos-net
+    driver: bridge
 
 volumes:
   caddy_data:
   caddy_config:
+  pg_data:

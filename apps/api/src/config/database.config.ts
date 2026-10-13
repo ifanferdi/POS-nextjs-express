@@ -8,6 +8,3 @@ const url =
 const ssl = process.env.DB_USE_SSL ? process.env.DB_USE_SSL.toLowerCase() === 'true' : false;
 
 export default { url, username, password, name, host, port, ssl };
-
-export const SUPABASE_KEEPALIVE_INTERVAL_MS =
-  Number(process.env.SUPABASE_KEEPALIVE_INTERVAL_MS) || 6 * 60 * 60 * 1000; // 6 jam

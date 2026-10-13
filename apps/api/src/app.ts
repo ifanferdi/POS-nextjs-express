@@ -3,7 +3,6 @@ import config from '@/config/config';
 import 'dotenv/config';
 import express, { Express } from 'express';
 import * as http from 'http';
-import { startSupabaseKeepAlive } from './infrastructure/database/keep-alive';
 
 const PORT = config.app.port || 8000;
 
@@ -13,8 +12,6 @@ const PORT = config.app.port || 8000;
 
   await bootstrap(app);
   console.log('✅  Success connected to all resources.');
-
-  startSupabaseKeepAlive();
 
   const server = httpServer.listen(PORT, () => console.log(`✅  Listening on port: ${PORT}`));
 
