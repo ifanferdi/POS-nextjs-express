@@ -116,7 +116,7 @@ export default async function AccountPage() {
           </div>
         </section>
 
-        <section className={`${glass} p-6`}>
+        <section className={`${glass} p-6`} hidden>
           <div className="flex items-center gap-2">
             <span className="flex size-9 items-center justify-center rounded-xl bg-info/10 text-info backdrop-blur">
               <ShieldCheckIcon className="size-4" />
