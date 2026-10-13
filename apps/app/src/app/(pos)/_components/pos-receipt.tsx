@@ -22,9 +22,9 @@ interface PosReceiptProps {
 }
 
 export function PosReceipt({ lastOrder, onNewTransaction }: PosReceiptProps) {
-  const { order, items, amountTendered } = lastOrder;
+  const { orderItems: items, payment, user, ...order } = lastOrder;
   const [open, setOpen] = useState(!!lastOrder);
-  const isCash = order.payment.method === PaymentMethod.CASH && amountTendered !== undefined;
+  const isCash = payment.method === PaymentMethod.CASH;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -48,22 +48,22 @@ export function PosReceipt({ lastOrder, onNewTransaction }: PosReceiptProps) {
               />
               <ReceiptRow
                 label="Payment"
-                value={order.payment.method ? getPaymentMethod(order.payment.method) : '-'}
+                value={payment.method ? getPaymentMethod(payment.method) : '-'}
               />
-              <ReceiptRow label="Cashier" value={order ? order.user.profile.fullName : '-'} />
+              <ReceiptRow label="Cashier" value={order ? user.profile.fullName : '-'} />
             </div>
 
             <div className="space-y-1.5">
               {items.map((item) => (
                 <div key={item.productId} className="flex justify-between gap-2 text-xs">
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-medium">{item.name}</p>
+                    <p className="truncate font-medium">{item.product.name}</p>
                     <p className="text-muted-foreground">
-                      {item.quantity} x {formatCurrency(item.price)}
+                      {item.quantity} x {formatCurrency(item.product.price)}
                     </p>
                   </div>
                   <span className="shrink-0 font-medium tabular-nums">
-                    {formatCurrency(item.price * item.quantity)}
+                    {formatCurrency(item.product.price * item.quantity)}
                   </span>
                 </div>
               ))}
@@ -85,8 +85,8 @@ export function PosReceipt({ lastOrder, onNewTransaction }: PosReceiptProps) {
 
             {isCash && (
               <div className="space-y-1 text-xs">
-                <ReceiptRow label="Cash" value={formatCurrency(order.payment.amount ?? 0)} />
-                <ReceiptRow label="Change" value={formatCurrency(order.payment.change ?? 0)} />
+                <ReceiptRow label="Cash" value={formatCurrency(payment.amount ?? 0)} />
+                <ReceiptRow label="Change" value={formatCurrency(payment.change ?? 0)} />
               </div>
             )}
 

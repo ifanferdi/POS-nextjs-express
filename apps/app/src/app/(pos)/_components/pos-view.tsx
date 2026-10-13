@@ -39,7 +39,7 @@ export function PosView({ products, totalProducts, categories }: PosViewProps) {
         <PosCart onCheckoutSuccess={setLastOrder} />
       </aside>
 
-      {lastOrder && lastOrder.order.payment?.status === 'success' ? (
+      {lastOrder && lastOrder.payment?.status === 'success' ? (
         <PosReceipt lastOrder={lastOrder} onNewTransaction={() => setLastOrder(null)} />
       ) : null}
     </div>

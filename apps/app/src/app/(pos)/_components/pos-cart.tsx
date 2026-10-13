@@ -37,7 +37,7 @@ export function PosCart({ onCheckoutSuccess }: PosCartProps) {
   const count = cartCount(items);
 
   return (
-    <div className="flex h-full min-h-0 flex-col rounded-xl border border-border/60 bg-card max-lg:max-h-[70dvh]">
+    <div className="flex h-full min-h-0 flex-col rounded-xl border border-primary bg-card max-lg:max-h-[70dvh]">
       <button
         type="button"
         onClick={() => setOpen(!open)}

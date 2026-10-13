@@ -22,9 +22,7 @@ export async function getAllOrders<T = Order>(params: GetAllOrderParams) {
 
 export async function getOrderById<T = Order>(id: number, relation?: OrderRelationParams) {
   const api = await createServerApiClient();
-  const response = await api.get<T>(`/v1/orders/${id}`, {
-    params: { with: relation },
-  });
+  const response = await api.get<T>(`/v1/orders/${id}`, { params: { with: relation } });
   return response.data;
 }
 

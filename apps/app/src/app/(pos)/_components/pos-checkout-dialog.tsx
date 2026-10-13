@@ -118,11 +118,7 @@ export function PosCheckoutDialog({
       if (isCash) {
         toast.success(`Order ${result.data.orderNumber} created successfully.`);
         useCartStore.getState().clear();
-        onCheckoutSuccess({
-          order: result.data,
-          items: snapshot,
-          amountTendered,
-        });
+        onCheckoutSuccess(result.data);
         form.reset();
         setCheckoutOpen(false);
       } else {
@@ -332,6 +328,7 @@ export function PosCheckoutDialog({
                 orderNumber={createdOrder.orderNumber}
                 paymentMethod={paymentMethod}
                 payment={pendingPayment}
+                onCheckoutSuccess={onCheckoutSuccess}
                 onPaid={() => {
                   useCartStore.getState().clear();
                   toast.success('Payment received!');
@@ -342,10 +339,6 @@ export function PosCheckoutDialog({
                 onExpired={() => {
                   toast.error('Payment expired!');
                   useCartStore.getState().clear();
-                  onCheckoutSuccess({
-                    order: createdOrder,
-                    items: pendingPayment.snapshot,
-                  });
                   form.reset();
                   setPendingPayment(undefined);
                   setCheckoutOpen(false);

@@ -2,7 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import * as config from '@/config/config';
-import { CreatedOrder, Payment, PaymentStatus } from '@/domain';
+import { Payment, PaymentStatus, PosLastOrder } from '@/domain';
 import { getPaymentMethod, PaymentMethod, PaymentMidtrans } from '@/domain/payment.types';
 import { getPaymentByOrderId, mockMidtransPaymentAction } from '@/features/payments/action';
 import { useSSE } from '@/hooks/use-sse';
@@ -21,6 +21,7 @@ interface PosPaymentModuleProps {
   payment: PaymentMidtrans;
   onPaid: () => void;
   onExpired: () => void;
+  onCheckoutSuccess: (result: PosLastOrder) => void;
 }
 
 export function PosPaymentModule({
@@ -30,14 +31,18 @@ export function PosPaymentModule({
   payment,
   onPaid,
   onExpired,
+  onCheckoutSuccess,
 }: PosPaymentModuleProps) {
   const [isPaymentStatusLoading, setIsPaymentStatusLoading] = useState(false);
 
-  useSSE<CreatedOrder>({
+  useSSE<PosLastOrder>({
     events: ['order.status'],
     onEvent: ({ data }) => {
       const paidOrder = data[0];
       if (paidOrder?.orderNumber !== orderNumber) return;
+      onCheckoutSuccess(paidOrder);
+      console.log(paidOrder);
+
       onPaid();
     },
   });

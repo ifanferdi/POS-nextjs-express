@@ -1,7 +1,6 @@
 import { MidtransPaymentDetail, Payment } from '@/domain/payment.types';
 import { Product } from '@/domain/product.types';
 import { UserProfile } from '@/domain/user.types';
-import { CartItem } from '../store/pos-cart-store';
 import { ApiResponse } from './general.types';
 
 export enum OrderStatus {
@@ -70,20 +69,14 @@ export interface CreatedOrder extends Order {
   payment: Payment & { midtransDetail: MidtransPaymentDetail };
 }
 
-export interface PosLastOrder {
-  order: OrderApiResponse['order'];
-  items: CartItem[];
-  amountTendered?: number;
-  qrCodeUrl?: string;
-  vaNumber?: string;
-  paymentType?: string;
-  expiryTime?: string;
+export interface PosLastOrder extends CreatedOrder {
+  orderItems: Array<OrderItem & { product: Product }>;
+  user: UserProfile;
 }
 
 export interface OrderApiResponse extends ApiResponse {
   order: CreatedOrder & {
-    orderItems: OrderItem[];
-    payment: Payment & { midtransDetail: MidtransPaymentDetail };
+    orderItems: Array<OrderItem & { product: Product }>;
     user: UserProfile;
   };
 }
