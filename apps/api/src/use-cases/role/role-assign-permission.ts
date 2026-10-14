@@ -1,17 +1,20 @@
+import { Repositories } from '@/domain/repositories/repositories.interface';
+import ResetCachePermission from '@/use-cases/permission/reset-cache-permission';
 import {
   RoleAssignPermissionDto,
   SyncByPermissionIdsDto,
   SyncByPermissionsNameDto,
 } from '@/validations/role-validation';
 import _ from 'lodash';
-import BaseUseCase from '../_base-use-case';
-import ResetCachePermission from '@/use-cases/permission/reset-cache-permission';
 
-export default class RoleAssignPermission extends BaseUseCase {
+export default class RoleAssignPermission {
+  constructor(private repositories: Repositories) {}
+
   async execute(payload: RoleAssignPermissionDto) {
     let result: any;
 
-    if (payload.permissions) result = await this.syncByPermissionIds(payload as SyncByPermissionIdsDto);
+    if (payload.permissions)
+      result = await this.syncByPermissionIds(payload as SyncByPermissionIdsDto);
     else if (payload.permissionIds)
       result = await this.syncByPermissionsName(payload as SyncByPermissionsNameDto);
     else if (payload.addPermissions)
@@ -19,7 +22,7 @@ export default class RoleAssignPermission extends BaseUseCase {
     else if (payload.removePermissions)
       result = await this.removePermissions(payload as SyncByPermissionsNameDto);
 
-    await new ResetCachePermission(this.redisClient).execute({ roleId: payload.roleId });
+    await new ResetCachePermission(this.repositories).execute({ roleId: payload.roleId });
 
     return result;
   }

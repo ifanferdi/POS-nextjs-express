@@ -13,8 +13,8 @@ export default class ResetCachePermission extends BaseUseCase {
     const userIds = await this.getUserIds(params);
 
     for (const userId of userIds) {
-      const permissionKey = new CheckValidPermission(this.redisClient).getRedisKey(userId);
-      const meKey = new MyAccount(this.redisClient).getRedisKey(userId);
+      const permissionKey = new CheckValidPermission(this.repositories).getRedisKey(userId);
+      const meKey = new MyAccount(this.repositories).getRedisKey(userId);
 
       await this.repositories.redisRepository.destroy(permissionKey);
       await this.repositories.redisRepository.destroy(meKey);
