@@ -23,7 +23,7 @@ export default function UserRoutes(controller: UserController, auth: Authorizati
     .post('/:id/restore', controller.restore);
 
   router.use(auth.authorize(['Show User']), showRoutes);
-  router.use(auth.authorize(['Manage User', 'Manage Self']), manageRoutes);
+  router.use(auth.authorize(['Manage User']), manageRoutes);
 
   return router;
 }

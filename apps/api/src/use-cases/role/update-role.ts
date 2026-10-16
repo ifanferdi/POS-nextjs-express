@@ -10,7 +10,7 @@ export default class UpdateRole extends BaseUseCase {
     const role = await this.repositories.roleRepository.update(payload);
 
     if (payload.permissions || payload.permissionIds)
-      await new ResetCachePermission(this.redisClient).execute({ roleId: role.id });
+      await new ResetCachePermission(this.repositories).execute({ roleId: role.id });
 
     return role;
   }

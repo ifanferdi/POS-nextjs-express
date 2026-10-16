@@ -1,6 +1,5 @@
+import { getRedisKeyMe, getRedisKeyPermissions, getRedisKeyRole } from '@/helpers/common.helper';
 import BaseUseCase from '@/use-cases/_base-use-case';
-import CheckValidPermission from '@/use-cases/permission/check-valid-permission';
-import MyAccount from '@/use-cases/user/my-account';
 import {
   ResetCachePermissionDto,
   ResetCachePermissionSchema,
@@ -13,11 +12,13 @@ export default class ResetCachePermission extends BaseUseCase {
     const userIds = await this.getUserIds(params);
 
     for (const userId of userIds) {
-      const permissionKey = new CheckValidPermission(this.repositories).getRedisKey(userId);
-      const meKey = new MyAccount(this.repositories).getRedisKey(userId);
+      const permissionKey = getRedisKeyPermissions(userId);
+      const meKey = getRedisKeyMe(userId);
+      const roleKey = getRedisKeyRole(userId);
 
       await this.repositories.redisRepository.destroy(permissionKey);
       await this.repositories.redisRepository.destroy(meKey);
+      await this.repositories.redisRepository.destroy(roleKey);
     }
   }
 

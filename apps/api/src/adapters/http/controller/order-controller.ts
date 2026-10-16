@@ -16,10 +16,12 @@ import e from 'express';
 import asyncHandler from 'express-async-handler';
 
 export default class OrderController extends BaseController {
+  private order = this.useCases.orderUseCase;
+
   findAll = asyncHandler(async (req: e.Request & Record<string, any>, res: e.Response) => {
     const request = req.route.methods.get ? req.query : req.body;
 
-    const params: FindAllOrderDto = {
+    let params: FindAllOrderDto = {
       page: Number(request.page) || 1,
       limit: Number(request.limit) || 10,
       orderBy: handleOrderByRequest(request),
@@ -36,9 +38,11 @@ export default class OrderController extends BaseController {
       createdAtDay: request.createdAtDay,
     };
 
+    params = await this.order.authorizationOrder.all(params, req.user.id);
+
     FindAllOrderSchema.parse(params);
 
-    const result = await this.useCases.orderUseCase.findAllOrder.execute(params);
+    const result = await this.order.findAllOrder.execute(params);
 
     res.send(result);
   });
@@ -52,7 +56,7 @@ export default class OrderController extends BaseController {
 
     FindByIdOrderSchema.parse(params);
 
-    const result = await this.useCases.orderUseCase.findByIdOrder.execute(params);
+    const result = await this.order.findByIdOrder.execute(params);
 
     res.send(result);
   });
@@ -69,7 +73,7 @@ export default class OrderController extends BaseController {
 
     CreateOrderSchema.parse(payload);
 
-    const result = await this.useCases.orderUseCase.createOrder.execute(payload);
+    const result = await this.order.createOrder.execute(payload);
 
     res.status(result.isIdempoten ? HttpStatusCode.OK : HttpStatusCode.CREATED).send(result.data);
   });
@@ -82,7 +86,7 @@ export default class OrderController extends BaseController {
 
     UpdateOrderStatusSchema.parse(payload);
 
-    const order = await this.useCases.orderUseCase.updateOrderStatus.execute(payload);
+    const order = await this.order.updateOrderStatus.execute(payload);
 
     res.send({ message: 'Success.', order });
   });
@@ -91,7 +95,7 @@ export default class OrderController extends BaseController {
     const params = { id: Number(req.params.id) };
     BaseFindById.parse(params);
 
-    await this.useCases.orderUseCase.cancelOrder.execute(params as BaseFindById);
+    await this.order.cancelOrder.execute(params as BaseFindById);
 
     res.send({ message: 'Success.' });
   });

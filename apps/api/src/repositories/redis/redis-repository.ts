@@ -1,7 +1,7 @@
-import _ from 'lodash';
 import { RedisStore } from '@/domain/entities/types/redis.types';
 import { RedisClientType } from '@/domain/infrastructures/redis.interfaces';
 import { isJsonValue } from '@/helpers/common.helper';
+import _ from 'lodash';
 
 export default class RedisRepository {
   constructor(protected redis: RedisClientType) {}
@@ -42,6 +42,15 @@ export default class RedisRepository {
 
   async destroy(key: string) {
     if (await this.redis.del(key)) console.info(`Success delete data from redis key: ${key}`);
+  }
+
+  async bulkDestroy(keys: string[]) {
+    if (keys?.length === 0) return 0;
+
+    const deleted = await this.redis.del(keys);
+    if (deleted) console.info(`Success delete ${deleted} data from redis`);
+
+    return deleted;
   }
 
   async incr(key: string) {

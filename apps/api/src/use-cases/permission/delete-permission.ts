@@ -8,7 +8,7 @@ export default class DeletePermission extends BaseUseCase {
     const deletePermission = await this.repositories.permissionRepository.destroy<BatchPayload>(id);
 
     if (deletePermission.count && deletePermission?.count > 0)
-      await new ResetCachePermission(this.redisClient).execute({ permissionId: id });
+      await new ResetCachePermission(this.repositories).execute({ permissionId: id });
 
     return deletePermission;
   }

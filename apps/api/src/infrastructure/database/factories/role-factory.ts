@@ -36,7 +36,7 @@ export default function RoleFactory(permissions: Permission[]) {
       'Manage Payment',
       'Show Payment',
     ],
-    User: ['Manage User', 'Show User'],
+    User: ['Show Order', 'Show Product', 'Show Category', 'Manage Order', 'Manage Payment'],
   };
 
   const roleFactories: Array<CreateRoleDto & { id: number }> = [];

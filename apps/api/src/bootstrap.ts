@@ -42,8 +42,8 @@ import FindAllOrder from '@/use-cases/order/find-all-order';
 import FindByIdOrder from '@/use-cases/order/find-by-id-order';
 import UpdateOrderStatus from '@/use-cases/order/update-order-status';
 import FindAllPayment from '@/use-cases/payment/find-all-payment';
-import FindByOrderId from '@/use-cases/payment/find-by-order-id';
 import FindByIdPayment from '@/use-cases/payment/find-by-id-payment';
+import FindByOrderId from '@/use-cases/payment/find-by-order-id';
 import CheckValidPermission from '@/use-cases/permission/check-valid-permission';
 import CreatePermission from '@/use-cases/permission/create-permission';
 import DeletePermission from '@/use-cases/permission/delete-permission';
@@ -77,6 +77,7 @@ import { initSSERedisBridge } from './infrastructure/event-stream/sse-redis-brid
 import MidtransRepository from './repositories/midtrans/midtrans-repository';
 import GeneratePresignUrl from './use-cases/common/upload-presign-url';
 import SyncMidtransToDatabase from './use-cases/midtrans/sync-midtrans-to-database';
+import AuthorizationOrder from './use-cases/order/authorization-order';
 
 export default async function bootstrap(app: Express) {
   const repositories = await setupRepositories();
@@ -184,6 +185,7 @@ function setupUseCases(repositories: Repositories): UseCases {
       createOrder: new CreateOrder(repositories),
       updateOrderStatus: new UpdateOrderStatus(repositories),
       cancelOrder: new CancelOrder(repositories),
+      authorizationOrder: new AuthorizationOrder(repositories),
     },
     paymentUseCase: {
       findAllPayment: new FindAllPayment(repositories),

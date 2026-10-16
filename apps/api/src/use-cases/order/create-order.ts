@@ -33,8 +33,8 @@ const IDEMPOTENCY_POLL_INTERVAL_MS = 100;
 type OrderResponse = { message: string; order: StoreOrderResponse };
 
 export default class CreateOrder extends BaseUseCase {
-  private findByIdUser = new FindByIdUser(this.redisClient);
-  private findAllProducts = new FindAllProduct(this.redisClient);
+  private findByIdUser = new FindByIdUser(this.repositories);
+  private findAllProducts = new FindAllProduct(this.repositories);
 
   get now() {
     return new Date();
