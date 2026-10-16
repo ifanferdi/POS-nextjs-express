@@ -76,7 +76,7 @@ import SseController from './adapters/http/controller/sse-controller';
 import { initSSERedisBridge } from './infrastructure/event-stream/sse-redis-bridge';
 import MidtransRepository from './repositories/midtrans/midtrans-repository';
 import GeneratePresignUrl from './use-cases/common/upload-presign-url';
-import SyncMidtransToDatabase from './use-cases/midtrans/sync-midtrans-to-database';
+import MidtransWebhook from './use-cases/midtrans/midtrans-webhook';
 import AuthorizationOrder from './use-cases/order/authorization-order';
 
 export default async function bootstrap(app: Express) {
@@ -193,7 +193,7 @@ function setupUseCases(repositories: Repositories): UseCases {
       findByOrderId: new FindByOrderId(repositories),
     },
     midtransUseCase: {
-      syncMidtransToDatabase: new SyncMidtransToDatabase(repositories),
+      syncMidtransToDatabase: new MidtransWebhook(repositories),
     },
   };
 }

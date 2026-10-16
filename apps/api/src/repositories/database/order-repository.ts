@@ -163,6 +163,11 @@ export default class OrderRepository
     });
   }
 
+  /**
+   * Guard + side effects in ONE transaction: the conditional `updateMany` (status must still be
+   * `pending`) is the first statement, so only the notification that wins the claim updates the
+   * order and refunds stock. Returns false when the payment was already transitioned (duplicate).
+   */
   midtransPaymentSuccess(
     order: { id: number; status: OrderStatus },
     payment: MidtransPaymentUpdate,
@@ -171,10 +176,15 @@ export default class OrderRepository
     const { midtransOrderId, ...detail } = midtransDetail;
 
     return this.prisma.$transaction(async (tx) => {
+      const claim = await tx.payment.updateMany({
+        where: { id: paymentId, status: PaymentStatus.PENDING },
+        data: { status: updatePayment.status, paidAt: updatePayment.paidAt },
+      });
+      if (claim.count === 0) return false;
+
       await tx.payment.update({
         where: { id: paymentId },
         data: {
-          ...updatePayment,
           midtransDetail: {
             upsert: {
               create: { midtransOrderId, ...detail },
@@ -200,6 +210,8 @@ export default class OrderRepository
               data: { stock: { increment: item.quantity } },
             });
       }
+
+      return true;
     });
   }
 }

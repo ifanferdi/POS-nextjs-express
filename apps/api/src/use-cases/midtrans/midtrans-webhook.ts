@@ -2,12 +2,12 @@ import { OrderRelation, OrderStatus } from '@/domain/entities/enums/order.enum';
 import { PaymentStatus } from '@/domain/entities/enums/payment.enum';
 import { OrderPayment, StoreOrderResponse } from '@/domain/entities/models/order';
 import { MidtransWebhookPayload } from '@/domain/infrastructures/midtrans.interface';
-import { ErrorBadRequest } from '@/helpers/error.helper';
+import { ErrorUnauthorized } from '@/helpers/error.helper';
 import { publishSSEEvent } from '@/infrastructure/event-stream/sse-redis-bridge';
-import { SyncMidtransToDatabaseDto } from '@/validations/midtrans.validation';
+import { MidtransWebhookDto } from '@/validations/midtrans.validation';
 import BaseUseCase from '../_base-use-case';
 
-export default class SyncMidtransToDatabase extends BaseUseCase {
+export default class MidtransWebhook extends BaseUseCase {
   get validPaymentStatus() {
     return new Set<string>([
       PaymentStatus.SUCCESS,
@@ -17,32 +17,24 @@ export default class SyncMidtransToDatabase extends BaseUseCase {
     ]);
   }
 
-  async execute(params: SyncMidtransToDatabaseDto, isMockData = false) {
+  async execute(params: MidtransWebhookDto) {
     const { orderNumber, notification } = params;
 
-    if (!isMockData) this.verifyMidtransSignature(notification);
+    this.verifyMidtransSignature(notification);
 
-    let checkOrder = await this.checkOrderPayment(orderNumber);
+    const checkOrder = await this.checkOrderPayment(orderNumber);
     if (!checkOrder) return;
 
-    let { order, payment } = checkOrder;
+    const { order, payment } = checkOrder;
 
     const status = this.mapStatus(notification);
     if (status === PaymentStatus.PENDING) return;
 
     const orderStatus = this.handleGetOrderStatus(status);
 
-    // Atomic claim: only ONE concurrent notification may transition the payment out of `pending`.
-    // Losers get count 0 and return, so the order update and stock refund happen exactly once.
-    // payment success or expired would be update here
-    const claimed = await this.repositories.paymentRepository.claimStatus(
-      payment.id,
-      PaymentStatus.PENDING,
-      status,
-    );
-    if (!claimed) return;
-
-    await this.repositories.orderRepository.midtransPaymentSuccess(
+    // Guard + order update + stock refund run in ONE transaction (see midtransPaymentSuccess).
+    // A duplicate/concurrent notification loses the atomic claim inside it and is a no-op.
+    const claimed = await this.repositories.orderRepository.midtransPaymentSuccess(
       { id: order.id, status: orderStatus },
       {
         id: payment.id,
@@ -54,11 +46,13 @@ export default class SyncMidtransToDatabase extends BaseUseCase {
           paymentType: notification.payment_type,
           transactionStatus: notification.transaction_status,
           fraudStatus: notification.fraud_status,
-          signatureVerified: Boolean(notification),
+          // Reaching here means verifyMidtransSignature already passed.
+          signatureVerified: true,
           rawNotification: notification,
         },
       },
     );
+    if (!claimed) return;
 
     const updatedOrder = await this.repositories.orderRepository.findOne<StoreOrderResponse>({
       id: payment.orderId,
@@ -104,7 +98,7 @@ export default class SyncMidtransToDatabase extends BaseUseCase {
       signature_key,
     });
 
-    if (!isValidSignatureKey) throw new ErrorBadRequest('Invalid midtrans signature key');
+    if (!isValidSignatureKey) throw new ErrorUnauthorized('Invalid midtrans signature key');
   }
 
   private async checkOrderPayment(orderNumber: string) {

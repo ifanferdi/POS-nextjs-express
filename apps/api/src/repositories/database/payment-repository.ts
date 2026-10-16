@@ -51,19 +51,6 @@ export default class PaymentRepository extends DatabaseBaseRepository {
     }) as Promise<T | null>;
   }
 
-  /**
-   * Atomic status transition guard: only succeeds if the row is currently `from`.
-   * `count === 1` means this caller won the claim; `count === 0` means a concurrent notification
-   * already transitioned it. Used to serialize webhook handling (refund/order update exactly once).
-   */
-  async claimStatus(id: number, from: PaymentStatus, to: PaymentStatus) {
-    const result = await this.prisma.payment.updateMany({
-      where: { id, status: from },
-      data: { status: to },
-    });
-    return result.count === 1;
-  }
-
   store<T = Payment>(data: CreatePaymentDto) {
     if (!data.status) data.status = PaymentStatus.PENDING;
     const include: PaymentInclude = {};

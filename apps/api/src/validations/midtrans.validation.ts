@@ -3,7 +3,7 @@ import { MidtransWebhookPayload } from '@/domain/infrastructures/midtrans.interf
 import { NumberSchema, StringSchema } from '@/validations/base-validation';
 import z from 'zod';
 
-export const SyncMidtransToDatabaseSchema = z.object({ orderNumber: StringSchema });
+export const MidtransWebhookSchema = z.object({ orderNumber: StringSchema });
 
 export const MockMidtransWebhook = z.object({
   orderNumber: StringSchema,
@@ -19,7 +19,7 @@ export const MockMidtransSchema = z.object({
   grossAmount: z.number().optional().default(0),
 });
 
-export interface SyncMidtransToDatabaseDto extends z.infer<typeof SyncMidtransToDatabaseSchema> {
+export interface MidtransWebhookDto extends z.infer<typeof MidtransWebhookSchema> {
   notification: MidtransWebhookPayload;
 }
 export interface MockMidtransWebhookDto extends z.infer<typeof MockMidtransWebhook> {}
