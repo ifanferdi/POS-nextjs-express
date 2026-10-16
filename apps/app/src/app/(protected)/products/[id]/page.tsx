@@ -26,6 +26,8 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
   const session = await auth();
   if (!hasPermission(session?.user.permissions, [PERMISSION.SHOW_PRODUCT])) forbidden();
 
+  const canManage = hasPermission(session?.user.permissions, [PERMISSION.MANAGE_PRODUCT]);
+
   const { id } = await params;
   const product = await getProductById<ProductDetail>(Number(id), [ProductRelation.CATEGORIES]);
 
@@ -92,7 +94,11 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                 </div>
               </div>
             </div>
-            <ProductActions product={product} categories={product.categories!} />
+            <ProductActions
+              product={product}
+              categories={product.categories!}
+              canManage={canManage}
+            />
           </div>
         </CardHeader>
 

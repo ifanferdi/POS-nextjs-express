@@ -13,8 +13,7 @@ import { forbidden } from 'next/navigation';
 
 export default async function UserDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
-  if (!hasPermission(session?.user.permissions, [PERMISSION.SHOW_USER, PERMISSION.SHOW_TRAINEE]))
-    forbidden();
+  if (!hasPermission(session?.user.permissions, [PERMISSION.SHOW_USER])) forbidden();
 
   const { id } = await params;
   const user = await getUserById<UserDetail>(Number(id), [UserRelation.PROFILE, UserRelation.ROLE]);

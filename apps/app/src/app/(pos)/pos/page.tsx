@@ -14,7 +14,15 @@ const PAGE_SIZE = options.posProductLength;
 
 export default async function PosPage() {
   const session = await auth();
-  if (!hasPermission(session?.user.permissions, [PERMISSION.MANAGE_ORDER])) forbidden();
+  if (
+    !hasPermission(session?.user.permissions, [
+      PERMISSION.MANAGE_ORDER,
+      PERMISSION.SHOW_CATEGORY,
+      PERMISSION.SHOW_ORDER,
+      PERMISSION.SHOW_PRODUCT,
+    ])
+  )
+    forbidden();
 
   return (
     <Suspense fallback={<PosViewSkeleton />}>

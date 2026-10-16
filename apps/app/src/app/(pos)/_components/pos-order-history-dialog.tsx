@@ -195,13 +195,17 @@ export function PosOrderHistoryDialog({ open, setOpen }: PosOrderHistoryDialogPr
     setPayment(null);
     setIsPayLoading(true);
 
-    const result = await getPaymentByOrderId<PaymentMidtrans>({
+    const { result, error } = await getPaymentByOrderId<PaymentMidtrans>({
       orderId: order.id,
       with: [PaymentRelation.MIDTRANS_DETAIL],
     });
 
     setIsPayLoading(false);
 
+    if (error) {
+      toast.error(error);
+      return;
+    }
     if (!result || !result.midtransDetail) {
       toast.error('No payment terminal available for this order.');
       return;

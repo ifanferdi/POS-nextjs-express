@@ -25,8 +25,9 @@ interface UsersPageProps {
 
 export default async function UsersPage({ searchParams }: UsersPageProps) {
   const session = await auth();
-  if (!hasPermission(session?.user.permissions, [PERMISSION.SHOW_USER, PERMISSION.SHOW_TRAINEE]))
-    forbidden();
+  if (!hasPermission(session?.user.permissions, [PERMISSION.SHOW_USER])) forbidden();
+
+  const canManage = hasPermission(session?.user.permissions, [PERMISSION.MANAGE_USER]);
 
   const { page, q, roleId, isActive } = await searchParams;
   const pageNum = Number(page ?? 1);
@@ -57,7 +58,7 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
           <h1 className="text-2xl font-semibold tracking-tight">Users</h1>
           <p className="mt-1 text-sm text-muted-foreground">Manage your application users</p>
         </div>
-        <UserFormDialog mode="create" roles={roles} />
+        {canManage && <UserFormDialog mode="create" roles={roles} />}
       </div>
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <Suspense fallback={<Skeleton className="h-9 w-full sm:w-72" />}>
@@ -68,7 +69,7 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
         </Suspense>
       </div>
       <Suspense fallback={<UserTableSkeleton />}>
-        <UserTableSection params={params} roles={roles} />
+        <UserTableSection params={params} roles={roles} canManage={canManage} />
       </Suspense>
     </div>
   );

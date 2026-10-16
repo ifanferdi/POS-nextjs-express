@@ -39,8 +39,7 @@ export function LoginForm({ sessionExpired }: { sessionExpired?: boolean }) {
       }
 
       toast.success('Login successful');
-      router.push('/dashboard');
-      router.refresh();
+      router.push('/');
     });
   }
 

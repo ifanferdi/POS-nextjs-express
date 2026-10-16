@@ -13,13 +13,14 @@ export const headers = ['#', 'Name', 'Sku', 'Stock', 'Price', 'Categories', 'Is 
 interface ProductTableSectionProps {
   params: GetAllProductParams;
   categories: CategoryOption[];
+  canManage: boolean;
 }
 export async function ProductTableSection(props: ProductTableSectionProps) {
-  const { params, categories } = props;
+  const { params, categories, canManage } = props;
   const { data: products, ...meta } = await getAllProducts<ProductList>(params);
   return (
     <>
-      <ProductTable products={products} categories={categories} />
+      <ProductTable products={products} categories={categories} canManage={canManage} />
       <TablePagination
         page={meta.page}
         totalPages={meta.totalPages}
@@ -33,9 +34,10 @@ export async function ProductTableSection(props: ProductTableSectionProps) {
 interface ProductTableProps {
   products: ProductList[];
   categories: CategoryOption[];
+  canManage: boolean;
 }
 function ProductTable(props: ProductTableProps) {
-  const { products, categories } = props;
+  const { products, categories, canManage } = props;
   if (products.length === 0) return <EmptyTable entities="products" icon="product" />;
 
   return (
@@ -72,7 +74,7 @@ function ProductTable(props: ProductTableProps) {
           key: 'actions',
           content: (
             <div className="flex justify-end gap-2">
-              <ProductActions product={product} categories={categories} />
+              <ProductActions product={product} categories={categories} canManage={canManage} />
             </div>
           ),
         },

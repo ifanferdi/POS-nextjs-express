@@ -17,6 +17,8 @@ export default async function CategoriesPage({
   const session = await auth();
   if (!hasPermission(session?.user.permissions, [PERMISSION.SHOW_CATEGORY])) forbidden();
 
+  const canManage = hasPermission(session?.user.permissions, [PERMISSION.MANAGE_CATEGORY]);
+
   const { page, q } = await searchParams;
   const pageNum = Number(page ?? 1);
   const params: GetAllCategoryParams = { page: pageNum, q, orderBy: ['name:asc'] };
@@ -28,7 +30,7 @@ export default async function CategoriesPage({
           <h1 className="text-2xl font-semibold tracking-tight">Categories</h1>
           <p className="mt-1 text-sm text-muted-foreground">Manage your application categories</p>
         </div>
-        <CategoryFormDialog mode="create" />
+        {canManage && <CategoryFormDialog mode="create" />}
       </div>
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <Suspense fallback={<Skeleton className="h-9 w-full sm:w-72" />}>
@@ -36,7 +38,7 @@ export default async function CategoriesPage({
         </Suspense>
       </div>
       <Suspense fallback={<CategoryTableSkeleton />}>
-        <CategoriesTableSection params={params} />
+        <CategoriesTableSection params={params} canManage={canManage} />
       </Suspense>
     </div>
   );

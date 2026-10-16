@@ -29,7 +29,7 @@ const navItems = [
     title: 'Users',
     href: '/users',
     icon: icons.user,
-    permission: [PERMISSION.SHOW_USER, PERMISSION.SHOW_TRAINEE],
+    permission: [PERMISSION.SHOW_USER],
   },
   {
     title: 'Categories',

@@ -32,10 +32,11 @@ type RoleOption = Pick<Role, 'id' | 'name'>;
 interface UserActionsProps {
   user: UserList;
   roles: RoleOption[];
+  canManage: boolean;
 }
 
 export function UserActions(props: UserActionsProps) {
-  const { user, roles } = props;
+  const { user, roles, canManage } = props;
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -67,51 +68,59 @@ export function UserActions(props: UserActionsProps) {
               <span>Detail</span>
             </Link>
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setEditOpen(true)} className="cursor-pointer">
-            <PencilIcon className="mr-1" />
-            <span>Edit</span>
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            variant="destructive"
-            onClick={() => setDeleteOpen(true)}
-            className="cursor-pointer"
-          >
-            <TrashIcon className="mr-1" />
-            <span>Delete</span>
-          </DropdownMenuItem>
+          {canManage && (
+            <>
+              <DropdownMenuItem onClick={() => setEditOpen(true)} className="cursor-pointer">
+                <PencilIcon className="mr-1" />
+                <span>Edit</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                variant="destructive"
+                onClick={() => setDeleteOpen(true)}
+                className="cursor-pointer"
+              >
+                <TrashIcon className="mr-1" />
+                <span>Delete</span>
+              </DropdownMenuItem>
+            </>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <UserFormDialog
-        mode="edit"
-        user={user}
-        roles={roles}
-        editOpen={editOpen}
-        onOpenChange={setEditOpen}
-      />
+      {canManage && (
+        <>
+          <UserFormDialog
+            mode="edit"
+            user={user}
+            roles={roles}
+            editOpen={editOpen}
+            onOpenChange={setEditOpen}
+          />
 
-      <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete User</DialogTitle>
-          </DialogHeader>
-          <DialogDescription>
-            Are you sure you want to delete <strong>{user.profile.fullName}</strong>? This action
-            cannot be undone.
-          </DialogDescription>
-          <DialogFooter>
-            <Button variant="destructive" onClick={handleDelete} disabled={isPending}>
-              Delete
-            </Button>
-            <DialogClose asChild>
-              <Button type="button" variant="outline" disabled={isPending}>
-                Cancel
-              </Button>
-            </DialogClose>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Delete User</DialogTitle>
+              </DialogHeader>
+              <DialogDescription>
+                Are you sure you want to delete <strong>{user.profile.fullName}</strong>? This
+                action cannot be undone.
+              </DialogDescription>
+              <DialogFooter>
+                <Button variant="destructive" onClick={handleDelete} disabled={isPending}>
+                  Delete
+                </Button>
+                <DialogClose asChild>
+                  <Button type="button" variant="outline" disabled={isPending}>
+                    Cancel
+                  </Button>
+                </DialogClose>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </>
+      )}
     </>
   );
 }

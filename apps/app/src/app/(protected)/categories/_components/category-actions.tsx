@@ -19,7 +19,13 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { toast } from 'sonner';
 
-export function CategoryActions({ category }: { category: CategoryList }) {
+export function CategoryActions({
+  category,
+  canManage,
+}: {
+  category: CategoryList;
+  canManage: boolean;
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const [editOpen, setEditOpen] = useState(false);
@@ -56,55 +62,59 @@ export function CategoryActions({ category }: { category: CategoryList }) {
           </Button>
         }
       />
-      <Button
-        variant="ghost"
-        size="icon-sm"
-        aria-label="Edit category"
-        title="Edit"
-        onClick={() => setEditOpen(true)}
-        className="text-muted-foreground hover:bg-info/10 hover:text-info active:scale-90"
-      >
-        <PencilIcon />
-      </Button>
-      <Button
-        variant="ghost"
-        size="icon-sm"
-        aria-label="Delete category"
-        title="Delete"
-        onClick={() => setDeleteOpen(true)}
-        className="text-destructive hover:bg-destructive/10 hover:text-destructive active:scale-90"
-      >
-        <TrashIcon />
-      </Button>
+      {canManage && (
+        <>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label="Edit category"
+            title="Edit"
+            onClick={() => setEditOpen(true)}
+            className="text-muted-foreground hover:bg-info/10 hover:text-info active:scale-90"
+          >
+            <PencilIcon />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label="Delete category"
+            title="Delete"
+            onClick={() => setDeleteOpen(true)}
+            className="text-destructive hover:bg-destructive/10 hover:text-destructive active:scale-90"
+          >
+            <TrashIcon />
+          </Button>
 
-      <CategoryFormDialog
-        mode="edit"
-        category={category}
-        editOpen={editOpen}
-        onOpenChange={setEditOpen}
-      />
+          <CategoryFormDialog
+            mode="edit"
+            category={category}
+            editOpen={editOpen}
+            onOpenChange={setEditOpen}
+          />
 
-      <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete Category</DialogTitle>
-          </DialogHeader>
-          <DialogDescription>
-            Are you sure you want to delete <strong>{category.name}</strong>? This action cannot be
-            undone.
-          </DialogDescription>
-          <DialogFooter>
-            <Button variant="destructive" onClick={handleDelete} disabled={isPending}>
-              Delete
-            </Button>
-            <DialogClose asChild>
-              <Button type="button" variant="outline" disabled={isPending}>
-                Cancel
-              </Button>
-            </DialogClose>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Delete Category</DialogTitle>
+              </DialogHeader>
+              <DialogDescription>
+                Are you sure you want to delete <strong>{category.name}</strong>? This action cannot
+                be undone.
+              </DialogDescription>
+              <DialogFooter>
+                <Button variant="destructive" onClick={handleDelete} disabled={isPending}>
+                  Delete
+                </Button>
+                <DialogClose asChild>
+                  <Button type="button" variant="outline" disabled={isPending}>
+                    Cancel
+                  </Button>
+                </DialogClose>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </>
+      )}
     </div>
   );
 }

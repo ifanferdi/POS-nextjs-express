@@ -29,9 +29,10 @@ import { toast } from 'sonner';
 interface ProductActionsProps {
   product: ProductList;
   categories: CategoryOption[];
+  canManage: boolean;
 }
 
-export function ProductActions({ product, categories }: ProductActionsProps) {
+export function ProductActions({ product, categories, canManage }: ProductActionsProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [editOpen, setEditOpen] = useState(false);
@@ -67,51 +68,59 @@ export function ProductActions({ product, categories }: ProductActionsProps) {
               <span>Detail</span>
             </Link>
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setEditOpen(true)} className="cursor-pointer">
-            <PencilIcon className="mr-1" />
-            <span>Edit</span>
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            variant="destructive"
-            onClick={() => setDeleteOpen(true)}
-            className="cursor-pointer"
-          >
-            <TrashIcon className="mr-1" />
-            <span>Delete</span>
-          </DropdownMenuItem>
+          {canManage && (
+            <>
+              <DropdownMenuItem onClick={() => setEditOpen(true)} className="cursor-pointer">
+                <PencilIcon className="mr-1" />
+                <span>Edit</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                variant="destructive"
+                onClick={() => setDeleteOpen(true)}
+                className="cursor-pointer"
+              >
+                <TrashIcon className="mr-1" />
+                <span>Delete</span>
+              </DropdownMenuItem>
+            </>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <ProductFormDialog
-        mode="edit"
-        product={product}
-        categories={categories}
-        editOpen={editOpen}
-        onOpenChange={setEditOpen}
-      />
+      {canManage && (
+        <>
+          <ProductFormDialog
+            mode="edit"
+            product={product}
+            categories={categories}
+            editOpen={editOpen}
+            onOpenChange={setEditOpen}
+          />
 
-      <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete Product</DialogTitle>
-          </DialogHeader>
-          <DialogDescription>
-            Are you sure you want to delete <strong>{product.name}</strong>? This action cannot be
-            undone.
-          </DialogDescription>
-          <DialogFooter>
-            <Button variant="destructive" onClick={handleDelete} disabled={isPending}>
-              Delete
-            </Button>
-            <DialogClose asChild>
-              <Button type="button" variant="outline" disabled={isPending}>
-                Cancel
-              </Button>
-            </DialogClose>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Delete Product</DialogTitle>
+              </DialogHeader>
+              <DialogDescription>
+                Are you sure you want to delete <strong>{product.name}</strong>? This action cannot
+                be undone.
+              </DialogDescription>
+              <DialogFooter>
+                <Button variant="destructive" onClick={handleDelete} disabled={isPending}>
+                  Delete
+                </Button>
+                <DialogClose asChild>
+                  <Button type="button" variant="outline" disabled={isPending}>
+                    Cancel
+                  </Button>
+                </DialogClose>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </>
+      )}
     </div>
   );
 }

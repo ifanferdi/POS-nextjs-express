@@ -15,13 +15,14 @@ export const headers = ['#', 'Name', 'Username', 'Gender', 'Birth', 'Role', 'Sta
 interface UserTableSectionProps {
   params: GetAllUserParams;
   roles: RoleOption[];
+  canManage: boolean;
 }
 export async function UserTableSection(props: UserTableSectionProps) {
-  const { params, roles } = props;
+  const { params, roles, canManage } = props;
   const { data: users, ...meta } = await getAllUser<UserList>(params);
   return (
     <>
-      <UserTable users={users} roles={roles} />
+      <UserTable users={users} roles={roles} canManage={canManage} />
       <TablePagination
         page={meta.page}
         totalPages={meta.totalPages}
@@ -35,9 +36,10 @@ export async function UserTableSection(props: UserTableSectionProps) {
 interface UserTableProps {
   users: UserList[];
   roles: RoleOption[];
+  canManage: boolean;
 }
 function UserTable(props: UserTableProps) {
-  const { users, roles } = props;
+  const { users, roles, canManage } = props;
   if (users.length === 0) return <EmptyTable entities="users" icon="user" />;
 
   return (
@@ -92,7 +94,7 @@ function UserTable(props: UserTableProps) {
           type: 'custom',
           content: (
             <div className="flex justify-end gap-2">
-              <UserActions user={user} roles={roles} />
+              <UserActions user={user} roles={roles} canManage={canManage} />
             </div>
           ),
         },
