@@ -243,7 +243,7 @@ function CheckPaymentStatusButton({
       columns: ['status'],
     });
 
-    if (payment.status === PaymentStatus.SUCCESS) {
+    if (payment.result?.status === PaymentStatus.SUCCESS) {
       toast.success('Payment received!');
       onPaid();
     }

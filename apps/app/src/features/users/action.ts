@@ -14,7 +14,7 @@ import { PERMISSION, requirePermission } from '@/lib/permission';
 import { revalidatePath } from 'next/cache';
 import { unstable_rethrow } from 'next/navigation';
 
-const MANAGE_USER = [PERMISSION.MANAGE_USER, PERMISSION.MANAGE_TRAINEE];
+const MANAGE_USER = [PERMISSION.MANAGE_USER];
 
 export async function createUserAction(input: CreateUserInput): Promise<ActionResult<User>> {
   const validate = CreateUserSchema.safeParse(input);
