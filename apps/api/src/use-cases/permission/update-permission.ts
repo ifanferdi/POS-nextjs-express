@@ -9,7 +9,7 @@ export default class UpdatePermission extends BaseUseCase {
 
     const permission = await this.repositories.permissionRepository.update(payload);
 
-    await new ResetCachePermission(this.redisClient).execute({ permissionId: payload.id });
+    await new ResetCachePermission(this.repositories).execute({ permissionId: payload.id });
 
     return permission;
   }

@@ -65,3 +65,11 @@ export interface SyncByPermissionsNameDto {
   roleId: number;
   permissions: string[];
 }
+export interface AddPermissionsNameDto {
+  roleId: number;
+  addPermissions: string[];
+}
+export interface RemovePermissionsNameDto {
+  roleId: number;
+  removePermissions: string[];
+}

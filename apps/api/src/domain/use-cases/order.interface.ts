@@ -1,3 +1,4 @@
+import AuthorizationOrder from '@/use-cases/order/authorization-order';
 import CancelOrder from '@/use-cases/order/cancel-order';
 import CreateOrder from '@/use-cases/order/create-order';
 import FindAllOrder from '@/use-cases/order/find-all-order';
@@ -10,4 +11,5 @@ export interface OrderUseCase {
   createOrder: CreateOrder;
   updateOrderStatus: UpdateOrderStatus;
   cancelOrder: CancelOrder;
+  authorizationOrder: AuthorizationOrder;
 }

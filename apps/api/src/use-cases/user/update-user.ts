@@ -21,7 +21,7 @@ export default class UpdateUser extends BaseUseCase {
 
     const user = await this.repositories.userRepository.update(payload);
 
-    await new ResetCachePermission(this.redisClient).execute({ userId: payload.id });
+    await new ResetCachePermission(this.repositories).execute({ userId: payload.id });
 
     return user;
   }

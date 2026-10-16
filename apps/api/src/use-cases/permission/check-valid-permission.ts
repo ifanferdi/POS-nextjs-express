@@ -1,5 +1,6 @@
 import config from '@/config/config';
 import { UserRelation } from '@/domain/entities/enums/user.enum';
+import { getRedisKeyPermissions } from '@/helpers/common.helper';
 import { Permission } from '@/infrastructure/database/prisma/generated/client';
 import BaseUseCase from '@/use-cases/_base-use-case';
 import FindByIdUser from '@/use-cases/user/find-by-id-user';
@@ -7,12 +8,12 @@ import { CheckValidPermissionDto } from '@/validations/permission-validation';
 const ME_CACHE_TTL = config.redis.meCacheTtl;
 
 export default class CheckValidPermission extends BaseUseCase {
-  private findByIdUser = new FindByIdUser(this.redisClient);
+  private findByIdUser = new FindByIdUser(this.repositories);
 
   getRedisKey = (userId: number) => `permissions:user-${userId}`;
 
   async execute({ userId, permissions }: CheckValidPermissionDto) {
-    const redisKey = this.getRedisKey(userId);
+    const redisKey = getRedisKeyPermissions(userId);
 
     let redisData: string[] = await this.repositories.redisRepository.findOne(redisKey);
 
@@ -32,7 +33,7 @@ export default class CheckValidPermission extends BaseUseCase {
     const userPermissions = await this.getUserPermissions(userId);
 
     // Store permission by user id to redis
-    const redisKey = this.getRedisKey(userId);
+    const redisKey = getRedisKeyPermissions(userId);
     await this.repositories.redisRepository.store({
       key: redisKey,
       value: userPermissions,

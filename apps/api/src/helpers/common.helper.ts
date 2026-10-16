@@ -76,3 +76,7 @@ export function createS3SignatureKey(path: string, expires: number) {
     .update(`${path}:${expires}`)
     .digest('hex');
 }
+
+export const getRedisKeyPermissions = (userId: number) => `permissions:user-${userId}`;
+export const getRedisKeyMe = (userId: number) => `me:user-${userId}`;
+export const getRedisKeyRole = (userId: number) => `role:user-${userId}`;

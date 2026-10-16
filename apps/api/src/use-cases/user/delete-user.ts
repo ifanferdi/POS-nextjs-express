@@ -1,16 +1,19 @@
 import { UserRelation } from '@/domain/entities/enums/user.enum';
 import { IUserProfile } from '@/domain/entities/models/user';
+import { ErrorBadRequest } from '@/helpers/error.helper';
 import BaseUseCase from '@/use-cases/_base-use-case';
 import ResetCachePermission from '@/use-cases/permission/reset-cache-permission';
 import { BaseFindById } from '@/validations/base-validation';
 
 export default class DeleteUser extends BaseUseCase {
-  async execute({ id }: BaseFindById, options?: { isPermanently: boolean }) {
+  async execute({ id }: BaseFindById, options: { isPermanently?: boolean; requestedBy: number }) {
+    if (id === options.requestedBy) throw new ErrorBadRequest('Cannot delete yourself.');
+
     const result = options?.isPermanently
       ? await this.handleDeletePermanently({ id })
       : await this.repositories.userRepository.destroy(id);
 
-    await new ResetCachePermission(this.redisClient).execute({ userId: id });
+    await new ResetCachePermission(this.repositories).execute({ userId: id });
 
     return result;
   }

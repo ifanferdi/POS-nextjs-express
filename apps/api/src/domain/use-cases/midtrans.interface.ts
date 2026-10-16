@@ -1,5 +1,5 @@
-import SyncMidtransToDatabase from '@/use-cases/midtrans/sync-midtrans-to-database';
+import MidtransWebhook from '@/use-cases/midtrans/midtrans-webhook';
 
 export interface MidtransUseCase {
-  syncMidtransToDatabase: SyncMidtransToDatabase;
+  syncMidtransToDatabase: MidtransWebhook;
 }
