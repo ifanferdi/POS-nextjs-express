@@ -50,7 +50,7 @@ apps/
 
 - Reads run as Server Components; mutations run as Server Actions — backend endpoints and tokens are never exposed to the browser.
 - NextAuth v5 JWT session holds access/refresh tokens in an httpOnly cookie; refresh is proactive in the `jwt` callback.
-- Feature-based modules under `features/` (auth, users, roles, permissions, products, categories, orders, payments, uploads).
+- Feature-based modules under `src/features/` (auth, users, roles, permissions, products, categories, orders, payments, uploads).
 
 **Backend** (layered / clean architecture):
 
@@ -61,16 +61,21 @@ See `apps/app/README.md` and `apps/api/README.md` for the details.
 
 ## Design system
 
-The frontend uses **shadcn/ui** (style `radix-nova`, base Radix) on **Tailwind CSS v4**, defined in `apps/app/app/globals.css` and `apps/app/components.json`:
+The frontend uses **shadcn/ui** (style `radix-nova`, base Radix) on **Tailwind CSS v4**, defined in `apps/app/src/app/globals.css` and `apps/app/components.json`:
 
 - **Color** — `oklch` tokens; a neutral base with a teal-green primary (`oklch(0.55 0.14 175)`), plus semantic `success` / `warning` / `info` tokens on top of the shadcn defaults.
 - **Dark mode** — `class` strategy via the `.dark` selector, toggled with `next-themes`.
 - **Typography** — Inter (sans) and Geist Mono.
 - **Radius** — a `--radius` scale (`sm`…`4xl`) derived from a single base token.
 - **Component sizing** — consistent control heights (button/input/select) overridden in a `@layer components` block without touching the primitives.
-- **Centralized config** — all env vars resolve through `apps/app/config/config.ts` (typed, single source of truth).
+- **Centralized config** — all env vars resolve through `apps/app/src/config/config.ts` (typed, single source of truth).
 
 ## Installation
+
+### Prerequisites
+
+- [Bun](https://bun.sh) (package manager & runtime)
+- Docker with Docker Compose v2 (full stack, or infra only for manual dev)
 
 ### Docker (recommended)
 
@@ -110,9 +115,6 @@ Other scripts: `bun run build:api`, `bun run build:app`, `bun run lint`.
 ├── apps/
 │   ├── app/      # Next.js frontend
 │   └── api/      # Express + Prisma backend
-├── docs/
-│   ├── observability-backend.md
-│   └── observability-frontend.md
 ├── docker-compose.yml
 └── package.json  # Bun workspace scripts
 ```
@@ -129,4 +131,7 @@ Other scripts: `bun run build:api`, `bun run build:app`, `bun run lint`.
 - `apps/app/README.md` — frontend details (architecture, folder structure, conventions)
 - `apps/api/README.md` — backend details (layers, domain model, endpoints)
 - `apps/api/docs/openapi.yaml` — OpenAPI spec · `apps/api/docs/postman-collection.json` — Postman collection
-- `docs/observability-backend.md` / `docs/observability-frontend.md` — observability notes
+
+## License
+
+Released under the [MIT License](LICENSE) — free to use, modify, and distribute, including for commercial use.
