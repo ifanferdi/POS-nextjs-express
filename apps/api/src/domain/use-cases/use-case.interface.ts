@@ -1,6 +1,7 @@
 import { AuthUseCase } from '@/domain/use-cases/auth.interface';
 import { CategoryUseCase } from '@/domain/use-cases/category.interface';
 import { CommonUseCase } from '@/domain/use-cases/common.interface';
+import { DashboardUseCase } from '@/domain/use-cases/dashboard.interface';
 import { MidtransUseCase } from '@/domain/use-cases/midtrans.interface';
 import { OrderUseCase } from '@/domain/use-cases/order.interface';
 import { PaymentUseCase } from '@/domain/use-cases/payment.interface';
@@ -20,4 +21,5 @@ export interface UseCases {
   orderUseCase: OrderUseCase;
   paymentUseCase: PaymentUseCase;
   midtransUseCase: MidtransUseCase;
+  dashboardUseCase: DashboardUseCase;
 }

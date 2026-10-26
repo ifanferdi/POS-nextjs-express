@@ -92,11 +92,11 @@
       "name": "Dashboard",
       "item": [
         {
-          "name": "Dashboard",
+          "name": "Summary (KPI)",
           "request": {
             "method": "GET",
             "url": {
-              "raw": "{{baseUrl}}/api/v1/dashboard",
+              "raw": "{{baseUrl}}/api/v1/dashboard?from=2026-10-01&to=2026-10-26&tz=Asia%2FJakarta",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -104,8 +104,197 @@
                 "api",
                 "v1",
                 "dashboard"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "2026-10-01",
+                  "description": "YYYY-MM-DD (opsional, default 30 hari terakhir)"
+                },
+                {
+                  "key": "to",
+                  "value": "2026-10-26",
+                  "description": "YYYY-MM-DD (opsional, default hari ini)"
+                },
+                {
+                  "key": "tz",
+                  "value": "Asia/Jakarta",
+                  "description": "IANA timezone, default UTC"
+                }
               ]
             }
+          }
+        },
+        {
+          "name": "Orders Trend",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/dashboard/orders-trend?from=2026-10-01&to=2026-10-26&granularity=day&tz=Asia%2FJakarta",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "dashboard",
+                "orders-trend"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "2026-10-01"
+                },
+                {
+                  "key": "to",
+                  "value": "2026-10-26"
+                },
+                {
+                  "key": "granularity",
+                  "value": "day",
+                  "description": "day | week | month (default day)"
+                },
+                {
+                  "key": "tz",
+                  "value": "Asia/Jakarta"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Orders by Status",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/dashboard/orders-by-status?from=2026-10-01&to=2026-10-26&tz=Asia%2FJakarta",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "dashboard",
+                "orders-by-status"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "2026-10-01"
+                },
+                {
+                  "key": "to",
+                  "value": "2026-10-26"
+                },
+                {
+                  "key": "tz",
+                  "value": "Asia/Jakarta"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Payments Breakdown",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/dashboard/payments?from=2026-10-01&to=2026-10-26&tz=Asia%2FJakarta",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "dashboard",
+                "payments"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "2026-10-01"
+                },
+                {
+                  "key": "to",
+                  "value": "2026-10-26"
+                },
+                {
+                  "key": "tz",
+                  "value": "Asia/Jakarta"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Top Products",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/dashboard/top-products?from=2026-10-01&to=2026-10-26&limit=10&tz=Asia%2FJakarta",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "dashboard",
+                "top-products"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "2026-10-01"
+                },
+                {
+                  "key": "to",
+                  "value": "2026-10-26"
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "1-100 (default 10)"
+                },
+                {
+                  "key": "tz",
+                  "value": "Asia/Jakarta"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Export Orders (CSV)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/dashboard/orders/export?from=2026-10-01&to=2026-10-26&tz=Asia%2FJakarta",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "dashboard",
+                "orders",
+                "export"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "2026-10-01"
+                },
+                {
+                  "key": "to",
+                  "value": "2026-10-26"
+                },
+                {
+                  "key": "tz",
+                  "value": "Asia/Jakarta"
+                }
+              ]
+            },
+            "description": "Response: text/csv attachment"
           }
         },
         {

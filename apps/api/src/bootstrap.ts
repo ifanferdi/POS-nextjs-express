@@ -1,6 +1,7 @@
 import AppController from '@/adapters/http/controller/app-controller';
 import AuthController from '@/adapters/http/controller/auth-controller';
 import CategoryController from '@/adapters/http/controller/category-controller';
+import DashboardController from '@/adapters/http/controller/dashboard-controller';
 import MidtransController from '@/adapters/http/controller/midtrans-controller';
 import OrderController from '@/adapters/http/controller/order-controller';
 import PaymentController from '@/adapters/http/controller/payment-controller';
@@ -15,6 +16,7 @@ import { UseCases } from '@/domain/use-cases/use-case.interface';
 import { prisma } from '@/infrastructure/database/prisma/prisma';
 import RedisConnection from '@/infrastructure/redis/redis-connection';
 import CategoryRepository from '@/repositories/database/category-repository';
+import DashboardRepository from '@/repositories/database/dashboard-repository';
 import OrderRepository from '@/repositories/database/order-repository';
 import PaymentRepository from '@/repositories/database/payment-repository';
 import PermissionRepository from '@/repositories/database/permission-repository';
@@ -35,7 +37,12 @@ import DeleteCategory from '@/use-cases/category/delete-category';
 import FindAllCategory from '@/use-cases/category/find-all-category';
 import FindByIdCategory from '@/use-cases/category/find-by-id-category';
 import UpdateCategory from '@/use-cases/category/update-category';
-import PosDashboard from '@/use-cases/common/pos-dashboard';
+import DashboardOrdersByStatus from '@/use-cases/dashboard/dashboard-orders-by-status';
+import DashboardOrdersExport from '@/use-cases/dashboard/dashboard-orders-export';
+import DashboardOrdersTrend from '@/use-cases/dashboard/dashboard-orders-trend';
+import DashboardPayments from '@/use-cases/dashboard/dashboard-payments';
+import DashboardSummary from '@/use-cases/dashboard/dashboard-summary';
+import DashboardTopProducts from '@/use-cases/dashboard/dashboard-top-products';
 import CancelOrder from '@/use-cases/order/cancel-order';
 import CreateOrder from '@/use-cases/order/create-order';
 import FindAllOrder from '@/use-cases/order/find-all-order';
@@ -102,6 +109,7 @@ function setupControllers(useCases: UseCases): Controllers {
     orderController: new OrderController(useCases),
     paymentController: new PaymentController(useCases),
     midtransController: new MidtransController(useCases),
+    dashboardController: new DashboardController(useCases),
   };
 }
 
@@ -116,6 +124,7 @@ async function setupRepositories(): Promise<Repositories> {
     productRepository: new ProductRepository(prisma),
     orderRepository: new OrderRepository(prisma),
     paymentRepository: new PaymentRepository(prisma),
+    dashboardRepository: new DashboardRepository(prisma),
     redisRepository: new RedisRepository(redisClient),
     storageRepository: new S3StorageRepository(),
     midtransRepository: new MidtransRepository(),
@@ -126,7 +135,6 @@ function setupUseCases(repositories: Repositories): UseCases {
   return {
     commonUseCase: {
       generatePresignUrl: new GeneratePresignUrl(repositories),
-      posDashboard: new PosDashboard(repositories),
     },
     userUseCase: {
       findAllUser: new FindAllUser(repositories),
@@ -194,6 +202,14 @@ function setupUseCases(repositories: Repositories): UseCases {
     },
     midtransUseCase: {
       syncMidtransToDatabase: new MidtransWebhook(repositories),
+    },
+    dashboardUseCase: {
+      summary: new DashboardSummary(repositories),
+      ordersTrend: new DashboardOrdersTrend(repositories),
+      ordersByStatus: new DashboardOrdersByStatus(repositories),
+      payments: new DashboardPayments(repositories),
+      topProducts: new DashboardTopProducts(repositories),
+      ordersExport: new DashboardOrdersExport(repositories),
     },
   };
 }

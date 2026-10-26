@@ -1,4 +1,5 @@
 import CategoryRepository from '@/repositories/database/category-repository';
+import DashboardRepository from '@/repositories/database/dashboard-repository';
 import OrderRepository from '@/repositories/database/order-repository';
 import PaymentRepository from '@/repositories/database/payment-repository';
 import PermissionRepository from '@/repositories/database/permission-repository';
@@ -19,6 +20,7 @@ export interface Repositories extends ToolsRepository {
   productRepository: ProductRepository;
   orderRepository: OrderRepository;
   paymentRepository: PaymentRepository;
+  dashboardRepository: DashboardRepository;
 }
 
 interface ToolsRepository {

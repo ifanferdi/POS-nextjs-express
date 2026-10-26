@@ -1,5 +1,6 @@
 import AuthRoutes from '@/adapters/http/routes/auth.routes';
 import CategoryRoutes from '@/adapters/http/routes/category.routes';
+import DashboardRoutes from '@/adapters/http/routes/dashboard.routes';
 import OrderRoutes from '@/adapters/http/routes/order.routes';
 import PaymentRoutes from '@/adapters/http/routes/payment.routes';
 import PermissionRoutes from '@/adapters/http/routes/permission.routes';
@@ -12,7 +13,7 @@ import { Express } from 'express';
 import SseRoutes from './sse.route';
 
 export default function Routes(app: Express, controllers: Controllers, auth: Authorization) {
-  app.get('/api/v1/dashboard', controllers.appController.index);
+  app.use('/api/v1/dashboard', DashboardRoutes(controllers.dashboardController));
   app.post('/api/v1/uploads/generate-presign-url', controllers.appController.presignUrl);
   app.use('/api/v1/auth', AuthRoutes(controllers.authController));
   app.use('/api/v1/users', UserRoutes(controllers.userController, auth));

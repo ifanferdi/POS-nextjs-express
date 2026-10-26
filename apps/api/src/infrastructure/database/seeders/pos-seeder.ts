@@ -34,7 +34,7 @@ export default class PosSeeder implements Seeder {
   }
 
   private async seedCategories() {
-    const data = Array.from({ length: 100 }, (_: unknown, i: number) => ({
+    const data = Array.from({ length: 100 }, () => ({
       name: faker.commerce.department(),
       description: faker.commerce.productDescription(),
     }));
@@ -180,7 +180,7 @@ export default class PosSeeder implements Seeder {
         const status =
           paymentMethod === PaymentMethod.CASH
             ? _.sample([OrderStatus.COMPLETED, OrderStatus.CANCELLED])!
-            : _.sample([OrderStatus.PENDING, OrderStatus.EXPIRED])!;
+            : _.sample([OrderStatus.PENDING, OrderStatus.COMPLETED, OrderStatus.EXPIRED])!;
 
         const itemsCount = faker.number.int({ min: 1, max: 5 });
         const selectedProducts = _.sampleSize(products, itemsCount);
@@ -213,6 +213,8 @@ export default class PosSeeder implements Seeder {
         const paidAt = paymentStatus !== PaymentStatus.SUCCESS ? undefined : faker.date.anytime();
         const orderNumber = `INV-${String(id).padStart(6, '0')}`;
 
+        const createdAt = faker.date.anytime();
+        const updatedAt = createdAt;
         orders.push({
           id,
           customerId: null,
@@ -224,6 +226,8 @@ export default class PosSeeder implements Seeder {
           total,
           status,
           notes: faker.helpers.maybe(() => faker.lorem.sentence(), { probability: 0.3 }),
+          createdAt,
+          updatedAt,
         });
         payments.push({
           orderId: id,
@@ -234,6 +238,8 @@ export default class PosSeeder implements Seeder {
           method: paymentMethod,
           status: paymentStatus,
           paidAt,
+          createdAt,
+          updatedAt,
         });
       });
 

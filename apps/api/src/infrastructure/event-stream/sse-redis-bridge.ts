@@ -20,7 +20,7 @@ type SSEMessage = {
 
 export async function initSSERedisBridge() {
   try {
-    await subscriber.subscribe(config.sse.channel, (message, channel) => {
+    await subscriber.subscribe(config.sse.channel, (message, _) => {
       try {
         const payload: SSEMessage = JSON.parse(message);
         const event = `${payload.entity}.${payload.action}`;
@@ -36,6 +36,14 @@ export async function initSSERedisBridge() {
         } else {
           sseManager.broadcast({ event, data });
         }
+
+        // Data order/payment/product berubah → cache dashboard langsung di-invalidasi
+        // supaya refetch setelah event SSE tidak menyajikan angka stale.
+        if (['order', 'payment', 'product'].includes(payload.entity)) {
+          invalidateDashboardCache().catch((err) =>
+            console.error('Failed to invalidate dashboard cache:', err),
+          );
+        }
       } catch (err) {
         console.error('Failed to parse SSE message:', err);
       }
@@ -45,6 +53,13 @@ export async function initSSERedisBridge() {
   } catch (err) {
     console.error('Failed to subscribe SSE channel:', err);
   }
+}
+
+// shortcut: KEYS blocking — aman untuk jumlah key dashboard yang kecil;
+// ganti ke SCAN kalau key dashboard tumbuh banyak.
+async function invalidateDashboardCache() {
+  const keys = await subscriber.keys('dashboard:*');
+  if (keys.length) await subscriber.del(keys);
 }
 
 // Dipanggil dari service manapun (bukan cuma dari SSE controller)
