@@ -89,7 +89,7 @@ All routes are prefixed `/api/v1` and protected by JWT middleware unless noted. 
 ## Auth
 
 - **Modes** — `AUTH_MODE` is `stateless` (JWT only) or `stateful` (session persisted in Redis).
-- **Tokens** — short-lived access token (default `7h`) + refresh token (default 30 days). Refresh rotates both.
+- **Tokens** — short-lived access token (JWT, stateless: no Redis lookup) + refresh token stateful Redis session, rotates automatically when used.
 - **2FA** — optional (`AUTH_USE_2FA`); an OTP is emailed via SMTP and verified before access, with rate limiting.
 - **Middleware chain** — `ExtractJwtToken` reads/validates the token, `Authorization` enforces permissions; `verifySignedUrl` guards local-file access.
 
