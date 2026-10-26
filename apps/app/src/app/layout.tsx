@@ -1,4 +1,5 @@
 import '@/app/globals.css';
+import { QueryProvider } from '@/components/query-provider';
 import { ThemeProvider } from '@/components/theme-provider';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { app } from '@/config/config';
@@ -22,10 +23,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={font.variable} suppressHydrationWarning>
       <body className={`${font.className} antialiased`}>
         <ThemeProvider>
-          <TooltipProvider>
-            {children}
-            <Toaster richColors position="top-right" />
-          </TooltipProvider>
+          <QueryProvider>
+            <TooltipProvider>
+              {children}
+              <Toaster richColors position="top-right" />
+            </TooltipProvider>
+          </QueryProvider>
         </ThemeProvider>
       </body>
     </html>

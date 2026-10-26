@@ -98,3 +98,8 @@ export const midtrans = {
 
 export const sse = { allowedChannels: ['products', 'users', 'orders', 'pos'] as const };
 export type SseType = (typeof sse.allowedChannels)[number];
+
+export const dashboard = {
+  timezone: process.env.DASHBOARD_TZ ?? 'Asia/Jakarta',
+  defaultRangeDays: 30,
+};

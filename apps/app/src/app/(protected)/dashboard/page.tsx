@@ -1,40 +1,23 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { icons } from '@/config/config';
-import { LucideIcon } from 'lucide-react';
+import { DashboardView } from '@/app/(protected)/dashboard/_components/dashboard-view';
+import { dashboard as dashboardConfig } from '@/config/config';
+import { DashboardSummary } from '@/domain';
+import { getDashboardSummary } from '@/features/dashboard/api';
+import { getDefaultDateRange } from '@/lib/helper';
+import { unstable_rethrow } from 'next/navigation';
 
-const stats: { title: string; value: string; icon: LucideIcon; trend?: string }[] = [
-  { title: 'Total Users', value: '128', icon: icons.user, trend: '+12%' },
-  { title: 'Categories', value: '24', icon: icons.category },
-  { title: 'Products', value: '342', icon: icons.product, trend: '+5%' },
-  { title: 'Orders', value: '89', icon: icons.order, trend: '-3%' },
-];
+export default async function DashboardPage() {
+  // Summary di-SSR supaya first paint langsung ada angka; widget interaktif di client.
+  const tz = dashboardConfig.timezone;
+  const range = getDefaultDateRange(tz, dashboardConfig.defaultRangeDays);
 
-export default function DashboardPage() {
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Welcome to your admin panel</p>
-      </div>
+  let initialSummary: DashboardSummary | null;
+  try {
+    initialSummary = await getDashboardSummary({ ...range, tz });
+  } catch (error) {
+    // Biarkan redirect 401 tetap jalan; error lain jatuh ke retry di client.
+    unstable_rethrow(error);
+    initialSummary = null;
+  }
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat) => (
-          <Card key={stat.title}>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">{stat.title}</CardTitle>
-              <stat.icon className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stat.value}</div>
-              {stat.trend && (
-                <p className={`text-xs ${stat.trend.startsWith('+') ? 'text-success' : 'text-destructive'}`}>
-                  {stat.trend} from last month
-                </p>
-              )}
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    </div>
-  );
+  return <DashboardView initialSummary={initialSummary} initialRange={range} />;
 }

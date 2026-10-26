@@ -12,6 +12,28 @@ export const formatCurrency = (n: number, decimalDigits = 2) =>
     currency: 'IDR',
     maximumFractionDigits: decimalDigits,
   }).format(n);
+export const formatCompactCurrency = (n: number) =>
+  new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    notation: 'compact',
+    maximumFractionDigits: 1,
+  }).format(n);
+
+/** YYYY-MM-DD dari Date di timezone tertentu (bukan timezone server). */
+export const formatDateInTimezone = (date: Date, timeZone: string) =>
+  date.toLocaleDateString('en-CA', { timeZone });
+
+/** Range `days` hari terakhir sampai hari ini di `timeZone`. */
+export const getDefaultDateRange = (timeZone: string, days = 30) => {
+  const to = formatDateInTimezone(new Date(), timeZone);
+  return {
+    to,
+    from: moment(to)
+      .subtract(days - 1, 'days')
+      .format('YYYY-MM-DD'),
+  };
+};
 export const defaultPaginatedResponse = {
   page: 1,
   limit: 10,

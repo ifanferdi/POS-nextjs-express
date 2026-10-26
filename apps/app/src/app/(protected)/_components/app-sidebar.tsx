@@ -24,7 +24,11 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 const navItems = [
-  { title: 'Dashboard', href: '/dashboard', icon: icons.dashboard, permission: null },
+  {
+    title: 'Dashboard',
+    href: '/dashboard',
+    icon: icons.dashboard,
+  },
   {
     title: 'Users',
     href: '/users',
