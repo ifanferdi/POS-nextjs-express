@@ -27,12 +27,8 @@ export default class AuthController extends BaseController {
     res.json({ message: 'Success', ...token });
   });
 
-  signOut = asyncHandler(async (req: e.Request, res: e.Response) => {
-    const params = { id: extractUserId(req) };
-
-    // BaseFindById.parse(params);
-
-    await this.useCases.authUseCase.signOut.execute(params as BaseFindById);
+  signOut = asyncHandler(async (req: e.Request & Record<string, any>, res: e.Response) => {
+    await this.useCases.authUseCase.signOut.execute({ sessionId: req.user?.sessionId });
 
     res.json({ message: 'Success' });
   });

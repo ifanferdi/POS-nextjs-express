@@ -21,4 +21,4 @@ export function verify(token: string) {
   }
 }
 
-export const key = (id: number) => `jwt:user-${id}`;
+export const key = (sessionId: string) => `jwt:session-${sessionId}`;
