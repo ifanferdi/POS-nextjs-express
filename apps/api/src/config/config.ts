@@ -48,6 +48,7 @@ const config = {
   redis: {
     url: process.env.REDIS_URL || 'redis://localhost:6379',
     meCacheTtl: process.env.ME_CACHE_TTL || 24 * 60 * 60,
+    dashboardCacheTtl: Number(process.env.DASHBOARD_CACHE_TTL) || 30, // detik
     orderCounterRedisTimeout: Number(process.env.ORDER_COUNTR_REDIS_TIMEOUT) || 60 * 60 * 24 * 2, // hari
     idempotencyKeyTtl: Number(process.env.IDEMPOTENCY_KEY_TTL) || 24 * 60 * 60, // 24 jam
   },

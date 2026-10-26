@@ -1,7 +1,7 @@
 import { isString } from 'lodash';
 import { EnumLike, z } from 'zod';
 
-const DateStringSchema = z
+export const DateStringSchema = z
   .string()
   .regex(/^\d{4}-\d{2}-\d{2}$/, { message: 'Invalid date format (YYYY-MM-DD)' })
   .refine((val) => !isString(new Date(val).getTime()), { message: 'Invalid date value' });

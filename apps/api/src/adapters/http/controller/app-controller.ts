@@ -4,12 +4,6 @@ import e from 'express';
 import asyncHandler from 'express-async-handler';
 
 export default class AppController extends BaseController {
-  index = asyncHandler(async (_req: e.Request, res: e.Response) => {
-    const dashboard = await this.useCases.commonUseCase.posDashboard.execute();
-
-    res.json(dashboard);
-  });
-
   presignUrl = asyncHandler(async (req: e.Request, res: e.Response) => {
     UploadSchema.parse(req.body);
 
