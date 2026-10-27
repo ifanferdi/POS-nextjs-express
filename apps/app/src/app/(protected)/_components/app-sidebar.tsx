@@ -30,12 +30,6 @@ const navItems = [
     icon: icons.dashboard,
   },
   {
-    title: 'Users',
-    href: '/users',
-    icon: icons.user,
-    permission: [PERMISSION.SHOW_USER],
-  },
-  {
     title: 'Categories',
     href: '/categories',
     icon: icons.category,
@@ -52,6 +46,12 @@ const navItems = [
     href: '/orders',
     icon: icons.order,
     permission: [PERMISSION.SHOW_ORDER],
+  },
+  {
+    title: 'Users',
+    href: '/users',
+    icon: icons.user,
+    permission: [PERMISSION.SHOW_USER],
   },
 ];
 
