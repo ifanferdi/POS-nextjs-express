@@ -7,7 +7,6 @@ export default class AuthorizationOrder extends BaseUseCase {
 
   async all(params: FindAllOrderDto, userId: number) {
     if (await this.authorization.hasRole(userId, 'User')) params.userId = userId;
-    console.log(params, await this.authorization.hasRole(userId, 'User'));
 
     return params;
   }

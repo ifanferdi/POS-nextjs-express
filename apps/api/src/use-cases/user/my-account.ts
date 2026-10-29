@@ -27,7 +27,6 @@ export default class MyAccount extends BaseUseCase {
       id,
       with: [UserRelation.PROFILE, UserRelation.ROLE, UserRelation.PERMISSIONS],
     });
-    console.log(user);
 
     user.profile.imageUrl = undefined;
 
