@@ -2,22 +2,20 @@ import { ProductFilter } from '@/app/(protected)/products/_components/product-fi
 import { ProductFormDialog } from '@/app/(protected)/products/_components/product-form-dialog';
 import { ProductSearch } from '@/app/(protected)/products/_components/product-search';
 import { ProductTableSection } from '@/app/(protected)/products/_components/product-table';
-import { ProductTableSkeleton } from '@/app/(protected)/products/_components/product-table-skeleton';
 import { auth } from '@/auth';
-import { CategoryOption, ProductRelation } from '@/domain';
+import { CategoryOption } from '@/domain';
 import { getAllCategories } from '@/features/categories/api';
-import { GetAllProductParams } from '@/features/products/schema';
 import { hasPermission, PERMISSION } from '@/lib/permission';
 import { forbidden } from 'next/navigation';
-import { Suspense } from 'react';
 
-interface ProductsPageProps {
-  searchParams: Promise<{
-    page?: string;
-    q?: string;
-    'categoryId[]'?: string[];
-    isActive?: string;
-  }>;
+export interface ProductSearchParams {
+  page?: string;
+  q?: string;
+  'categoryId[]'?: string[];
+  isActive?: string;
+}
+ interface ProductsPageProps {
+  searchParams: Promise<ProductSearchParams>;
 }
 
 export default async function ProductsPage({ searchParams }: ProductsPageProps) {
@@ -25,24 +23,6 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
   if (!hasPermission(session?.user.permissions, [PERMISSION.SHOW_PRODUCT])) forbidden();
 
   const canManage = hasPermission(session?.user.permissions, [PERMISSION.MANAGE_PRODUCT]);
-
-  const { page, q, isActive, ...props } = await searchParams;
-  const categoryIds =
-    typeof props['categoryId[]'] === 'string' ? [props['categoryId[]']] : props['categoryId[]'];
-
-  const pageNum = Number(page ?? 1);
-  const categoryIdsNum =
-    categoryIds && categoryIds.length > 0 ? categoryIds.map((val) => Number(val)) : undefined;
-  const isActiveBool = isActive === 'true' ? true : isActive === 'false' ? false : undefined;
-
-  const params: GetAllProductParams = {
-    page: pageNum,
-    q,
-    categoryId: categoryIdsNum,
-    isActive: isActiveBool,
-    with: [ProductRelation.CATEGORIES],
-    orderBy: ['name:asc'],
-  };
 
   const { data: categories } = await getAllCategories<CategoryOption>({
     limit: -1,
@@ -60,16 +40,14 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
         {canManage && <ProductFormDialog mode="create" categories={categories} />}
       </div>
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <Suspense fallback={null}>
-          <ProductSearch />
-        </Suspense>
-        <Suspense fallback={null}>
-          <ProductFilter categories={categories} />{' '}
-        </Suspense>
+        <ProductSearch />
+        <ProductFilter categories={categories} />{' '}
       </div>
-      <Suspense fallback={<ProductTableSkeleton />}>
-        <ProductTableSection categories={categories} params={params} canManage={canManage} />
-      </Suspense>
+      <ProductTableSection
+        categories={categories}
+        searchParams={await searchParams}
+        canManage={canManage}
+      />
     </div>
   );
 }

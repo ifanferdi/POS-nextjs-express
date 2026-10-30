@@ -1,21 +1,49 @@
+'use client';
+
 import { CategoryActions } from '@/app/(protected)/categories/_components/category-actions';
 import { CategoryDetailDialog } from '@/app/(protected)/categories/_components/category-detail-dialog';
+import { CategorySearchParams } from '@/app/(protected)/categories/page';
 import { TablePagination } from '@/components/shared/table';
-import { DataTable, EmptyTable } from '@/components/shared/table-server';
+import { DataTable, EmptyTable, ErrorTable } from '@/components/shared/table-server';
 import { CategoryList } from '@/domain';
-import { getAllCategories } from '@/features/categories/api';
-import { GetAllCategoryParams } from '@/features/categories/schema';
+import { getAllCategoriesAction } from '@/features/categories/action';
+import { categoryKeys } from '@/lib/tenstack-keys';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
+import { CategoryTableSkeleton } from './category-table-skeleton';
 
 export const headers = ['#', 'Name', 'Total Products', ''];
 
 interface categoriesTableSectionProps {
-  params: GetAllCategoryParams;
+  searchParams: CategorySearchParams;
   canManage: boolean;
 }
-export async function CategoriesTableSection(props: categoriesTableSectionProps) {
-  const { params, canManage } = props;
-  const { data: categories, ...meta } = await getAllCategories<CategoryList>(params);
+export function CategoriesTableSection(props: categoriesTableSectionProps) {
+  const { searchParams, canManage } = props;
+
+  const { page, q } = searchParams;
+  const pageNum = Number(page ?? 1);
+  const params = { page: pageNum, q, orderBy: ['name:asc'] };
+
+  const { data, isPending, isError, refetch } = useQuery({
+    queryKey: categoryKeys.all(params),
+    queryFn: () => getAllCategoriesAction<CategoryList>(params),
+    placeholderData: keepPreviousData,
+  });
+
+  if (isPending) return <CategoryTableSkeleton />;
+  if (isError)
+    return (
+      <ErrorTable
+        headers={headers}
+        className="md:w-xl"
+        entities="categories"
+        onRetry={() => refetch()}
+      />
+    );
+
+  const { data: categories, ...meta } = data;
+
   return (
     <>
       <CategoryTable categories={categories} canManage={canManage} />

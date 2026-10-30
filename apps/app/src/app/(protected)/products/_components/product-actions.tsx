@@ -20,6 +20,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { CategoryOption, ProductList } from '@/domain';
 import { deleteProductAction } from '@/features/products/action';
+import { Keys } from '@/lib/tenstack-keys';
+import { useQueryClient } from '@tanstack/react-query';
 import { EyeIcon, MoreHorizontalIcon, PencilIcon, TrashIcon } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -35,6 +37,7 @@ interface ProductActionsProps {
 export function ProductActions({ product, categories, canManage }: ProductActionsProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const queryClient = useQueryClient();
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -48,6 +51,7 @@ export function ProductActions({ product, categories, canManage }: ProductAction
       }
 
       toast.success('Product deleted successfully.');
+      queryClient.invalidateQueries({ queryKey: [Keys.PRODUCTS] });
       setDeleteOpen(false);
       if (pathname !== '/products') router.push('/products');
     });

@@ -11,7 +11,7 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { icons } from '@/config/config';
 import { stringEllipsis } from '@/lib/helper';
-import { CircleAlert } from 'lucide-react';
+import { CircleAlert, RotateCwIcon } from 'lucide-react';
 import Link from 'next/link';
 import { ReactNode } from 'react';
 
@@ -138,6 +138,53 @@ export function Skeleton({ className, total }: SkeletonProps) {
       key={total}
       className={`bg-muted-foreground/20 dark:bg-muted-foreground/20 ${className}`}
     />
+  );
+}
+
+export function ErrorTable({
+  headers,
+  entities,
+  onRetry,
+  className,
+}: {
+  headers: string[];
+  entities: string;
+  onRetry: () => void;
+  className?: string;
+}) {
+  return (
+    <div className={`overflow-hidden rounded-lg border border-border/60 ${className}`}>
+      <Table>
+        <TableHeader>
+          <TableRow className="bg-muted dark:bg-muted/50">
+            {headers.map((header) => (
+              <TableHead
+                key={header}
+                className={`text-xs text-muted-foreground ${header === '#' ? 'w-0 px-3 text-center' : ''}`}
+              >
+                {header}
+              </TableHead>
+            ))}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          <TableRow>
+            <TableCell colSpan={headers.length}>
+              <div className="flex flex-col items-center justify-center gap-3 rounded-lg py-16">
+                <div className="flex size-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/50">
+                  <CircleAlert className="size-6 text-red-600" />
+                </div>
+                <p className="text-sm font-medium">Error while getting {entities} data.</p>
+                <Button variant="outline" size="sm" onClick={onRetry}>
+                  <RotateCwIcon />
+                  Retry
+                </Button>
+              </div>
+            </TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>
+    </div>
   );
 }
 

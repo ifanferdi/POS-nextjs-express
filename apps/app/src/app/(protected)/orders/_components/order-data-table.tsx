@@ -1,4 +1,5 @@
 import { OrderActions } from '@/app/(protected)/orders/_components/order-actions';
+import { headers } from '@/app/(protected)/orders/_components/order-table';
 import { CellsType, DataTable, EmptyTable } from '@/components/shared/table-server';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -8,23 +9,9 @@ import { CreditCardIcon, EyeIcon, Loader2Icon } from 'lucide-react';
 import moment from 'moment';
 import Link from 'next/link';
 
-export const headers = [
-  '#',
-  'Order #',
-  // 'Customer',
-  'Date',
-  'Items',
-  'Total',
-  'Payment',
-  'Status',
-  '',
-];
-
 interface OrderTableProps {
   orders: OrderList[];
-  /** When provided, the action column renders a view button instead of full order actions. */
   onView?: (order: OrderList) => void;
-  /** When provided, a Pay button is shown for non-cash orders that are still pending. */
   onPay?: (order: OrderList) => void;
   isPayLoading?: boolean;
 }

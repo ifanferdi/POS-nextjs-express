@@ -21,6 +21,13 @@ export interface ProductList extends Product {
   categories: Category[];
 }
 
+export type ProductsTableDto = Pick<
+  ProductList,
+  'id' | 'name' | 'sku' | 'stock' | 'price' | 'isActive'
+> & {
+  categories: Array<Pick<Category, 'id' | 'name'>>;
+};
+
 export type ProductDetail = ProductList;
 
 export enum ProductRelation {

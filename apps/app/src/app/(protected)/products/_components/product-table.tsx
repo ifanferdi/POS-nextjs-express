@@ -1,23 +1,61 @@
+'use client';
+
 import { ProductActions } from '@/app/(protected)/products/_components/product-actions';
+import { ProductTableSkeleton } from '@/app/(protected)/products/_components/product-table-skeleton';
+import { ProductSearchParams } from '@/app/(protected)/products/page';
 import { TablePagination } from '@/components/shared/table';
-import { DataTable, EmptyTable, TooltipedCell } from '@/components/shared/table-server';
+import { DataTable, EmptyTable, ErrorTable, TooltipedCell } from '@/components/shared/table-server';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { CategoryOption, ProductList } from '@/domain';
-import { getAllProducts } from '@/features/products/api';
-import { GetAllProductParams } from '@/features/products/schema';
+import { CategoryOption, ProductList, ProductRelation } from '@/domain';
+import { getAllProductsAction } from '@/features/products/action';
 import { formatCurrency } from '@/lib/helper';
+import { productKeys } from '@/lib/tenstack-keys';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 
 export const headers = ['#', 'Name', 'Sku', 'Stock', 'Price', 'Categories', 'Is Active?', ''];
 
 interface ProductTableSectionProps {
-  params: GetAllProductParams;
+  searchParams: ProductSearchParams;
   categories: CategoryOption[];
   canManage: boolean;
 }
-export async function ProductTableSection(props: ProductTableSectionProps) {
-  const { params, categories, canManage } = props;
-  const { data: products, ...meta } = await getAllProducts<ProductList>(params);
+
+export function ProductTableSection(props: ProductTableSectionProps) {
+  const { searchParams, categories, canManage } = props;
+
+  const { page, q, isActive, ...searchParam } = searchParams;
+  const categoryIds =
+    typeof searchParam['categoryId[]'] === 'string'
+      ? [searchParam['categoryId[]']]
+      : searchParam['categoryId[]'];
+
+  const pageNum = Number(page ?? 1);
+  const categoryIdsNum =
+    categoryIds && categoryIds.length > 0 ? categoryIds.map((val) => Number(val)) : undefined;
+  const isActiveBool = isActive === 'true' ? true : isActive === 'false' ? false : undefined;
+
+  const params = {
+    page: pageNum,
+    q,
+    categoryId: categoryIdsNum,
+    isActive: isActiveBool,
+    with: [ProductRelation.CATEGORIES],
+    orderBy: ['name:asc'],
+  };
+
+  const { data, isPending, isError, refetch } = useQuery({
+    queryKey: productKeys.all(params),
+    queryFn: () => getAllProductsAction<ProductList>(params),
+    placeholderData: keepPreviousData,
+  });
+
+  if (isPending) return <ProductTableSkeleton />;
+  if (isError)
+    return <ErrorTable headers={headers} entities="products" onRetry={() => refetch()} />;
+
+  const { data: products, ...meta } = data;
+
   return (
     <>
       <ProductTable products={products} categories={categories} canManage={canManage} />

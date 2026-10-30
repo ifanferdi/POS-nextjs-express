@@ -14,6 +14,8 @@ import {
 } from '@/components/ui/dialog';
 import { CategoryList } from '@/domain';
 import { deleteCategoryAction } from '@/features/categories/action';
+import { Keys } from '@/lib/tenstack-keys';
+import { useQueryClient } from '@tanstack/react-query';
 import { EyeIcon, PencilIcon, TrashIcon } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
@@ -31,6 +33,7 @@ export function CategoryActions({
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const queryClient = useQueryClient();
 
   function handleDelete() {
     startTransition(async () => {
@@ -41,6 +44,7 @@ export function CategoryActions({
       }
 
       toast.success('Category deleted successfully.');
+      queryClient.invalidateQueries({ queryKey: [Keys.CATEGORIES] });
       setDeleteOpen(false);
       if (pathname !== '/categories') router.push('/categories');
     });

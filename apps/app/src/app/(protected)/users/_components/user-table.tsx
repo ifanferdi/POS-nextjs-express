@@ -1,25 +1,54 @@
+'use client';
+
 import { UserActions } from '@/app/(protected)/users/_components/user-actions';
 import { TablePagination } from '@/components/shared/table';
-import { DataTable, EmptyTable } from '@/components/shared/table-server';
+import { DataTable, EmptyTable, ErrorTable } from '@/components/shared/table-server';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { RoleOption, UserList } from '@/domain';
+import { RoleOption, UserList, UserRelation } from '@/domain';
 import { getAllUsersAction } from '@/features/users/action';
 import { GetAllUserParams } from '@/features/users/schema';
 import { getInitials } from '@/lib/helper';
+import { orderKeys } from '@/lib/tenstack-keys';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import _ from 'lodash';
 import moment from 'moment';
+import { UserSearchParams } from '../page';
+import { UserTableSkeleton } from './user-table-skeleton';
 
 export const headers = ['#', 'Name', 'Username', 'Gender', 'Birth', 'Role', 'Status', ''];
 
 interface UserTableSectionProps {
-  params: GetAllUserParams;
+  searchParams: UserSearchParams;
   roles: RoleOption[];
   canManage: boolean;
 }
-export async function UserTableSection(props: UserTableSectionProps) {
-  const { params, roles, canManage } = props;
-  const { data: users, ...meta } = await getAllUsersAction<UserList>(params);
+export function UserTableSection(props: UserTableSectionProps) {
+  const { searchParams, roles, canManage } = props;
+  const { page, q, roleId, isActive } = searchParams;
+
+  const pageNum = Number(page ?? 1);
+  const roleIdNum = roleId ? Number(roleId) : undefined;
+  const isActiveBool = isActive === 'true' ? true : isActive === 'false' ? false : undefined;
+
+  const params: GetAllUserParams = {
+    page: pageNum,
+    q,
+    roleId: roleIdNum,
+    isActive: isActiveBool,
+    with: [UserRelation.PROFILE, UserRelation.ROLE],
+  };
+
+  const { data, isPending, isError, refetch } = useQuery({
+    queryKey: orderKeys.all(params),
+    queryFn: () => getAllUsersAction<UserList>(params),
+    placeholderData: keepPreviousData,
+  });
+  if (isPending) return <UserTableSkeleton />;
+  if (isError) return <ErrorTable headers={headers} entities="users" onRetry={() => refetch()} />;
+
+  const { data: users, ...meta } = data;
+
   return (
     <>
       <UserTable users={users} roles={roles} canManage={canManage} />
@@ -40,7 +69,7 @@ interface UserTableProps {
 }
 function UserTable(props: UserTableProps) {
   const { users, roles, canManage } = props;
-  if (users.length === 0) return <EmptyTable headers={headers} entities="users" icon="user" />;
+  if (users.length === 0) return <EmptyTable entities="users" icon="user" headers={headers} />;
 
   return (
     <DataTable

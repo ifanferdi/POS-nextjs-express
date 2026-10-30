@@ -38,9 +38,11 @@ import {
   UpdateProductInput,
 } from '@/features/products/schema';
 import { ImageFileSchema } from '@/features/uploads/schema';
+import { Keys } from '@/lib/tenstack-keys';
 import { uploadImageToS3 } from '@/lib/upload';
 import { cn } from '@/lib/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useQueryClient } from '@tanstack/react-query';
 import _ from 'lodash';
 import { ChevronDown, Loader2Icon, PlusIcon, XIcon } from 'lucide-react';
 import Image from 'next/image';
@@ -98,6 +100,7 @@ interface ProductFormProps {
 function ProductForm(props: ProductFormProps) {
   const { mode, product, categories, onClose } = props;
   const [isPending, startTransition] = useTransition();
+  const queryClient = useQueryClient();
   const isCreateMode = mode === 'create';
   const [previewUrl, setPreviewUrl] = useState<string | null>(product?.imageUrl ?? null);
 
@@ -152,6 +155,7 @@ function ProductForm(props: ProductFormProps) {
         toast.success(
           isCreateMode ? 'Product created successfully!' : 'Product updated successfully',
         );
+        queryClient.invalidateQueries({ queryKey: [Keys.PRODUCTS] });
         form.reset();
         onClose();
       } catch (error) {

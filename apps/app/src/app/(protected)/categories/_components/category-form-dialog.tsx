@@ -22,7 +22,9 @@ import {
   UpdateCategoryInput,
   UpdateCategorySchema,
 } from '@/features/categories/schema';
+import { Keys } from '@/lib/tenstack-keys';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useQueryClient } from '@tanstack/react-query';
 import { useState, useTransition } from 'react';
 import { Controller, useForm, UseFormReturn } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -69,6 +71,7 @@ function CategoryForm(props: CategoryFormProps) {
   const { category, mode, onClose } = props;
   const [isPending, startTransition] = useTransition();
   const isCreateMode = mode === 'create';
+  const queryClient = useQueryClient();
 
   const defaultValues = {
     name: isCreateMode ? '' : category!.name,
@@ -95,6 +98,7 @@ function CategoryForm(props: CategoryFormProps) {
       toast.success(
         isCreateMode ? 'Create new Category successfully!' : 'Update Category successfully',
       );
+      queryClient.invalidateQueries({ queryKey: [Keys.CATEGORIES] });
       form.reset();
       onClose();
     });

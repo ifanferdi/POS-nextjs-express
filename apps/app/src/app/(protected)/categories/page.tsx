@@ -1,27 +1,24 @@
 import { CategoryFormDialog } from '@/app/(protected)/categories/_components/category-form-dialog';
 import { CategorySearch } from '@/app/(protected)/categories/_components/category-search';
 import { CategoriesTableSection } from '@/app/(protected)/categories/_components/category-table';
-import { CategoryTableSkeleton } from '@/app/(protected)/categories/_components/category-table-skeleton';
 import { auth } from '@/auth';
-import { Skeleton } from '@/components/ui/skeleton';
-import { GetAllCategoryParams } from '@/features/categories/schema';
 import { hasPermission, PERMISSION } from '@/lib/permission';
 import { forbidden } from 'next/navigation';
-import { Suspense } from 'react';
 
-export default async function CategoriesPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ page?: string; q?: string }>;
-}) {
+export interface CategorySearchParams {
+  page?: string;
+  q?: string;
+}
+
+interface CategoriesPageProps {
+  searchParams: Promise<CategorySearchParams>;
+}
+
+export default async function CategoriesPage({ searchParams }: CategoriesPageProps) {
   const session = await auth();
   if (!hasPermission(session?.user.permissions, [PERMISSION.SHOW_CATEGORY])) forbidden();
 
   const canManage = hasPermission(session?.user.permissions, [PERMISSION.MANAGE_CATEGORY]);
-
-  const { page, q } = await searchParams;
-  const pageNum = Number(page ?? 1);
-  const params: GetAllCategoryParams = { page: pageNum, q, orderBy: ['name:asc'] };
 
   return (
     <div className="space-y-6">
@@ -33,13 +30,9 @@ export default async function CategoriesPage({
         {canManage && <CategoryFormDialog mode="create" />}
       </div>
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <Suspense fallback={<Skeleton className="h-9 w-full sm:w-72" />}>
-          <CategorySearch />
-        </Suspense>
+        <CategorySearch />
       </div>
-      <Suspense fallback={<CategoryTableSkeleton />}>
-        <CategoriesTableSection params={params} canManage={canManage} />
-      </Suspense>
+      <CategoriesTableSection searchParams={await searchParams} canManage={canManage} />
     </div>
   );
 }
