@@ -37,7 +37,7 @@ export function PosCart({ onCheckoutSuccess }: PosCartProps) {
   const count = cartCount(items);
 
   return (
-    <div className="flex h-full min-h-0 flex-col rounded-xl border border-primary bg-card max-lg:max-h-[70dvh]">
+    <div className="flex h-full min-h-0 flex-col rounded-xl border border-primary/50 bg-card max-lg:max-h-[70dvh]">
       <button
         type="button"
         onClick={() => setOpen(!open)}
@@ -85,7 +85,7 @@ export function PosCart({ onCheckoutSuccess }: PosCartProps) {
             {items.map((item) => (
               <li
                 key={item.productId}
-                className="flex gap-3 items-center rounded-lg border border-border/40 p-2.5 bg-muted/50 dark:bg-muted/50 transition hover:bg-muted dark:hover:bg-muted"
+                className="flex gap-3 items-center rounded-lg border border-border/40 p-2.5 bg-muted-foreground/10 dark:bg-muted-foreground/10 hover:bg-muted-foreground/20 hover:dark:bg-muted-foreground/20 transition"
               >
                 <div className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-md bg-card">
                   {item.imageUrl ? (
@@ -109,13 +109,13 @@ export function PosCart({ onCheckoutSuccess }: PosCartProps) {
                     <button
                       type="button"
                       onClick={() => remove(item.productId)}
-                      className="shrink-0 text-muted-foreground transition hover:text-destructive"
+                      className="shrink-0 text-destructive/70 hover:text-destructive transition"
                       aria-label="Remove item"
                     >
                       <Trash2Icon className="size-4" />
                     </button>
                   </div>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
                     {formatCurrency(item.price)} · Stock: {item.stock}
                   </p>
                   <div className="mt-auto flex items-center justify-between gap-2">
@@ -123,7 +123,7 @@ export function PosCart({ onCheckoutSuccess }: PosCartProps) {
                       <button
                         type="button"
                         onClick={() => dec(item.productId)}
-                        className="flex size-6 items-center justify-center rounded-md border border-border/60 text-muted-foreground transition hover:bg-primary/40 hover:text-white disabled:opacity-50"
+                        className="flex size-6 items-center justify-center rounded-md border transition text-muted-foreground hover:bg-primary hover:text-white dark:hover:text-black disabled:opacity-50"
                         aria-label="Decrease quantity"
                       >
                         <MinusIcon className="size-3.5" />
@@ -134,13 +134,13 @@ export function PosCart({ onCheckoutSuccess }: PosCartProps) {
                       <button
                         type="button"
                         onClick={() => inc(item.productId)}
-                        className="flex size-6 items-center justify-center rounded-md border border-border/60 text-muted-foreground transition hover:bg-primary/40 hover:text-white disabled:opacity-50"
+                        className="flex size-6 items-center justify-center rounded-md border text-gray-500 transition hover:bg-primary hover:text-white dark:hover:text-black disabled:opacity-50"
                         aria-label="Increase quantity"
                       >
                         <PlusIcon className="size-3.5" />
                       </button>
                     </div>
-                    <span className="text-sm font-semibold">
+                    <span className="text-sm font-semibold text-primary">
                       {formatCurrency(item.price * item.quantity)}
                     </span>
                   </div>

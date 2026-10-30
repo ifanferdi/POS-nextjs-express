@@ -38,7 +38,8 @@ interface ProductTableProps {
 }
 function ProductTable(props: ProductTableProps) {
   const { products, categories, canManage } = props;
-  if (products.length === 0) return <EmptyTable entities="products" icon="product" />;
+  if (products.length === 0)
+    return <EmptyTable entities="products" icon="product" headers={headers} />;
 
   return (
     <DataTable

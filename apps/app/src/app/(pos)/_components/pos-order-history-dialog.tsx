@@ -25,7 +25,7 @@ import {
   PaymentRelation,
 } from '@/domain';
 import { getPaymentMethod, PaymentMethod, PaymentMidtrans } from '@/domain/payment.types';
-import { getOrderByIdAction, getOrdersAction } from '@/features/orders/action';
+import { getAllOrdersAction, getOrderByIdAction } from '@/features/orders/action';
 import { getPaymentByOrderId } from '@/features/payments/action';
 import _ from 'lodash';
 import {
@@ -112,7 +112,7 @@ export function PosOrderHistoryDialog({ open, setOpen }: PosOrderHistoryDialogPr
     const id = ++fetchIdRef.current;
     const fetchOrders = async () => {
       setIsLoading(true);
-      const result = await getOrdersAction<OrderList>({
+      const result = await getAllOrdersAction<OrderList>({
         page: 1,
         limit: PAGE_SIZE,
         q: query || undefined,
@@ -141,7 +141,7 @@ export function PosOrderHistoryDialog({ open, setOpen }: PosOrderHistoryDialogPr
     const id = ++fetchIdRef.current;
     if (append) setIsLoadingMore(true);
     else setIsLoading(true);
-    const result = await getOrdersAction<OrderList>({
+    const result = await getAllOrdersAction<OrderList>({
       page: nextPage,
       limit: PAGE_SIZE,
       q: query || undefined,

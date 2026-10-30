@@ -11,7 +11,7 @@ import {
   UpdateOrderInput,
   UpdateOrderSchema,
 } from '@/features/orders/schema';
-import { defaultPaginatedResponse } from '@/lib/helper';
+import { guard } from '@/lib/helper';
 import { PERMISSION, requirePermission } from '@/lib/permission';
 import { revalidatePath } from 'next/cache';
 import { unstable_rethrow } from 'next/navigation';
@@ -41,17 +41,10 @@ export async function createOrderAction(
   }
 }
 
-export async function getOrdersAction<T = Order>(
+export async function getAllOrdersAction<T = Order>(
   params: GetAllOrderParams,
 ): Promise<PaginatedResponse<T>> {
-  try {
-    const response = await api.getAllOrders<T>(params);
-    return response;
-  } catch (error) {
-    unstable_rethrow(error);
-    console.error(error);
-    return defaultPaginatedResponse;
-  }
+  return await guard(async () => await api.getAllOrders(params), 'Failed to fetch orders.');
 }
 
 export async function getOrderByIdAction<T = OrderDetail>(

@@ -1,11 +1,12 @@
 'use client';
 
-import { DashboardCardError } from '@/app/(protected)/dashboard/_components/dashboard-card-error';
+import { QueryError } from '@/components/shared/query-error';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { dashboard as dashboardConfig } from '@/config/config';
 import { DashboardStatusCount, OrderStatus } from '@/domain';
 import { getDashboardOrdersByStatusAction } from '@/features/dashboard/action';
+import { dashboardKeys } from '@/lib/tenstack-keys';
 import { cn } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
@@ -39,7 +40,7 @@ export function DashboardStatusDonut({ range }: DashboardStatusDonutProps) {
   const [active, setActive] = useState<OrderStatus | null>(null);
 
   const { data, isPending, isError, refetch } = useQuery({
-    queryKey: ['dashboard', 'status', range.from, range.to],
+    queryKey: dashboardKeys.status(range),
     queryFn: () => getDashboardOrdersByStatusAction({ ...range, tz: TZ }),
   });
 
@@ -74,7 +75,7 @@ export function DashboardStatusDonut({ range }: DashboardStatusDonutProps) {
         {isPending ? (
           <Skeleton className="h-56 w-full" />
         ) : isError ? (
-          <DashboardCardError onRetry={() => refetch()} />
+          <QueryError onRetry={() => refetch()} />
         ) : total === 0 ? (
           <div className="flex flex-1 items-center justify-center py-16 text-sm text-muted-foreground">
             No orders in this period.

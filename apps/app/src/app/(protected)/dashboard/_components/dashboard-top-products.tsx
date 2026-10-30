@@ -1,12 +1,13 @@
 'use client';
 
-import { DashboardCardError } from '@/app/(protected)/dashboard/_components/dashboard-card-error';
+import { QueryError } from '@/components/shared/query-error';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { dashboard as dashboardConfig } from '@/config/config';
 import { DashboardTopProduct } from '@/domain';
 import { getDashboardTopProductsAction } from '@/features/dashboard/action';
 import { formatCurrency } from '@/lib/helper';
+import { dashboardKeys } from '@/lib/tenstack-keys';
 import { useQuery } from '@tanstack/react-query';
 
 const TZ = dashboardConfig.timezone;
@@ -18,7 +19,7 @@ interface DashboardTopProductsProps {
 
 export function DashboardTopProducts({ range }: DashboardTopProductsProps) {
   const { data, isPending, isError, refetch } = useQuery({
-    queryKey: ['dashboard', 'top-products', range.from, range.to],
+    queryKey: dashboardKeys.topProduct(range),
     queryFn: () => getDashboardTopProductsAction({ ...range, tz: TZ, limit: TOP_PRODUCTS_LIMIT }),
   });
 
@@ -35,7 +36,7 @@ export function DashboardTopProducts({ range }: DashboardTopProductsProps) {
         {isPending ? (
           <Skeleton className="h-64 w-full" />
         ) : isError ? (
-          <DashboardCardError onRetry={() => refetch()} />
+          <QueryError onRetry={() => refetch()} />
         ) : products.length === 0 ? (
           <div className="py-16 text-center text-sm text-muted-foreground">
             No products sold in this period.

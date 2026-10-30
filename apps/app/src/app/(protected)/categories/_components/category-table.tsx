@@ -35,7 +35,10 @@ interface CategoryTableProps {
 }
 function CategoryTable(props: CategoryTableProps) {
   const { categories, canManage } = props;
-  if (categories.length === 0) return <EmptyTable entities="categories" icon="category" />;
+  if (categories.length === 0)
+    return (
+      <EmptyTable headers={headers} className="md:w-xl" entities="categories" icon="category" />
+    );
 
   return (
     <DataTable

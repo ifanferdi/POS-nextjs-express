@@ -4,7 +4,7 @@ import { DataTable, EmptyTable } from '@/components/shared/table-server';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { RoleOption, UserList } from '@/domain';
-import { getAllUser } from '@/features/users/api';
+import { getAllUsersAction } from '@/features/users/action';
 import { GetAllUserParams } from '@/features/users/schema';
 import { getInitials } from '@/lib/helper';
 import _ from 'lodash';
@@ -19,7 +19,7 @@ interface UserTableSectionProps {
 }
 export async function UserTableSection(props: UserTableSectionProps) {
   const { params, roles, canManage } = props;
-  const { data: users, ...meta } = await getAllUser<UserList>(params);
+  const { data: users, ...meta } = await getAllUsersAction<UserList>(params);
   return (
     <>
       <UserTable users={users} roles={roles} canManage={canManage} />
@@ -40,7 +40,7 @@ interface UserTableProps {
 }
 function UserTable(props: UserTableProps) {
   const { users, roles, canManage } = props;
-  if (users.length === 0) return <EmptyTable entities="users" icon="user" />;
+  if (users.length === 0) return <EmptyTable headers={headers} entities="users" icon="user" />;
 
   return (
     <DataTable

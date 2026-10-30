@@ -14,7 +14,7 @@ export function ProductTableSkeleton({ rows = 10 }: { rows?: number }) {
                 <Skeleton className={`h-4 w-4`} />
               </TableCell>
               <TableCell>
-                <Skeleton className="h-4 w-36" />
+                <Skeleton className="h-4 w-44" />
               </TableCell>
               <TableCell>
                 <Skeleton className="h-4 w-28" />
@@ -26,7 +26,11 @@ export function ProductTableSkeleton({ rows = 10 }: { rows?: number }) {
                 <Skeleton className="h-4 w-14" />
               </TableCell>
               <TableCell>
-                <Skeleton className="h-4 w-36" />
+                <div className="flex gap-2">
+                  <Skeleton className="h-4 w-16" />
+                  <Skeleton className="h-4 w-16" />
+                  <Skeleton className="h-4 w-16" />
+                </div>
               </TableCell>
               <TableCell>
                 <Skeleton className="h-4 w-16" />

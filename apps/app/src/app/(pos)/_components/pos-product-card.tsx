@@ -34,7 +34,7 @@ export function ProductCard({
         added ? 'border-primary' : 'hover:shadow-lg hover:-translate-y-1',
       )}
     >
-      <div className="relative aspect-square w-full bg-muted/50">
+      <div className="relative aspect-square w-full bg-muted-foreground/20 dark:bg-muted-foreground/20">
         <ProductImage imageUrl={product.imageUrl} name={product.name} />
       </div>
       <div className="flex flex-1 flex-col gap-1 p-2">
@@ -77,7 +77,7 @@ export function ProductCard({
               <button
                 type="button"
                 onClick={() => dec(product.id)}
-                className="flex size-7 shrink-0 items-center justify-center text-muted-foreground transition hover:bg-muted rounded-s-md"
+                className="flex size-7 shrink-0 items-center justify-center text-muted-foreground transition hover:bg-primary hover:text-white dark:hover:text-black rounded-s-md"
                 aria-label="Decrease"
               >
                 <MinusIcon className="size-3.5" />
@@ -90,12 +90,12 @@ export function ProductCard({
                 onChange={(e) =>
                   setItem(product.id, Number(e.target.value.replace(/\D/g, '')) || 0)
                 }
-                className="h-7 w-0 min-w-6 flex-1 appearance-none border-0 bg-transparent px-0 text-center text-sm font-medium tabular-nums focus-visible:ring-0 [&::-webkit-inner-spin-button]:appearance-none"
+                className="h-7 w-0 min-w-6 flex-1 appearance-none border-0 bg-transparent dark:bg-transparent px-0 text-center text-sm font-medium tabular-nums focus-visible:ring-0 [&::-webkit-inner-spin-button]:appearance-none"
               />
               <button
                 type="button"
                 onClick={() => inc(product.id)}
-                className="flex size-7 shrink-0 items-center justify-center text-muted-foreground transition hover:bg-muted rounded-e-md"
+                className="flex size-7 shrink-0 items-center justify-center text-muted-foreground transition hover:bg-primary hover:text-white dark:hover:text-black rounded-e-md"
                 aria-label="Increase"
               >
                 <PlusIcon className="size-3.5" />

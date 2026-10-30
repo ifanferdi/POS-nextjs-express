@@ -1,5 +1,6 @@
 import _ from 'lodash';
 import moment from 'moment';
+import { unstable_rethrow } from 'next/navigation';
 
 export const stringEllipsis = (str: string, length = 30) =>
   _.truncate(str, { length, separator: '' });
@@ -90,4 +91,23 @@ export function calculateRounding(
     rounding: Number(rounding.toFixed(2)),
     total: Number(total.toFixed(2)),
   };
+}
+
+export async function guard<T>(
+  call: () => Promise<T>,
+  errorMessage = 'Failed to load dashboard data.',
+): Promise<T> {
+  try {
+    return await call();
+  } catch (error) {
+    unstable_rethrow(error);
+    throw error instanceof Error ? error : new Error(errorMessage);
+  }
+}
+
+export function coerceEnum<T extends string>(
+  value: string | undefined,
+  values: readonly T[],
+): T | undefined {
+  return value && (values as readonly string[]).includes(value) ? (value as T) : undefined;
 }

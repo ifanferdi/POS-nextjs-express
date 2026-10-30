@@ -10,9 +10,9 @@ import {
   UpdateProductInput,
   UpdateProductSchema,
 } from '@/features/products/schema';
+import { guard } from '@/lib/helper';
 import { PERMISSION, requirePermission } from '@/lib/permission';
 import { revalidatePath } from 'next/cache';
-import { unstable_rethrow } from 'next/navigation';
 
 export async function createProductAction(
   input: CreateProductInput,
@@ -20,7 +20,7 @@ export async function createProductAction(
   const validate = CreateProductSchema.safeParse(input);
   if (!validate.success) return { success: false, error: 'Invalid input.' };
 
-  try {
+  return await guard(async () => {
     const session = await auth();
     requirePermission(session?.user.permissions, [PERMISSION.MANAGE_PRODUCT]);
 
@@ -28,23 +28,17 @@ export async function createProductAction(
     revalidatePath('/products');
 
     return { success: true };
-  } catch (error) {
-    unstable_rethrow(error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Failed to create product.',
-    };
-  }
+  }, 'Failed to create product.');
 }
 
 export async function updateProductAction(
   id: number,
   input: UpdateProductInput,
 ): Promise<ActionResult<Product>> {
-  const validate = UpdateProductSchema.safeParse(input);
-  if (!validate.success) return { success: false, error: 'Invalid input.' };
+  return await guard(async () => {
+    const validate = UpdateProductSchema.safeParse(input);
+    if (!validate.success) throw new Error(validate.error.message);
 
-  try {
     const session = await auth();
     requirePermission(session?.user.permissions, [PERMISSION.MANAGE_PRODUCT]);
 
@@ -52,17 +46,11 @@ export async function updateProductAction(
     revalidatePath('/products');
 
     return { success: true };
-  } catch (error) {
-    unstable_rethrow(error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Failed to change product.',
-    };
-  }
+  }, 'Failed to change product.');
 }
 
 export async function deleteProductAction(id: number): Promise<ActionResult<Product>> {
-  try {
+  return await guard(async () => {
     const session = await auth();
     requirePermission(session?.user.permissions, [PERMISSION.MANAGE_PRODUCT]);
 
@@ -70,22 +58,11 @@ export async function deleteProductAction(id: number): Promise<ActionResult<Prod
     revalidatePath('/products');
 
     return { success: true };
-  } catch (error) {
-    unstable_rethrow(error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Failed to delete product.',
-    };
-  }
+  }, 'Failed to delete product.');
 }
 
 export async function getAllProductsAction<T = Product>(
   params: GetAllProductParams,
 ): Promise<PaginatedResponse<T>> {
-  try {
-    return await api.getAllProducts(params);
-  } catch (error) {
-    unstable_rethrow(error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to fetch products.');
-  }
+  return await guard(async () => await api.getAllProducts(params), 'Failed to fetch products.');
 }

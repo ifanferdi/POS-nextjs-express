@@ -1,12 +1,13 @@
 'use client';
 
-import { DashboardCardError } from '@/app/(protected)/dashboard/_components/dashboard-card-error';
+import { QueryError } from '@/components/shared/query-error';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { dashboard as dashboardConfig } from '@/config/config';
 import { DashboardSummary } from '@/domain';
 import { getDashboardSummaryAction } from '@/features/dashboard/action';
 import { formatCurrency } from '@/lib/helper';
+import { dashboardKeys } from '@/lib/tenstack-keys';
 import { useQuery } from '@tanstack/react-query';
 import {
   ArrowDownRightIcon,
@@ -70,12 +71,12 @@ interface DashboardSummaryCardsProps {
 
 export function DashboardSummaryCards({ range, initialData }: DashboardSummaryCardsProps) {
   const { data, isPending, isError, refetch } = useQuery({
-    queryKey: ['dashboard', 'summary', range.from, range.to],
+    queryKey: dashboardKeys.summary(range),
     queryFn: () => getDashboardSummaryAction({ ...range, tz: TZ }),
     initialData: initialData ?? undefined,
   });
 
-  if (isError) return <DashboardCardError onRetry={() => refetch()} />;
+  if (isError) return <QueryError onRetry={() => refetch()} />;
 
   return (
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">

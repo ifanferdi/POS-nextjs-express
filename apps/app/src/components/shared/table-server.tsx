@@ -1,3 +1,4 @@
+import { Button } from '@/components/shared/button';
 import { Skeleton as SkeletonComponent } from '@/components/ui/skeleton';
 import {
   Table,
@@ -10,13 +11,14 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { icons } from '@/config/config';
 import { stringEllipsis } from '@/lib/helper';
+import { CircleAlert } from 'lucide-react';
 import Link from 'next/link';
 import { ReactNode } from 'react';
 
 export function HeaderTable({ headers }: { headers: string[] }) {
   return (
     <TableHeader>
-      <TableRow className="bg-muted/40 hover:bg-muted/40">
+      <TableRow className="bg-muted dark:bg-muted/90 hover:bg-muted/70 dark:hover:bg-muted/70">
         {headers.map((header) => (
           <TableHead
             key={header}
@@ -54,18 +56,7 @@ export function DataTable<T>({
   return (
     <div className={`overflow-hidden rounded-lg border border-border/60 ${className}`}>
       <Table>
-        <TableHeader>
-          <TableRow className="bg-muted dark:bg-muted/50">
-            {headers.map((header) => (
-              <TableHead
-                key={header}
-                className={`text-xs text-muted-foreground ${header === '#' ? 'w-0 px-3 text-center' : ''}`}
-              >
-                {header}
-              </TableHead>
-            ))}
-          </TableRow>
-        </TableHeader>
+        <HeaderTable headers={headers} />
         <TableBody>
           {records.map((record, index) => (
             <TableRow key={index} className="group hover:bg-secondary">
@@ -145,20 +136,52 @@ export function Skeleton({ className, total }: SkeletonProps) {
   return (
     <SkeletonComponent
       key={total}
-      className={`bg-muted-foreground/20 dark:bg-muted ${className}`}
+      className={`bg-muted-foreground/20 dark:bg-muted-foreground/20 ${className}`}
     />
   );
 }
 
-export function EmptyTable({ entities, icon }: { entities: string; icon: keyof typeof icons }) {
+export function EmptyTable({
+  headers,
+  entities,
+  icon,
+  className,
+}: {
+  headers: string[];
+  entities: string;
+  icon: keyof typeof icons;
+  className?: string;
+}) {
   const Icon = icons[icon];
   return (
-    <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-16">
-      <div className="mb-3 flex size-12 items-center justify-center rounded-full bg-muted">
-        <Icon className="size-6 text-muted-foreground" />
-      </div>
-      <p className="text-sm font-medium">No {entities} found</p>
-      <p className="mt-1 text-sm text-muted-foreground">Try to add new data.</p>
+    <div className={`overflow-hidden rounded-lg border border-border/60 ${className}`}>
+      <Table>
+        <TableHeader>
+          <TableRow className="bg-muted dark:bg-muted/50">
+            {headers.map((header) => (
+              <TableHead
+                key={header}
+                className={`text-xs text-muted-foreground ${header === '#' ? 'w-0 px-3 text-center' : ''}`}
+              >
+                {header}
+              </TableHead>
+            ))}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          <TableRow>
+            <TableCell colSpan={headers.length}>
+              <div className="flex flex-col items-center justify-center rounded-lg py-16">
+                <div className="flex size-12 items-center justify-center rounded-full bg-muted mb-3">
+                  <Icon className="size-6 text-muted-foreground" />
+                </div>
+                <p className="text-sm font-medium mb-1">No {entities} found.</p>
+                <p className="text-sm text-muted-foreground">Try to add new data.</p>
+              </div>
+            </TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>
     </div>
   );
 }

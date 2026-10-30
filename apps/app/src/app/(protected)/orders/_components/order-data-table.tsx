@@ -8,7 +8,7 @@ import { CreditCardIcon, EyeIcon, Loader2Icon } from 'lucide-react';
 import moment from 'moment';
 import Link from 'next/link';
 
-export const orderTableHeaders = [
+export const headers = [
   '#',
   'Order #',
   // 'Customer',
@@ -30,7 +30,7 @@ interface OrderTableProps {
 }
 
 export function OrderTable({ orders, onView, onPay, isPayLoading }: OrderTableProps) {
-  if (orders.length === 0) return <EmptyTable entities="orders" icon="order" />;
+  if (orders.length === 0) return <EmptyTable headers={headers} entities="orders" icon="order" />;
 
   const orderNumberCell = (order: OrderList): CellsType =>
     onView
@@ -59,7 +59,7 @@ export function OrderTable({ orders, onView, onPay, isPayLoading }: OrderTablePr
   return (
     <div className="overflow-hidden rounded-lg border border-border/60">
       <DataTable
-        headers={orderTableHeaders}
+        headers={headers}
         records={orders}
         cells={(order) => [
           orderNumberCell(order),

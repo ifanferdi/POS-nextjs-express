@@ -1,12 +1,13 @@
 'use client';
 
-import { DashboardCardError } from '@/app/(protected)/dashboard/_components/dashboard-card-error';
+import { QueryError } from '@/components/shared/query-error';
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { dashboard as dashboardConfig } from '@/config/config';
 import { DashboardGranularity } from '@/domain';
 import { getDashboardTrendAction } from '@/features/dashboard/action';
 import { formatCompactCurrency, formatCurrency } from '@/lib/helper';
+import { dashboardKeys } from '@/lib/tenstack-keys';
 import { cn } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import moment from 'moment';
@@ -51,7 +52,7 @@ export function DashboardTrendChart({ range, granularity, className }: Dashboard
   const svgRef = useRef<SVGSVGElement>(null);
 
   const { data, isPending, isError, refetch } = useQuery({
-    queryKey: ['dashboard', 'trend', range.from, range.to, granularity],
+    queryKey: dashboardKeys.trend(range),
     queryFn: () => getDashboardTrendAction({ ...range, granularity, tz: TZ }),
   });
 
@@ -120,7 +121,7 @@ export function DashboardTrendChart({ range, granularity, className }: Dashboard
         {isPending ? (
           <Skeleton className="h-64 w-full" />
         ) : isError ? (
-          <DashboardCardError onRetry={() => refetch()} />
+          <QueryError onRetry={() => refetch()} />
         ) : points.length === 0 ? (
           <div className="flex flex-1 items-center justify-center py-16 text-sm text-muted-foreground">
             No sales in this period.

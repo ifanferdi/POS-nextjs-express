@@ -8,6 +8,7 @@ import { DashboardTopProducts } from '@/app/(protected)/dashboard/_components/da
 import { DashboardTrendChart } from '@/app/(protected)/dashboard/_components/dashboard-trend-chart';
 import { DashboardGranularity, DashboardSummary } from '@/domain';
 import { useSSE } from '@/hooks/use-sse';
+import { Keys } from '@/lib/tenstack-keys';
 import { useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 
@@ -37,7 +38,7 @@ export function DashboardView({ initialSummary, initialRange }: DashboardViewPro
     events: Object.keys(SSE_WIDGETS),
     onEvent: (payload) => {
       for (const widget of SSE_WIDGETS[payload.event] ?? []) {
-        queryClient.invalidateQueries({ queryKey: ['dashboard', widget] });
+        queryClient.invalidateQueries({ queryKey: [Keys.DASHBOARD, widget] });
       }
     },
   });

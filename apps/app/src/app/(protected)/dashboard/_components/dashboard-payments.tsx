@@ -1,12 +1,13 @@
 'use client';
 
-import { DashboardCardError } from '@/app/(protected)/dashboard/_components/dashboard-card-error';
+import { QueryError } from '@/components/shared/query-error';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { dashboard as dashboardConfig } from '@/config/config';
 import { getPaymentMethod, PaymentMethod, PaymentStatus } from '@/domain';
 import { getDashboardPaymentsAction } from '@/features/dashboard/action';
 import { formatCurrency } from '@/lib/helper';
+import { dashboardKeys } from '@/lib/tenstack-keys';
 import { cn } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
@@ -53,7 +54,7 @@ export function DashboardPayments({ range }: DashboardPaymentsProps) {
   const [active, setActive] = useState<PaymentMethod | null>(null);
 
   const { data, isPending, isError, refetch } = useQuery({
-    queryKey: ['dashboard', 'payments', range.from, range.to],
+    queryKey: dashboardKeys.payments(range),
     queryFn: () => getDashboardPaymentsAction({ ...range, tz: TZ }),
   });
 
@@ -107,7 +108,7 @@ export function DashboardPayments({ range }: DashboardPaymentsProps) {
         {isPending ? (
           <Skeleton className="h-64 w-full" />
         ) : isError ? (
-          <DashboardCardError onRetry={() => refetch()} />
+          <QueryError onRetry={() => refetch()} />
         ) : rows.length === 0 ? (
           <div className="flex flex-1 items-center justify-center py-16 text-sm text-muted-foreground">
             No successful payments in this period.

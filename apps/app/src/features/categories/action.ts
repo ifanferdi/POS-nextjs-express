@@ -1,14 +1,16 @@
 'use server';
 
 import { auth } from '@/auth';
-import { ActionResult, Category } from '@/domain';
+import { ActionResult, Category, PaginatedResponse } from '@/domain';
 import * as api from '@/features/categories/api';
 import {
   CreateCategoryInput,
   CreateCategorySchema,
+  GetAllCategoryParams,
   UpdateCategoryInput,
   UpdateCategorySchema,
 } from '@/features/categories/schema';
+import { guard } from '@/lib/helper';
 import { PERMISSION, requirePermission } from '@/lib/permission';
 import { revalidatePath } from 'next/cache';
 import { unstable_rethrow } from 'next/navigation';
@@ -76,4 +78,10 @@ export async function deleteCategoryAction(id: number): Promise<ActionResult<Cat
       error: error instanceof Error ? error.message : 'Failed to delete Category.',
     };
   }
+}
+
+export async function getAllCategoriesAction<T = Category>(
+  params: GetAllCategoryParams,
+): Promise<PaginatedResponse<T>> {
+  return await guard(() => api.getAllCategories(params), 'Failed to fetch categories.');
 }

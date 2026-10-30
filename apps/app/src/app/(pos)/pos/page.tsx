@@ -4,8 +4,8 @@ import { auth } from '@/auth';
 import { Skeleton } from '@/components/ui/skeleton';
 import { options } from '@/config/config';
 import { CategoryOption, ProductList, ProductRelation } from '@/domain';
-import { getAllCategories } from '@/features/categories/api';
-import { getAllProducts } from '@/features/products/api';
+import { getAllCategoriesAction } from '@/features/categories/action';
+import { getAllProductsAction } from '@/features/products/action';
 import { hasPermission, PERMISSION } from '@/lib/permission';
 import { forbidden } from 'next/navigation';
 import { Suspense } from 'react';
@@ -32,20 +32,20 @@ export default async function PosPage() {
 }
 
 async function PosViewLoader() {
-  const { data: products, total: totalProducts } = await getAllProducts<ProductList>({
+  const { data: products, total } = await getAllProductsAction<ProductList>({
     isActive: true,
     limit: PAGE_SIZE,
     orderBy: ['name:asc'],
     with: [ProductRelation.CATEGORIES],
   });
 
-  const { data: categories } = await getAllCategories<CategoryOption>({
+  const { data: categories } = await getAllCategoriesAction<CategoryOption>({
     limit: -1,
     columns: ['id', 'name'],
     orderBy: ['name:asc'],
   });
 
-  return <PosView products={products} totalProducts={totalProducts} categories={categories} />;
+  return <PosView products={products} totalProducts={total} categories={categories} />;
 }
 
 function PosViewSkeleton() {
