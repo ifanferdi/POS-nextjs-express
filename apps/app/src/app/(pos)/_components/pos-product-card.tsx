@@ -1,12 +1,13 @@
+import { DiscountBadge, PriceTag, QuotaBadge } from '@/components/shared/discount';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Product } from '@/domain';
-import { formatCurrency } from '@/lib/helper';
+import { getActiveDiscount } from '@/lib/helper';
 import { cn } from '@/lib/utils';
 import { Loader2Icon, MinusIcon, PackageIcon, PlusIcon, XIcon } from 'lucide-react';
 import Image from 'next/image';
 import { useState } from 'react';
-import { CartItem, useCartStore } from '../../../store/pos-cart-store';
+import { CartItem, splitCartItem, useCartStore } from '../../../store/pos-cart-store';
 
 export function ProductCard({
   product,
@@ -26,6 +27,11 @@ export function ProductCard({
   const cartItem = items.find((i) => i.productId === product.id);
   const qty = cartItem?.quantity ?? 0;
   const added = qty > 0;
+  const discount = getActiveDiscount(product.discount);
+  const finalPrice = discount?.finalPrice ?? product.price;
+  const promoInCart = cartItem ? splitCartItem(cartItem).promoQty : 0;
+  const remainingQuota =
+    discount?.remainingQuota == null ? null : Math.max(0, discount.remainingQuota - promoInCart);
 
   return (
     <div
@@ -39,10 +45,16 @@ export function ProductCard({
       </div>
       <div className="flex flex-1 flex-col gap-1 p-2">
         <p className="line-clamp-1 text-sm font-medium">{product.name}</p>
-        <p className="text-sm font-semibold text-primary" suppressHydrationWarning>
-          {formatCurrency(product.price)}
-        </p>
-        <p className="text-xs text-muted-foreground">Stock: {product.stock}</p>
+        <PriceTag price={product.price} finalPrice={finalPrice} className="text-sm" />
+        <div className="flex flex-wrap items-center gap-1">
+          <p className="text-xs text-muted-foreground">Stock: {product.stock}</p>
+          {discount && (
+            <>
+              <DiscountBadge price={product.price} amount={discount.amount} />{' '}
+              <QuotaBadge remainingQuota={remainingQuota} />
+            </>
+          )}
+        </div>
 
         {!added ? (
           <Button
@@ -54,12 +66,14 @@ export function ProductCard({
                 productId: product.id,
                 name: product.name,
                 price: product.price,
+                finalPrice,
+                remainingQuota: discount?.remainingQuota ?? null,
                 imagePath: product.imagePath,
                 imageUrl: product.imageUrl,
                 stock: product.stock,
               })
             }
-            className="mt-1 w-full hover:bg-muted dark:hover:bg-muted"
+            className="mt-auto w-full hover:bg-muted dark:hover:bg-muted"
           >
             + Add
           </Button>

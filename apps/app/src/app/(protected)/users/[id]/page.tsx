@@ -4,10 +4,10 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { UserDetail, UserRelation } from '@/domain';
 import { getUserById } from '@/features/users/api';
+import { formatDate, formatDateTime } from '@/lib/helper';
 import { hasPermission, PERMISSION } from '@/lib/permission';
 import _ from 'lodash';
 import { ArrowLeftIcon } from 'lucide-react';
-import moment from 'moment';
 import Link from 'next/link';
 import { forbidden } from 'next/navigation';
 
@@ -30,9 +30,8 @@ export default async function UserDetailPage({ params }: { params: Promise<{ id:
     { label: 'Role', value: user.role.name },
     { label: 'Gender', value: _.capitalize(user.profile.gender) },
     { label: 'Place of Birth', value: user.profile.placeOfBirth },
-    { label: 'Date of Birth', value: moment(user.profile.dateOfBirth).format('MMMM Do YYYY') },
+    { label: 'Date of Birth', value: formatDate(user.profile.dateOfBirth) },
     { label: 'Age', value: `${user.profile.age} years` },
-    // { label: 'Created At', value: moment(user.createdAt).format('MMMM Do YYYY, HH:mm') },
   ];
 
   return (
@@ -56,7 +55,7 @@ export default async function UserDetailPage({ params }: { params: Promise<{ id:
               <div className="mt-1 flex items-center gap-2">
                 <span className="text-sm text-muted-foreground">@{user.username}</span>
                 {user.isActive ? (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-xs font-medium text-success">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-success/15 px-2 py-0.5 text-xs font-medium text-success">
                     <span className="size-1.5 rounded-full bg-success" />
                     Active
                   </span>
@@ -83,8 +82,8 @@ export default async function UserDetailPage({ params }: { params: Promise<{ id:
           </dl>
           <Separator />
           <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
-            <span>Created at {moment(user.createdAt).format('MMMM D, YYYY, HH:mm')}</span>
-            <span>Updated at {moment(user.updatedAt).format('MMMM D, YYYY, HH:mm')}</span>
+            <span>Created at {formatDateTime(user.createdAt)}</span>
+            <span>Updated at {formatDateTime(user.updatedAt)}</span>
           </div>
         </CardContent>
       </Card>

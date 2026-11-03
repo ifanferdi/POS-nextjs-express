@@ -118,7 +118,7 @@ export function PosProductGrid({
       page: Math.ceil(products.length / PAGE_SIZE) + 1,
       limit: PAGE_SIZE,
       orderBy: ['name:asc'],
-      with: [ProductRelation.CATEGORIES],
+      with: [ProductRelation.CATEGORIES, ProductRelation.DISCOUNT_CYCLES],
     })
       .then(({ data: newProducts, total: newTotal }) => {
         setProducts([...products, ...newProducts]);

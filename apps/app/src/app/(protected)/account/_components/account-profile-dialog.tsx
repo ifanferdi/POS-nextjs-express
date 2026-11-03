@@ -24,10 +24,9 @@ import { GENDER_VALUES } from '@/domain';
 import { updateMyAccountAction } from '@/features/account/action';
 import { AccountProfileInput, AccountProfileSchema } from '@/features/account/schema';
 import { MeResponseDto } from '@/features/auth/dto';
-import { getInitials } from '@/lib/helper';
+import { formatDateISO, getInitials } from '@/lib/helper';
 import { uploadImageToS3 } from '@/lib/upload';
 import { zodResolver } from '@hookform/resolvers/zod';
-import moment from 'moment';
 import { useRouter } from 'next/navigation';
 import { ChangeEvent, useState, useTransition } from 'react';
 import { Controller, DefaultValues, useForm } from 'react-hook-form';
@@ -45,9 +44,7 @@ export function AccountProfileDialog({ me }: { me: MeResponseDto }) {
     profile: {
       fullName: me.profile?.fullName ?? '',
       placeOfBirth: me.profile?.placeOfBirth ?? '',
-      dateOfBirth: me.profile?.dateOfBirth
-        ? moment(me.profile.dateOfBirth).format('YYYY-MM-DD')
-        : '',
+      dateOfBirth: me.profile?.dateOfBirth ? formatDateISO(me.profile.dateOfBirth) : '',
       gender: me.profile?.gender,
       imagePath: me.profile?.imagePath ?? undefined,
     },

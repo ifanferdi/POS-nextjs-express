@@ -10,6 +10,7 @@
  */
 
 import {
+  BadgePercentIcon,
   BoxesIcon,
   BoxIcon,
   KeyRoundIcon,
@@ -56,6 +57,7 @@ export const icons = {
   role: ShieldUserIcon,
   permission: KeyRoundIcon,
   product: BoxIcon,
+  discount: BadgePercentIcon,
   isActive: UserRoundCheckIcon,
   category: BoxesIcon,
   order: ShoppingCartIcon,

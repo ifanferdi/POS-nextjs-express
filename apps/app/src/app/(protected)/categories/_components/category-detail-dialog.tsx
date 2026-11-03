@@ -1,9 +1,10 @@
 'use client';
 
+import { TooltipedCell } from '@/components/shared/table-server';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { CategoryList } from '@/domain';
+import { formatDate } from '@/lib/helper';
 import { BoxesIcon } from 'lucide-react';
-import moment from 'moment';
 import { type ReactNode, useState } from 'react';
 
 export function CategoryDetailDialog({
@@ -19,8 +20,8 @@ export function CategoryDetailDialog({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {trigger ?? (
-          <button className="w-full gap-3 text-left group">
-            <span className="font-medium group-hover:underline">{category.name}</span>
+          <button suppressHydrationWarning className="w-full gap-3 text-left group">
+            {TooltipedCell(category.name)}
           </button>
         )}
       </DialogTrigger>
@@ -50,15 +51,11 @@ export function CategoryDetailDialog({
               <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
                 <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted border">
                   <span className="font-medium">Created</span>
-                  <span className="font-mono">
-                    {moment(category.createdAt).format('MMM D, YYYY')}
-                  </span>
+                  <span className="font-mono">{formatDate(category.createdAt)}</span>
                 </span>
                 <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted border">
                   <span className="font-medium">Updated</span>
-                  <span className="font-mono">
-                    {moment(category.updatedAt).format('MMM D, YYYY')}
-                  </span>
+                  <span className="font-mono">{formatDate(category.updatedAt)}</span>
                 </span>
               </div>
             </div>

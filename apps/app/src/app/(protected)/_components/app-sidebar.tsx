@@ -42,6 +42,12 @@ const navItems = [
     permission: [PERMISSION.SHOW_PRODUCT],
   },
   {
+    title: 'Discounts',
+    href: '/product-discount-cycles',
+    icon: icons.discount,
+    permission: [PERMISSION.SHOW_PRODUCT_DISCOUNT_CYCLE],
+  },
+  {
     title: 'Orders',
     href: '/orders',
     icon: icons.order,

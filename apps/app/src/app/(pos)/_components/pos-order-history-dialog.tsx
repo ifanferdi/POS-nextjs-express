@@ -40,7 +40,7 @@ import moment from 'moment';
 import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 15;
 const DEFAULT_STATUS = OrderStatus.PENDING;
 
 interface PosOrderHistoryDialogProps {
@@ -244,7 +244,7 @@ export function PosOrderHistoryDialog({ open, setOpen }: PosOrderHistoryDialogPr
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="flex h-[90%] flex-col overflow-hidden sm:max-w-[90%]">
+      <DialogContent className="flex h-auto max-h-[90%] flex-col overflow-hidden sm:max-w-[90%]">
         {payOrder && payment && (
           <PaymentDialog
             open={payOpen}

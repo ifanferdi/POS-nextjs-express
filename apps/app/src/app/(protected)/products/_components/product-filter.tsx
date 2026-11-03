@@ -36,7 +36,7 @@ export function ProductFilter({ categories }: ProductFilterProps) {
   }, [categories, categoryQuery]);
 
   function pushParams(params: URLSearchParams) {
-    params.set('page', '1');
+    params.delete('page');
     startTransition(() => router.push(`/products?${params.toString()}`));
   }
 

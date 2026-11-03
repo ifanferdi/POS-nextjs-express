@@ -11,9 +11,8 @@ import {
 import { company } from '@/config/config';
 import { getPaymentMethod, PosLastOrder } from '@/domain';
 import { PaymentMethod } from '@/domain/payment.types';
-import { formatCurrency } from '@/lib/helper';
+import { formatCurrency, formatDateTime, splitOrderItem } from '@/lib/helper';
 import { PrinterIcon, RotateCcwIcon } from 'lucide-react';
-import moment from 'moment';
 import { useState } from 'react';
 
 interface PosReceiptProps {
@@ -42,10 +41,7 @@ export function PosReceipt({ lastOrder, onNewTransaction }: PosReceiptProps) {
 
             <div className="border-y border-dashed border-border/60 py-3 text-xs">
               <ReceiptRow label="No. Order" value={order.orderNumber} />
-              <ReceiptRow
-                label="Date"
-                value={moment(order.createdAt).format('DD MMM YYYY, HH:mm')}
-              />
+              <ReceiptRow label="Date" value={formatDateTime(order.createdAt)} />
               <ReceiptRow
                 label="Payment"
                 value={payment.method ? getPaymentMethod(payment.method) : '-'}
@@ -54,32 +50,46 @@ export function PosReceipt({ lastOrder, onNewTransaction }: PosReceiptProps) {
             </div>
 
             <div className="space-y-1.5">
-              {items.map((item) => (
-                <div key={item.productId} className="flex justify-between gap-2 text-xs">
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-medium">{item.product.name}</p>
-                    <p className="text-muted-foreground">
-                      {item.quantity} x {formatCurrency(item.product.price)}
-                    </p>
+              {items.map((item) => {
+                const split = splitOrderItem(item);
+                const name = item.meta?.product?.name ?? item.product.name;
+
+                return (
+                  <div key={item.id} className="flex justify-between gap-2 text-xs">
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-medium">{name}</p>
+                      {split.discountedQty > 0 && (
+                        <p className="text-muted-foreground tabular-nums">
+                          {split.discountedQty} x {formatCurrency(split.unitPrice)} discount
+                        </p>
+                      )}
+                      {split.regularQty > 0 && (
+                        <p className="text-muted-foreground tabular-nums">
+                          {split.regularQty} x {formatCurrency(split.unitPrice)}
+                          {split.discountedQty > 0 ? ' regular' : ''}
+                        </p>
+                      )}
+                    </div>
+                    <span className="shrink-0 font-medium text-muted-foreground tabular-nums">
+                      {formatCurrency(split.total)}
+                    </span>
                   </div>
-                  <span className="shrink-0 font-medium tabular-nums">
-                    {formatCurrency(item.product.price * item.quantity)}
-                  </span>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             <div className="space-y-1 border-t border-dashed border-border/60 pt-3 text-xs">
               <div className="border-b border-border/60 pb-3">
                 <ReceiptRow label="Subtotal" value={formatCurrency(order.subtotal)} />
-                <ReceiptRow label="Tax" value={formatCurrency(order.tax)} />
-                {order.discount > 0 && (
-                  <ReceiptRow label="Discount" value={`- ${formatCurrency(order.discount)}`} />
+                {order.totalDiscount > 0 && (
+                  <ReceiptRow label="Discount" value={`-${formatCurrency(order.totalDiscount)}`} />
                 )}
               </div>
               <div className="flex justify-between pt-2 text-sm font-bold">
                 <span>TOTAL</span>
-                <span className="tabular-nums text-primary">{formatCurrency(order.total)}</span>
+                <span className="text-muted-foreground tabular-nums">
+                  {formatCurrency(order.total)}
+                </span>
               </div>
             </div>
 
@@ -126,7 +136,7 @@ function ReceiptRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between">
       <span className="text-muted-foreground">{label}</span>
-      <span className="font-medium tabular-nums">{value}</span>
+      <span className="font-medium text-muted-foreground tabular-nums">{value}</span>
     </div>
   );
 }

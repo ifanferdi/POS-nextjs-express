@@ -36,7 +36,7 @@ async function PosViewLoader() {
     isActive: true,
     limit: PAGE_SIZE,
     orderBy: ['name:asc'],
-    with: [ProductRelation.CATEGORIES],
+    with: [ProductRelation.CATEGORIES, ProductRelation.DISCOUNT_CYCLES],
   });
 
   const { data: categories } = await getAllCategoriesAction<CategoryOption>({

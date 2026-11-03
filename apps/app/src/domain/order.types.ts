@@ -1,4 +1,5 @@
 import { MidtransPaymentDetail, Payment } from '@/domain/payment.types';
+import { ProductDiscountCycle } from '@/domain/product-discount-cycle.types';
 import { Product } from '@/domain/product.types';
 import { UserProfile } from '@/domain/user.types';
 import { ApiResponse } from './general.types';
@@ -22,18 +23,37 @@ export enum OrderRelation {
   PAYMENT = 'payment',
 }
 
+interface Snapshot {
+  /** Waktu data diambil saat order dibuat. */
+  snapshotAt?: Date;
+}
+
+export interface OrderItemMeta {
+  product?: Product & Snapshot;
+  discount?: ProductDiscountCycle & Snapshot;
+  /** Total potongan item (sudah clamp dan partial) dalam Rp. */
+  discountAmount?: number;
+  /** Jumlah unit yang kena diskon; bisa kurang dari quantity. */
+  discountQty?: number;
+}
+
+export interface OrderMeta {
+  user?: UserProfile & Snapshot;
+  products?: Array<Product & Snapshot>;
+  discounts?: Array<ProductDiscountCycle & Snapshot>;
+}
+
 export interface Order {
   id: number;
   customerId: number | null;
   userId: number | null;
   orderNumber: string;
   subtotal: number;
-  tax: number;
-  discount: number;
+  totalDiscount: number;
   total: number;
   status: OrderStatus;
   notes: string | null;
-  meta: Record<string, unknown> | null;
+  meta: OrderMeta | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -57,7 +77,7 @@ export interface OrderItem {
   quantity: number;
   unitPrice: number;
   totalPrice: number;
-  meta: Record<string, unknown> | null;
+  meta: OrderItemMeta | null;
   createdAt: Date;
   updatedAt: Date;
 }

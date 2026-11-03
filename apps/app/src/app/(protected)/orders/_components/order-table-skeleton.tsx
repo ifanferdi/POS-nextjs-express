@@ -1,4 +1,4 @@
-import { headers } from '@/app/(protected)/orders/_components/order-table';
+import { headers } from '@/app/(protected)/orders/_components/order-data-table';
 import { ActionSkeleton, HeaderTable, Skeleton } from '@/components/shared/table-server';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 
@@ -24,6 +24,9 @@ export function OrderTableSkeleton({ rows = 10 }: { rows?: number }) {
               </TableCell>
               <TableCell>
                 <Skeleton className="h-4 w-12" />
+              </TableCell>
+              <TableCell>
+                <Skeleton className="h-4 w-16" />
               </TableCell>
               <TableCell>
                 <Skeleton className="h-4 w-20" />

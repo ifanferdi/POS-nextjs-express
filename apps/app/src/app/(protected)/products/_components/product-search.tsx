@@ -21,7 +21,7 @@ export function ProductSearch() {
     (q: string) => {
       const params = new URLSearchParams(searchParamsRef.current.toString());
       if (q) {
-        params.set('page', '1');
+        params.delete('page');
         params.set('q', q);
       } else {
         params.delete('page');

@@ -1,4 +1,5 @@
 import { Category } from '@/domain/category.types';
+import type { ProductDiscount } from '@/domain/product-discount-cycle.types';
 
 export interface Product {
   id: number;
@@ -15,6 +16,7 @@ export interface Product {
   createdAt: Date;
   updatedAt: Date;
   deletedAt: Date | null;
+  discount?: ProductDiscount | null;
 }
 
 export interface ProductList extends Product {
@@ -25,5 +27,6 @@ export type ProductDetail = ProductList;
 
 export enum ProductRelation {
   CATEGORIES = 'categories',
+  DISCOUNT_CYCLES = 'discount-cycles',
   SOFT_DELETE = 'soft-delete',
 }

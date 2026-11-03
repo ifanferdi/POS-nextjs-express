@@ -1,4 +1,5 @@
 import { ProductActions } from '@/app/(protected)/products/_components/product-actions';
+import { PriceTag } from '@/components/shared/discount';
 import { TablePagination } from '@/components/shared/table';
 import { DataTable, EmptyTable, TooltipedCell } from '@/components/shared/table-server';
 import { Badge } from '@/components/ui/badge';
@@ -6,7 +7,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { CategoryOption, ProductList } from '@/domain';
 import { getAllProducts } from '@/features/products/api';
 import { GetAllProductParams } from '@/features/products/schema';
-import { formatCurrency } from '@/lib/helper';
+import { getActiveDiscount } from '@/lib/helper';
 
 export const headers = ['#', 'Name', 'Sku', 'Stock', 'Price', 'Categories', 'Is Active?', ''];
 
@@ -47,14 +48,25 @@ function ProductTable(props: ProductTableProps) {
       records={products}
       cells={(product) => [
         {
-          key: 'fullname',
+          key: 'name',
           type: 'link',
           url: `/products/${product.id}`,
           content: TooltipedCell(product.name),
         },
         { key: 'sku', content: product.sku === '' ? '-' : product.sku },
         { key: 'stock', content: `${product.stock} item` },
-        { key: 'price', content: formatCurrency(product.price) },
+        {
+          key: 'price',
+          type: 'custom',
+          content: (
+            <PriceTag
+              price={product.price}
+              finalPrice={getActiveDiscount(product.discount)?.finalPrice ?? product.price}
+              finalClassName="tabular-nums text-sm"
+              className="whitespace-nowrap"
+            />
+          ),
+        },
         { key: 'categories', content: handleCategoriesColumn(product) },
         {
           key: 'isActive',

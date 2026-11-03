@@ -1,15 +1,18 @@
 import { ProductActions } from '@/app/(protected)/products/_components/product-actions';
 import { BarcodeDisplay } from '@/app/(protected)/products/_components/product-barcode';
 import { auth } from '@/auth';
+import { DiscountBadge } from '@/components/shared/discount';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { ProductDetail, ProductRelation } from '@/domain';
 import { getProductById } from '@/features/products/api';
-import { formatCurrency } from '@/lib/helper';
+import { formatCurrency, formatDateTime, getActiveDiscount } from '@/lib/helper';
 import { hasPermission, PERMISSION } from '@/lib/permission';
+import { cn } from '@/lib/utils';
 import {
   ArrowLeftIcon,
+  BadgePercentIcon,
   BarcodeIcon,
   BoxIcon,
   ImageIcon,
@@ -17,7 +20,6 @@ import {
   PackageIcon,
   TagIcon,
 } from 'lucide-react';
-import moment from 'moment';
 import Image from 'next/image';
 import Link from 'next/link';
 import { forbidden, notFound } from 'next/navigation';
@@ -29,12 +31,16 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
   const canManage = hasPermission(session?.user.permissions, [PERMISSION.MANAGE_PRODUCT]);
 
   const { id } = await params;
-  const product = await getProductById<ProductDetail>(Number(id), [ProductRelation.CATEGORIES]);
+  const product = await getProductById<ProductDetail>(Number(id), [
+    ProductRelation.CATEGORIES,
+    ProductRelation.DISCOUNT_CYCLES,
+  ]);
 
   if (!product) notFound();
 
   const margin = product.cost ? product.price - product.cost : null;
   const lowStock = product.stock <= 5;
+  const discount = getActiveDiscount(product.discount);
 
   return (
     <div className="space-y-6">
@@ -69,7 +75,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                 <h2 className="text-xl font-semibold tracking-tight">{product.name}</h2>
                 <div className="flex flex-wrap items-center gap-2">
                   {product.isActive ? (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-xs font-medium text-success">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-success/15 px-2 py-0.5 text-xs font-medium text-success">
                       <span className="size-1.5 rounded-full bg-success" />
                       Active
                     </span>
@@ -103,12 +109,29 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
         </CardHeader>
 
         <CardContent className="space-y-6">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div
+            className={cn('grid grid-cols-1 gap-4', discount ? 'sm:grid-cols-4' : 'sm:grid-cols-3')}
+          >
+            {discount && (
+              <div className="rounded-lg border border-border/60 bg-muted/30 p-4">
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  Price
+                </p>
+                <p className="mt-1 text-2xl text-primary font-semibold tabular-nums">
+                  {formatCurrency(discount.finalPrice)}
+                </p>
+              </div>
+            )}
             <div className="rounded-lg border border-border/60 bg-muted/30 p-4">
               <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Price
+                {discount ? 'Normal Price' : 'Price'}
               </p>
-              <p className="mt-1 text-2xl font-semibold text-primary">
+              <p
+                className={cn(
+                  'mt-1 text-2xl text-muted-foreground tabular-nums',
+                  !discount && 'text-primary font-semibold',
+                )}
+              >
                 {formatCurrency(product.price)}
               </p>
             </div>
@@ -116,7 +139,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
               <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                 Cost
               </p>
-              <p className="mt-1 text-2xl font-semibold">
+              <p className="mt-1 text-2xl text-muted-foreground tabular-nums">
                 {product.cost != null ? formatCurrency(product.cost) : '-'}
               </p>
             </div>
@@ -124,11 +147,62 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
               <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                 Margin
               </p>
-              <p className="mt-1 text-2xl font-semibold text-success">
+              <p className="mt-1 text-2xl text-muted-foreground tabular-nums">
                 {margin != null ? formatCurrency(margin) : '-'}
               </p>
             </div>
           </div>
+
+          {discount && (
+            <div className="space-y-3">
+              <h3 className="flex items-center gap-2 text-sm font-medium">
+                <BadgePercentIcon className="size-4 text-muted-foreground" />
+                Discount
+              </h3>
+              <Separator />
+              <div className="rounded-lg border border-border/60 bg-muted/30 p-4">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                  <dl className="grid flex-1 grid-cols-1 gap-3 text-sm sm:grid-cols-2">
+                    <div>
+                      <dt className="text-xs text-muted-foreground">Discount per unit</dt>
+                      <dd className="mt-0.5 flex items-center gap-1.5 font-medium text-muted-foreground tabular-nums">
+                        -{formatCurrency(discount.amount)}
+                        <DiscountBadge price={product.price} amount={discount.amount} />
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs text-muted-foreground">Final price</dt>
+                      <dd className="mt-0.5 font-medium text-muted-foreground tabular-nums">
+                        {formatCurrency(discount.finalPrice)}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs text-muted-foreground">Period</dt>
+                      <dd className="mt-0.5 text-muted-foreground tabular-nums">
+                        {formatDateTime(discount.startDate)} - {formatDateTime(discount.endDate)}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs text-muted-foreground">Quota</dt>
+                      <dd className="mt-0.5 flex flex-wrap items-center gap-2 tabular-nums">
+                        <span>
+                          {discount.quota === null
+                            ? 'Unlimited'
+                            : `${discount.usedQty} of ${discount.quota} used`}
+                        </span>
+                        {discount.remainingQuota !== null && (
+                          <span className="text-muted-foreground">
+                            {discount.remainingQuota} left
+                          </span>
+                        )}
+                        <DiscountStatusBadge remainingQuota={discount.remainingQuota} />
+                      </dd>
+                    </div>
+                  </dl>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <div className="space-y-3">
@@ -203,11 +277,29 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 
           <Separator />
           <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
-            <span>Created at {moment(product.createdAt).format('MMMM D, YYYY, HH:mm')}</span>
-            <span>Updated at {moment(product.updatedAt).format('MMMM D, YYYY, HH:mm')}</span>
+            <span>Created at {formatDateTime(product.createdAt)}</span>
+            <span>Updated at {formatDateTime(product.updatedAt)}</span>
           </div>
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+function DiscountStatusBadge({ remainingQuota }: { remainingQuota: number | null }) {
+  const exhausted = remainingQuota === 0;
+  const tone = exhausted ? 'bg-warning/10 text-warning' : 'bg-success/15 text-success';
+  const dot = exhausted ? 'bg-warning' : 'bg-success';
+
+  return (
+    <span
+      className={cn(
+        'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium',
+        tone,
+      )}
+    >
+      <span className={cn('size-1.5 rounded-full', dot)} />
+      {exhausted ? 'Quota exhausted' : 'Active'}
+    </span>
   );
 }

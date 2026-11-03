@@ -1,11 +1,10 @@
 import { OrderActions } from '@/app/(protected)/orders/_components/order-actions';
-import { CellsType, DataTable, EmptyTable } from '@/components/shared/table-server';
+import { CellsType, DataTable, EmptyTable, TooltipedCell } from '@/components/shared/table-server';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { getPaymentMethod, OrderList, OrderStatus, PaymentMethod, PaymentStatus } from '@/domain';
-import { formatCurrency } from '@/lib/helper';
+import { formatCurrency, formatDateTime } from '@/lib/helper';
 import { CreditCardIcon, EyeIcon, Loader2Icon } from 'lucide-react';
-import moment from 'moment';
 import Link from 'next/link';
 
 export const headers = [
@@ -14,6 +13,7 @@ export const headers = [
   // 'Customer',
   'Date',
   'Items',
+  'Discount',
   'Total',
   'Payment',
   'Status',
@@ -44,7 +44,7 @@ export function OrderTable({ orders, onView, onPay, isPayLoading }: OrderTablePr
                 onClick={() => onView(order)}
                 aria-label={`View order ${order.orderNumber}`}
               >
-                <span className="font-medium group-hover:underline">{order.orderNumber}</span>
+                {TooltipedCell(order.orderNumber)}
               </Link>
             </div>
           ),
@@ -53,7 +53,7 @@ export function OrderTable({ orders, onView, onPay, isPayLoading }: OrderTablePr
           key: 'order-number',
           type: 'link',
           url: `/orders/${order.id}`,
-          content: <span className="font-medium group-hover:underline">{order.orderNumber}</span>,
+          content: TooltipedCell(order.orderNumber),
         };
 
   return (
@@ -65,15 +65,35 @@ export function OrderTable({ orders, onView, onPay, isPayLoading }: OrderTablePr
           orderNumberCell(order),
           {
             key: 'date',
-            content: moment(order.createdAt).format('MMM D, YYYY HH:mm'),
+            content: (
+              <span className="whitespace-nowrap text-muted-foreground tabular-nums">
+                {formatDateTime(order.createdAt)}
+              </span>
+            ),
           },
           {
             key: 'items',
             content: `${order._count.orderItems ?? 0} item`,
           },
           {
+            key: 'discount',
+            type: 'custom',
+            content:
+              order.totalDiscount > 0 ? (
+                <span className="text-muted-foreground tabular-nums">
+                  -{formatCurrency(order.totalDiscount)}
+                </span>
+              ) : (
+                <span className="text-muted-foreground">-</span>
+              ),
+          },
+          {
             key: 'total',
-            content: formatCurrency(order.total),
+            content: (
+              <span className="text-muted-foreground tabular-nums">
+                {formatCurrency(order.total)}
+              </span>
+            ),
           },
           {
             key: 'payment',
@@ -117,7 +137,7 @@ export function OrderTable({ orders, onView, onPay, isPayLoading }: OrderTablePr
                       size="icon-sm"
                       aria-label={`Pay order ${order.orderNumber}`}
                       title="Pay"
-                      className="text-muted-foreground hover:bg-success/10 hover:text-success active:scale-90"
+                      className="text-muted-foreground hover:bg-success/15 hover:text-success active:scale-90"
                       onClick={() => onPay(order)}
                       disabled={isPayLoading}
                     >
@@ -136,9 +156,9 @@ export function OrderTable({ orders, onView, onPay, isPayLoading }: OrderTablePr
 
 const ORDER_STATUS_STYLES: Record<OrderStatus, string> = {
   [OrderStatus.PENDING]: 'bg-warning/10 text-warning',
-  [OrderStatus.PAID]: 'bg-success/10 text-success',
+  [OrderStatus.PAID]: 'bg-success/15 text-success',
   [OrderStatus.EXPIRED]: 'bg-destructive/10 text-destructive',
-  [OrderStatus.COMPLETED]: 'bg-success/10 text-success',
+  [OrderStatus.COMPLETED]: 'bg-success/15 text-success',
   [OrderStatus.CANCELLED]: 'bg-destructive/10 text-destructive',
 };
 

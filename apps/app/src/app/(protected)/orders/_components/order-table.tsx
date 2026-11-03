@@ -3,20 +3,11 @@ import { TablePagination } from '@/components/shared/table';
 import { OrderList } from '@/domain';
 import { getAllOrders } from '@/features/orders/api';
 import { GetAllOrderParams } from '@/features/orders/schema';
-export const headers = [
-  '#',
-  'Order #',
-  // 'Customer',
-  'Date',
-  'Items',
-  'Total',
-  'Payment',
-  'Status',
-  '',
-];
+
 interface OrderTableSectionProps {
   params: GetAllOrderParams;
 }
+
 export async function OrderTableSection(props: OrderTableSectionProps) {
   const { params } = props;
   const { data: orders, ...meta } = await getAllOrders<OrderList>(params);

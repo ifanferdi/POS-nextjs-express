@@ -28,7 +28,7 @@ export function UserFilter({ roles }: UserFilterProps) {
     } else {
       params.delete(key);
     }
-    params.set('page', '1');
+    params.delete('page');
     startTransition(() => router.push(`/users?${params.toString()}`));
   }
 
@@ -36,7 +36,7 @@ export function UserFilter({ roles }: UserFilterProps) {
     const params = new URLSearchParams(searchParams.toString());
     params.delete('roleId');
     params.delete('isActive');
-    params.set('page', '1');
+    params.delete('page');
     startTransition(() => router.push(`/users?${params.toString()}`));
   }
 

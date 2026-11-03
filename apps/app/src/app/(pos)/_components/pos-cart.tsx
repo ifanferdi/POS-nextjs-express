@@ -2,6 +2,7 @@
 
 import { PosCheckoutDialog } from '@/app/(pos)/_components/pos-checkout-dialog';
 import { PosOrderHistoryDialog } from '@/app/(pos)/_components/pos-order-history-dialog';
+import { DiscountBadge } from '@/components/shared/discount';
 import { Button } from '@/components/ui/button';
 import { PosLastOrder } from '@/domain';
 import { formatCurrency } from '@/lib/helper';
@@ -10,7 +11,6 @@ import {
   ChevronDownIcon,
   ChevronUpIcon,
   ClipboardListIcon,
-  InfoIcon,
   MinusIcon,
   PlusIcon,
   ShoppingBagIcon,
@@ -18,7 +18,14 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import { useState } from 'react';
-import { cartCount, cartSubtotal, useCartStore } from '../../../store/pos-cart-store';
+import {
+  cartCount,
+  cartDiscount,
+  cartSubtotal,
+  cartTotal,
+  splitCartItem,
+  useCartStore,
+} from '../../../store/pos-cart-store';
 
 interface PosCartProps {
   onCheckoutSuccess: (result: PosLastOrder) => void;
@@ -28,12 +35,15 @@ export function PosCart({ onCheckoutSuccess }: PosCartProps) {
   const items = useCartStore((s) => s.items);
   const inc = useCartStore((s) => s.inc);
   const dec = useCartStore((s) => s.dec);
+  const setItem = useCartStore((s) => s.setItem);
   const remove = useCartStore((s) => s.remove);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [open, setOpen] = useState(false);
 
   const subtotal = cartSubtotal(items);
+  const discount = cartDiscount(items);
+  const total = cartTotal(items);
   const count = cartCount(items);
 
   return (
@@ -49,8 +59,8 @@ export function PosCart({ onCheckoutSuccess }: PosCartProps) {
         <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
           {count} item
         </span>
-        <span className="ml-auto text-sm font-semibold tabular-nums" suppressHydrationWarning>
-          {formatCurrency(subtotal)}
+        <span className="ml-auto text-sm font-semibold text-muted-foreground tabular-nums">
+          {formatCurrency(total)}
         </span>
         {open ? (
           <ChevronDownIcon className="size-4 text-muted-foreground" />
@@ -82,86 +92,125 @@ export function PosCart({ onCheckoutSuccess }: PosCartProps) {
           </div>
         ) : (
           <ul className="space-y-2">
-            {items.map((item) => (
-              <li
-                key={item.productId}
-                className="flex gap-3 items-center rounded-lg border border-border/40 p-2.5 bg-muted-foreground/10 dark:bg-muted-foreground/10 hover:bg-muted-foreground/20 hover:dark:bg-muted-foreground/20 transition"
-              >
-                <div className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-md bg-card">
-                  {item.imageUrl ? (
-                    <Image
-                      src={item.imageUrl}
-                      alt={item.name}
-                      className="size-full object-cover"
-                      loading="lazy"
-                      height={200}
-                      width={200}
-                    />
-                  ) : (
-                    <span className="text-xs font-medium text-muted-foreground">
-                      {item.name.slice(0, 2).toUpperCase()}
-                    </span>
-                  )}
-                </div>
-                <div className="flex flex-1 flex-col gap-1">
-                  <div className="flex items-start justify-between gap-2">
-                    <p className="line-clamp-1 text-sm font-medium">{item.name}</p>
-                    <button
-                      type="button"
-                      onClick={() => remove(item.productId)}
-                      className="shrink-0 text-destructive/70 hover:text-destructive transition"
-                      aria-label="Remove item"
-                    >
-                      <Trash2Icon className="size-4" />
-                    </button>
-                  </div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {formatCurrency(item.price)} · Stock: {item.stock}
-                  </p>
-                  <div className="mt-auto flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-1">
-                      <button
-                        type="button"
-                        onClick={() => dec(item.productId)}
-                        className="flex size-6 items-center justify-center rounded-md border transition text-muted-foreground hover:bg-primary hover:text-white dark:hover:text-black disabled:opacity-50"
-                        aria-label="Decrease quantity"
-                      >
-                        <MinusIcon className="size-3.5" />
-                      </button>
-                      <span className="min-w-6 text-center text-sm font-medium tabular-nums">
-                        {item.quantity}
+            {items.map((item) => {
+              const split = splitCartItem(item);
+
+              return (
+                <li
+                  key={item.productId}
+                  className="flex gap-3 items-center rounded-lg border border-border/40 p-2.5 bg-muted-foreground/10 dark:bg-muted-foreground/10 hover:bg-muted-foreground/20 hover:dark:bg-muted-foreground/20 transition"
+                >
+                  <div className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-md bg-card">
+                    {item.imageUrl ? (
+                      <Image
+                        src={item.imageUrl}
+                        alt={item.name}
+                        className="size-full object-cover"
+                        loading="lazy"
+                        height={200}
+                        width={200}
+                      />
+                    ) : (
+                      <span className="text-xs font-medium text-muted-foreground">
+                        {item.name.slice(0, 2).toUpperCase()}
                       </span>
+                    )}
+                  </div>
+                  <div className="flex flex-1 flex-col gap-1">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="line-clamp-1 text-sm font-medium">{item.name}</p>
                       <button
                         type="button"
-                        onClick={() => inc(item.productId)}
-                        className="flex size-6 items-center justify-center rounded-md border text-gray-500 transition hover:bg-primary hover:text-white dark:hover:text-black disabled:opacity-50"
-                        aria-label="Increase quantity"
+                        onClick={() => remove(item.productId)}
+                        className="shrink-0 text-destructive/70 hover:text-destructive transition"
+                        aria-label={`Remove ${item.name}`}
                       >
-                        <PlusIcon className="size-3.5" />
+                        <Trash2Icon className="size-4" />
                       </button>
                     </div>
-                    <span className="text-sm font-semibold text-primary">
-                      {formatCurrency(item.price * item.quantity)}
-                    </span>
+
+                    {split.promoQty > 0 && (
+                      <p className="flex items-center gap-1.5 text-xs text-muted-foreground tabular-nums">
+                        {split.promoQty} ×{' '}
+                        <span className="font-semibold">
+                          {formatCurrency(split.promoUnitPrice)}
+                        </span>
+                        <DiscountBadge price={item.price} amount={item.price - item.finalPrice} />
+                      </p>
+                    )}
+                    {split.regularQty > 0 && (
+                      <p className="text-xs text-muted-foreground tabular-nums">
+                        {split.regularQty} ×{' '}
+                        <span className="font-semibold">{formatCurrency(item.price)}</span> (regular
+                        price)
+                      </p>
+                    )}
+                    {split.regularQty > 0 && split.promoQty > 0 && (
+                      <p className="text-[10px] font-medium text-warning">Discount limit reached</p>
+                    )}
+
+                    <div className="mt-auto flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => dec(item.productId)}
+                          className="flex size-6 items-center justify-center rounded-md border transition text-muted-foreground hover:bg-primary hover:text-white dark:hover:text-black disabled:opacity-50"
+                          aria-label={`Decrease ${item.name} quantity`}
+                        >
+                          <MinusIcon className="size-3.5" />
+                        </button>
+                        <input
+                          aria-label={`${item.name} quantity`}
+                          type="text"
+                          inputMode="numeric"
+                          value={item.quantity}
+                          onChange={(e) =>
+                            setItem(item.productId, Number(e.target.value.replace(/\D/g, '')) || 0)
+                          }
+                          className="h-6 w-8 rounded-sm bg-transparent text-center text-sm font-medium tabular-nums focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => inc(item.productId)}
+                          className="flex size-6 items-center justify-center rounded-md border text-gray-500 transition hover:bg-primary hover:text-white dark:hover:text-black disabled:opacity-50"
+                          aria-label={`Increase ${item.name} quantity`}
+                        >
+                          <PlusIcon className="size-3.5" />
+                        </button>
+                      </div>
+                      <span className="text-sm font-semibold text-primary tabular-nums">
+                        {formatCurrency(split.total)}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              </li>
-            ))}
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>
 
       <div className={cn('border-t border-border/60 p-4', !open && 'max-lg:hidden')}>
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <InfoIcon className="size-3.5" />
-          <span>Tax included.</span>
-        </div>
-        <div className="mt-2 flex items-center justify-between">
-          <span className="text-sm font-medium text-muted-foreground">Subtotal Estimate</span>
-          <span className="text-lg font-semibold tabular-nums" suppressHydrationWarning>
-            {formatCurrency(subtotal)}
-          </span>
-        </div>
+        <dl className="space-y-1 text-sm">
+          <div className="flex items-center justify-between">
+            <dt className="text-muted-foreground">Subtotal</dt>
+            <dd className="font-medium text-muted-foreground tabular-nums">
+              {formatCurrency(subtotal)}
+            </dd>
+          </div>
+          {discount > 0 && (
+            <div className="flex items-center justify-between">
+              <dt className="text-muted-foreground">Discount</dt>
+              <dd className="font-medium tabular-nums">-{formatCurrency(discount)}</dd>
+            </div>
+          )}
+          <div className="flex items-center justify-between pt-1">
+            <dt className="font-medium">Estimated total</dt>
+            <dd className="text-lg font-semibold text-muted-foreground tabular-nums">
+              {formatCurrency(total)}
+            </dd>
+          </div>
+        </dl>
         <Button
           className="mt-3 w-full"
           size="lg"
@@ -184,7 +233,6 @@ export function PosCart({ onCheckoutSuccess }: PosCartProps) {
       <PosCheckoutDialog
         open={checkoutOpen}
         setCheckoutOpen={setCheckoutOpen}
-        subtotal={subtotal}
         onCheckoutSuccess={onCheckoutSuccess}
       />
 

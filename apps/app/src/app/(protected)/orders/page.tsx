@@ -3,7 +3,6 @@ import { OrderSearch } from '@/app/(protected)/orders/_components/order-search';
 import { OrderTableSection } from '@/app/(protected)/orders/_components/order-table';
 import { OrderTableSkeleton } from '@/app/(protected)/orders/_components/order-table-skeleton';
 import { auth } from '@/auth';
-import { Skeleton } from '@/components/ui/skeleton';
 import { OrderRelation, OrderStatus, PaymentMethod } from '@/domain';
 import { GetAllOrderParams } from '@/features/orders/schema';
 import { hasPermission, PERMISSION } from '@/lib/permission';
@@ -52,12 +51,8 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
         </div>
       </div>
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <Suspense fallback={<Skeleton className="h-9 w-full sm:w-72" />}>
-          <OrderSearch />
-        </Suspense>
-        <Suspense fallback={<Skeleton className="h-9 w-24" />}>
-          <OrderFilter />
-        </Suspense>
+        <OrderSearch />
+        <OrderFilter />
       </div>
       <Suspense fallback={<OrderTableSkeleton />}>
         <OrderTableSection params={params} />

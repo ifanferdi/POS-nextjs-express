@@ -1,4 +1,3 @@
-import { Button } from '@/components/shared/button';
 import { Skeleton as SkeletonComponent } from '@/components/ui/skeleton';
 import {
   Table,
@@ -11,7 +10,7 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { icons } from '@/config/config';
 import { stringEllipsis } from '@/lib/helper';
-import { CircleAlert } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { ReactNode } from 'react';
 
@@ -59,7 +58,7 @@ export function DataTable<T>({
         <HeaderTable headers={headers} />
         <TableBody>
           {records.map((record, index) => (
-            <TableRow key={index} className="group hover:bg-secondary">
+            <TableRow key={index} className="group hover:bg-muted/30">
               {isNeedNumberColumn && (
                 <TableCell className="text-muted-foreground text-center">{index + 1}</TableCell>
               )}
@@ -103,7 +102,7 @@ function TableCellByType({
         </TableCell>
       );
     default:
-      return <TableCell className={`${className} text-muted-foreground`}>{content}</TableCell>;
+      return <TableCell className={cn('text-muted-foreground', className)}>{content}</TableCell>;
   }
 }
 

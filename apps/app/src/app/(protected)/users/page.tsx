@@ -5,7 +5,6 @@ import { UserTableSection } from '@/app/(protected)/users/_components/user-table
 import { UserTableSkeleton } from '@/app/(protected)/users/_components/user-table-skeleton';
 import { auth } from '@/auth';
 import { ParamsError } from '@/components/shared/error';
-import { Skeleton } from '@/components/ui/skeleton';
 import { RoleOption, UserRelation } from '@/domain';
 import { getAllRoles } from '@/features/roles/api';
 import { GetAllUserParams, GetAllUserSchema } from '@/features/users/schema';
@@ -61,12 +60,8 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
         {canManage && <UserFormDialog mode="create" roles={roles} />}
       </div>
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <Suspense fallback={<Skeleton className="h-9 w-full sm:w-72" />}>
-          <UserSearch />
-        </Suspense>
-        <Suspense fallback={<Skeleton className="h-9 w-24" />}>
-          <UserFilter roles={roles} />
-        </Suspense>
+        <UserSearch />
+        <UserFilter roles={roles} />
       </div>
       <Suspense fallback={<UserTableSkeleton />}>
         <UserTableSection params={params} roles={roles} canManage={canManage} />

@@ -8,6 +8,8 @@ export const PERMISSION = {
   MANAGE_CATEGORY: 'Manage Category',
   SHOW_PRODUCT: 'Show Product',
   MANAGE_PRODUCT: 'Manage Product',
+  SHOW_PRODUCT_DISCOUNT_CYCLE: 'Show Product Discount Cycle',
+  MANAGE_PRODUCT_DISCOUNT_CYCLE: 'Manage Product Discount Cycle',
   SHOW_ORDER: 'Show Order',
   MANAGE_ORDER: 'Manage Order',
   SHOW_PAYMENT: 'Show Payment',

@@ -1,14 +1,13 @@
 import { UserActions } from '@/app/(protected)/users/_components/user-actions';
 import { TablePagination } from '@/components/shared/table';
-import { DataTable, EmptyTable } from '@/components/shared/table-server';
+import { DataTable, EmptyTable, TooltipedCell } from '@/components/shared/table-server';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { RoleOption, UserList } from '@/domain';
 import { getAllUsersAction } from '@/features/users/action';
 import { GetAllUserParams } from '@/features/users/schema';
-import { getInitials } from '@/lib/helper';
+import { formatDate, getInitials } from '@/lib/helper';
 import _ from 'lodash';
-import moment from 'moment';
 
 export const headers = ['#', 'Name', 'Username', 'Gender', 'Birth', 'Role', 'Status', ''];
 
@@ -58,7 +57,7 @@ function UserTable(props: UserTableProps) {
                   {getInitials(user.profile.fullName)}
                 </AvatarFallback>
               </Avatar>
-              <span className="font-medium group-hover:underline">{user.profile.fullName}</span>
+              {TooltipedCell(user.profile.fullName)}
             </>
           ),
         },
@@ -71,7 +70,7 @@ function UserTable(props: UserTableProps) {
         { key: 'gender', content: _.capitalize(user.profile.gender) },
         {
           key: 'birth',
-          content: `${user.profile.placeOfBirth}, ${moment(user.profile.dateOfBirth).format('MMM D YYYY')}`,
+          content: `${user.profile.placeOfBirth}, ${formatDate(user.profile.dateOfBirth)}`,
         },
         { key: 'role', content: user.role.name },
         {

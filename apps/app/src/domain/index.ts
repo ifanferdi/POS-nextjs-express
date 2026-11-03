@@ -4,6 +4,7 @@ export * from '@/domain/general.types';
 export * from '@/domain/order.types';
 export * from '@/domain/payment.types';
 export * from '@/domain/permission.types';
+export * from '@/domain/product-discount-cycle.types';
 export * from '@/domain/product.types';
 export * from '@/domain/role.types';
 export * from '@/domain/user.types';
