@@ -4,6 +4,7 @@ import {
   OrderItem,
   Payment,
   Product,
+  ProductDiscountCycle,
 } from '@/infrastructure/database/prisma/generated/client';
 import { OrderScalarFieldEnum } from '@/infrastructure/database/prisma/generated/internal/prismaNamespace';
 import { PaymentMidtransDetail } from './payment';
@@ -19,14 +20,23 @@ export interface MetaProduct extends Partial<Product> {
   snapshotAt?: Date;
 }
 
+export interface MetaDiscountCycle extends Partial<ProductDiscountCycle> {
+  snapshotAt?: Date;
+}
+
 export interface MetaOrder {
   user?: IUserProfile | IUser;
   customer?: IUserProfile | IUser;
+  products?: MetaProduct[];
+  discounts?: MetaDiscountCycle[];
 }
 
 export interface MetaOrderItems {
   product?: Product;
   order?: Order;
+  discount?: MetaDiscountCycle;
+  discountAmount?: number;
+  discountQty?: number;
 }
 
 export interface StoreOrderDtoItems {
@@ -34,18 +44,19 @@ export interface StoreOrderDtoItems {
   quantity: number;
   unitPrice: number;
   totalPrice: number;
-  meta?: Record<string, any>;
+  discountId?: number;
+  discountQty?: number;
+  meta?: MetaOrderItems;
 }
 
 export interface StoreOrderDto {
   customerId?: number;
   userId?: number;
   subtotal: number;
-  tax: number;
-  discount: number;
+  totalDiscount: number;
   total: number;
   notes?: string;
-  meta?: Record<string, any>;
+  meta?: MetaOrder;
   items: StoreOrderDtoItems[];
   payment: Pick<Payment, 'amount' | 'change' | 'rounding' | 'total' | 'method'>;
 }

@@ -1,6 +1,10 @@
 import { ProductRelation } from '@/domain/entities/enums/product.enum';
-import { ProductCategories } from '@/domain/entities/models/product';
-import { extractCategories, handleProductImageUrl } from '@/helpers/data-extractor';
+import { IProduct, ProductCategories } from '@/domain/entities/models/product';
+import {
+  applyActiveDiscount,
+  extractCategories,
+  handleProductImageUrl,
+} from '@/helpers/data-extractor';
 import paginate from '@/helpers/paginate.helper';
 import BaseUseCase from '@/use-cases/_base-use-case';
 import { FindAllProductDto } from '@/validations/product-validation';
@@ -9,7 +13,7 @@ export default class FindAllProduct extends BaseUseCase {
   async execute(params: FindAllProductDto) {
     const { page = 1, limit = 10 } = params;
 
-    const data = await this.repositories.productRepository.findAll(params);
+    const data = await this.repositories.productRepository.findAll<IProduct>(params);
     const total = await this.repositories.productRepository.count(params);
 
     await Promise.all(
@@ -19,6 +23,14 @@ export default class FindAllProduct extends BaseUseCase {
           extractCategories(product as ProductCategories);
       }),
     );
+
+    if (params.with?.includes(ProductRelation.DISCOUNT_CYCLES)) {
+      const discounts = await this.repositories.productDiscountCycleRepository.findActive(
+        data.map((product) => product.id),
+        new Date(),
+      );
+      applyActiveDiscount(data, discounts);
+    }
 
     return paginate({ page, limit, total, data });
   }

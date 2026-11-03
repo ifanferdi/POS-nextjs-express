@@ -19,6 +19,8 @@ export default class QueryOrderRepository {
     if (relation?.includes(OrderRelation.USER_PROFILE))
       include.user = { select: { ...USER_SELECT_FIELDS_PRISMA, profile: true } };
     if (relation?.includes(OrderRelation.ORDER_ITEMS)) include.orderItems = true;
+    // ORDER_ITEMS_PRODUCT hanya untuk fallback/relasi — bukan sumber harga historis.
+    // Harga & diskon yang dipakai saat order ada di order_items.meta / orders.meta.
     if (relation?.includes(OrderRelation.ORDER_ITEMS_PRODUCT))
       include.orderItems = { include: { product: true } };
     if (relation?.includes(OrderRelation.PAYMENT)) include.payment = true;

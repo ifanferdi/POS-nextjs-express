@@ -7,6 +7,7 @@ import OrderController from '@/adapters/http/controller/order-controller';
 import PaymentController from '@/adapters/http/controller/payment-controller';
 import PermissionController from '@/adapters/http/controller/permission-controller';
 import ProductController from '@/adapters/http/controller/product-controller';
+import ProductDiscountCycleController from '@/adapters/http/controller/product-discount-cycle-controller';
 import RoleController from '@/adapters/http/controller/role-controller';
 import UserController from '@/adapters/http/controller/user-controller';
 import express from '@/adapters/http/webserver/express';
@@ -20,6 +21,7 @@ import DashboardRepository from '@/repositories/database/dashboard-repository';
 import OrderRepository from '@/repositories/database/order-repository';
 import PaymentRepository from '@/repositories/database/payment-repository';
 import PermissionRepository from '@/repositories/database/permission-repository';
+import ProductDiscountCycleRepository from '@/repositories/database/product-discount-cycle-repository';
 import ProductRepository from '@/repositories/database/product-repository';
 import RoleRepository from '@/repositories/database/role-repository';
 import UserRepository from '@/repositories/database/user-repository';
@@ -58,6 +60,12 @@ import FindAllPermission from '@/use-cases/permission/find-all-permission';
 import FindByIdPermission from '@/use-cases/permission/find-by-id-permission';
 import ResetCachePermission from '@/use-cases/permission/reset-cache-permission';
 import UpdatePermission from '@/use-cases/permission/update-permission';
+import CheckQuotaProductDiscountCycle from '@/use-cases/product-discount-cycle/check-quota-product-discount-cycle';
+import CreateProductDiscountCycle from '@/use-cases/product-discount-cycle/create-product-discount-cycle';
+import DeleteProductDiscountCycle from '@/use-cases/product-discount-cycle/delete-product-discount-cycle';
+import FindAllProductDiscountCycle from '@/use-cases/product-discount-cycle/find-all-product-discount-cycle';
+import FindByIdProductDiscountCycle from '@/use-cases/product-discount-cycle/find-by-id-product-discount-cycle';
+import UpdateProductDiscountCycle from '@/use-cases/product-discount-cycle/update-product-discount-cycle';
 import CreateProduct from '@/use-cases/product/create-product';
 import DeleteProduct from '@/use-cases/product/delete-product';
 import FindAllProduct from '@/use-cases/product/find-all-product';
@@ -106,6 +114,7 @@ function setupControllers(useCases: UseCases): Controllers {
     roleController: new RoleController(useCases),
     categoryController: new CategoryController(useCases),
     productController: new ProductController(useCases),
+    productDiscountCycleController: new ProductDiscountCycleController(useCases),
     orderController: new OrderController(useCases),
     paymentController: new PaymentController(useCases),
     midtransController: new MidtransController(useCases),
@@ -122,6 +131,7 @@ async function setupRepositories(): Promise<Repositories> {
     userRepository: new UserRepository(prisma),
     categoryRepository: new CategoryRepository(prisma),
     productRepository: new ProductRepository(prisma),
+    productDiscountCycleRepository: new ProductDiscountCycleRepository(prisma),
     orderRepository: new OrderRepository(prisma),
     paymentRepository: new PaymentRepository(prisma),
     dashboardRepository: new DashboardRepository(prisma),
@@ -186,6 +196,14 @@ function setupUseCases(repositories: Repositories): UseCases {
       deleteProduct: new DeleteProduct(repositories),
       restoreProduct: new RestoreProduct(repositories),
       productImage: new ProductImage(repositories),
+    },
+    productDiscountCycleUseCase: {
+      findAllProductDiscountCycle: new FindAllProductDiscountCycle(repositories),
+      findByIdProductDiscountCycle: new FindByIdProductDiscountCycle(repositories),
+      createProductDiscountCycle: new CreateProductDiscountCycle(repositories),
+      updateProductDiscountCycle: new UpdateProductDiscountCycle(repositories),
+      deleteProductDiscountCycle: new DeleteProductDiscountCycle(repositories),
+      checkQuotaProductDiscountCycle: new CheckQuotaProductDiscountCycle(repositories),
     },
     orderUseCase: {
       findAllOrder: new FindAllOrder(repositories),

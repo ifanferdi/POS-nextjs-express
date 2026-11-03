@@ -3,6 +3,7 @@ import DashboardRepository from '@/repositories/database/dashboard-repository';
 import OrderRepository from '@/repositories/database/order-repository';
 import PaymentRepository from '@/repositories/database/payment-repository';
 import PermissionRepository from '@/repositories/database/permission-repository';
+import ProductDiscountCycleRepository from '@/repositories/database/product-discount-cycle-repository';
 import ProductRepository from '@/repositories/database/product-repository';
 import RoleRepository from '@/repositories/database/role-repository';
 import UserRepository from '@/repositories/database/user-repository';
@@ -18,6 +19,7 @@ export interface Repositories extends ToolsRepository {
   permissionRepository: PermissionRepository;
   categoryRepository: CategoryRepository;
   productRepository: ProductRepository;
+  productDiscountCycleRepository: ProductDiscountCycleRepository;
   orderRepository: OrderRepository;
   paymentRepository: PaymentRepository;
   dashboardRepository: DashboardRepository;

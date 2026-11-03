@@ -1,8 +1,16 @@
 import { Category, Product } from '@/infrastructure/database/prisma/generated/client';
 import { ProductScalarFieldEnum } from '@/infrastructure/database/prisma/generated/internal/prismaNamespace';
+import { MetaDiscountCycle } from './order';
+
+export interface ProductDiscount extends MetaDiscountCycle {
+  remainingQuota: number | null;
+  finalPrice: number;
+}
 
 export interface IProduct extends Product {
-  imageUrl?: string ;
+  imageUrl?: string;
+  // Diisi hanya saat `with[]=discount-cycles`: semua data diskon aktif terbaru (maks. 1).
+  discount?: ProductDiscount | null;
 }
 
 export interface ProductCategories extends IProduct {

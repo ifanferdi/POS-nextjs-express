@@ -6,6 +6,7 @@ import { MidtransUseCase } from '@/domain/use-cases/midtrans.interface';
 import { OrderUseCase } from '@/domain/use-cases/order.interface';
 import { PaymentUseCase } from '@/domain/use-cases/payment.interface';
 import { PermissionUseCase } from '@/domain/use-cases/permission.interface';
+import { ProductDiscountCycleUseCase } from '@/domain/use-cases/product-discount-cycle.interface';
 import { ProductUseCase } from '@/domain/use-cases/product.interface';
 import { RoleUseCase } from '@/domain/use-cases/role.interface';
 import { UserUseCase } from '@/domain/use-cases/user.interface';
@@ -18,6 +19,7 @@ export interface UseCases {
   commonUseCase: CommonUseCase;
   categoryUseCase: CategoryUseCase;
   productUseCase: ProductUseCase;
+  productDiscountCycleUseCase: ProductDiscountCycleUseCase;
   orderUseCase: OrderUseCase;
   paymentUseCase: PaymentUseCase;
   midtransUseCase: MidtransUseCase;
