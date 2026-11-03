@@ -30,7 +30,53 @@ export default class PosSeeder implements Seeder {
   async execute(): Promise<void> {
     const categories = await this.seedCategories();
     const products = await this.seedProducts(categories);
+    await this.seedProductDiscountCycles(products);
     await this.seedOrders(products);
+  }
+
+  private async seedProductDiscountCycles(products: Product[]) {
+    const now = Date.now();
+    const day = 86_400_000;
+    const picked = _.sampleSize(products, 20);
+
+    const data = picked.map((product, index) => {
+      const amount = Math.min(
+        Math.round(product.price * faker.number.float({ min: 0.05, max: 0.15 })),
+        product.price,
+      );
+      const active = {
+        productId: product.id,
+        amount,
+        startDate: new Date(now - day),
+        endDate: new Date(now + 7 * day),
+      };
+
+      // 4 variasi: aktif berkuota, aktif unlimited, mendatang, kedaluwarsa
+      switch (index % 4) {
+        case 0:
+          return { ...active, quota: 100 };
+        case 1:
+          return { ...active, quota: null };
+        case 2:
+          return {
+            ...active,
+            quota: null,
+            startDate: new Date(now + day),
+            endDate: new Date(now + 7 * day),
+          };
+        default:
+          return {
+            ...active,
+            quota: null,
+            startDate: new Date(now - 14 * day),
+            endDate: new Date(now - 7 * day),
+          };
+      }
+    });
+
+    await this.prisma.productDiscountCycle.createMany({ data });
+
+    console.info('✅ Seed Product Discount Cycles');
   }
 
   private async seedCategories() {
@@ -194,9 +240,8 @@ export default class PosSeeder implements Seeder {
         });
 
         const subtotal = _.sumBy(orderItemsData, 'totalPrice');
-        const tax = Math.round(subtotal * 0.11);
-        const discount = faker.number.int({ min: 0, max: Math.floor(subtotal * 0.1) });
-        const total = subtotal + tax - discount;
+        const totalDiscount = faker.number.int({ min: 0, max: subtotal });
+        const total = subtotal - totalDiscount;
 
         const paymentStatus =
           status === OrderStatus.COMPLETED
@@ -221,8 +266,7 @@ export default class PosSeeder implements Seeder {
           userId: faker.number.int({ min: 1, max: countAllUsers }),
           orderNumber,
           subtotal,
-          tax,
-          discount,
+          totalDiscount,
           total,
           status,
           notes: faker.helpers.maybe(() => faker.lorem.sentence(), { probability: 0.3 }),

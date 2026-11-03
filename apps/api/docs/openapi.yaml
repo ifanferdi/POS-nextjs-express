@@ -1313,7 +1313,7 @@ paths:
             type: array
             items:
               type: string
-              enum: [categories]
+              enum: [categories, discount-cycles]
       responses:
         '200':
           description: Paginated list
@@ -1403,7 +1403,7 @@ paths:
                       type: array
                       items:
                         type: string
-                        enum: [categories]
+                        enum: [categories, discount-cycles]
       responses:
         '200':
           description: Paginated list
@@ -1467,7 +1467,7 @@ paths:
             type: array
             items:
               type: string
-              enum: [categories]
+              enum: [categories, discount-cycles]
       responses:
         '200':
           description: Product data
@@ -2338,6 +2338,35 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ProductCategory'
+        discount:
+          type: object
+          nullable: true
+          description: Diskon aktif terbaru (maks. 1); hanya dikirim saat `with[]=discount-cycles`.
+          properties:
+            id:
+              type: integer
+            productId:
+              type: integer
+            amount:
+              type: number
+            quota:
+              type: integer
+              nullable: true
+            usedQty:
+              type: integer
+            remainingQuota:
+              type: integer
+              nullable: true
+              description: Sisa unit berdiskon; null = unlimited, 0 = kuota habis.
+            finalPrice:
+              type: number
+              description: Harga akhir (price - potongan); sama dengan price bila kuota habis.
+            startDate:
+              type: string
+              format: date-time
+            endDate:
+              type: string
+              format: date-time
 
     # ── Order ───────────────────────────────────────────────
     OrderItem:

@@ -4,6 +4,7 @@ import DashboardRoutes from '@/adapters/http/routes/dashboard.routes';
 import OrderRoutes from '@/adapters/http/routes/order.routes';
 import PaymentRoutes from '@/adapters/http/routes/payment.routes';
 import PermissionRoutes from '@/adapters/http/routes/permission.routes';
+import ProductDiscountCycleRoutes from '@/adapters/http/routes/product-discount-cycle.routes';
 import ProductRoutes from '@/adapters/http/routes/product.routes';
 import RoleRoutes from '@/adapters/http/routes/role.routes';
 import UserRoutes from '@/adapters/http/routes/user.routes';
@@ -21,6 +22,10 @@ export default function Routes(app: Express, controllers: Controllers, auth: Aut
   app.use('/api/v1/roles', RoleRoutes(controllers.roleController, auth));
   app.use('/api/v1/categories', CategoryRoutes(controllers.categoryController, auth));
   app.use('/api/v1/products', ProductRoutes(controllers.productController, auth));
+  app.use(
+    '/api/v1/product-discount-cycles',
+    ProductDiscountCycleRoutes(controllers.productDiscountCycleController, auth),
+  );
   app.use('/api/v1/orders', OrderRoutes(controllers.orderController, auth));
   app.use('/api/v1/payments', PaymentRoutes(controllers.paymentController, auth));
   app.use('/api/v1/sse', SseRoutes(controllers.sseController, auth));

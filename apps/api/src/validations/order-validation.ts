@@ -42,6 +42,7 @@ export const FindAllOrderSchema = BasePagination(ORDER_FIELD)
 const OrderItemSchema = z.object({
   productId: NumberSchema,
   quantity: NumberSchema.min(1).default(1),
+  useDiscount: z.boolean().optional().default(false), // true = row memakai diskon & claim kuota; default harga normal
 });
 
 export const CreateOrderSchema = z

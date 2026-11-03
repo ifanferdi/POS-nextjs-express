@@ -39,8 +39,7 @@ export interface DashboardExportRow {
   createdAt: string;
   status: string;
   subtotal: number;
-  tax: number;
-  discount: number;
+  totalDiscount: number;
   total: number;
   method: string;
   paymentStatus: string;

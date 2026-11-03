@@ -2,9 +2,11 @@ import { UserRelation } from '@/domain/entities/enums/user.enum';
 import { IProduct, ProductCategories } from '@/domain/entities/models/product';
 import { PartialRoleHasPermission } from '@/domain/entities/models/role';
 import { IUserProfile, UserRelationData } from '@/domain/entities/models/user';
+import { ProductDiscountCycle } from '@/infrastructure/database/prisma/generated/client';
 import S3StorageRepository from '@/repositories/filesystem/s3-storage-repository';
 import { FindAllUserDto, FindByIdUserDto } from '@/validations/user-validation';
 import { isLink } from './common.helper';
+import { effectiveUnitDiscount, remainingQuota } from './discount.helper';
 
 export function extractRelationDataUser(
   params: FindAllUserDto | FindByIdUserDto,
@@ -54,6 +56,30 @@ export async function handleProductImageUrl(
     product.imageUrl = isLink(product.imagePath)
       ? product.imagePath
       : await storageRepository.getUrl(product.imagePath);
+}
+
+export function applyActiveDiscount(products: IProduct[], discounts: ProductDiscountCycle[]) {
+  // findActive() mengurutkan startDate desc → ambil yang pertama (latest) per product.
+  const discountMap = new Map<number, ProductDiscountCycle>();
+  discounts.forEach((discount) => {
+    if (!discountMap.has(discount.productId)) discountMap.set(discount.productId, discount);
+  });
+
+  products.forEach((product) => {
+    const discount = discountMap.get(product.id);
+    const remaining = discount ? remainingQuota(discount) : null;
+
+    product.discount = discount
+      ? {
+          ...discount,
+          remainingQuota: remaining,
+          finalPrice:
+            remaining !== 0
+              ? product.price - effectiveUnitDiscount(discount.amount, product.price)
+              : product.price,
+        }
+      : null;
+  });
 }
 
 export async function handleProfileImageUrl(

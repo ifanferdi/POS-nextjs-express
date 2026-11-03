@@ -145,9 +145,27 @@ model Product {
 
   productHasCategories ProductHasCategory[]
   orderItems           OrderItem[]
+  discountCycles       ProductDiscountCycle[]
 
   @@index([name], name: "products_name_index")
   @@map("products")
+}
+
+model ProductDiscountCycle {
+  id        Int      @id @default(autoincrement())
+  productId Int
+  amount    Int // potongan nominal per unit (Rp), > 0
+  quota     Int? // jumlah unit yang didiskon; null = unlimited
+  usedQty   Int      @default(0) // unit terjual dengan diskon — truth durable; Redis hanya counter sisa
+  startDate DateTime @db.Timestamptz // timestamp, termasuk jam
+  endDate   DateTime @db.Timestamptz
+  createdAt DateTime @default(now()) @db.Timestamptz
+  updatedAt DateTime @updatedAt @db.Timestamptz
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId, startDate, endDate])
+  @@map("product_discount_cycles")
 }
 
 model ProductHasCategory {
@@ -162,19 +180,18 @@ model ProductHasCategory {
 }
 
 model Order {
-  id          Int         @id @default(autoincrement())
-  customerId  Int?
-  userId      Int?
-  orderNumber String      @unique @db.VarChar(50)
-  subtotal    Int         @default(0)
-  tax         Int         @default(0)
-  discount    Int         @default(0)
-  total       Int         @default(0)
-  status      OrderStatus @default(pending)
-  notes       String?     @db.Text
-  meta        Json?
-  createdAt   DateTime    @default(now()) @db.Timestamptz
-  updatedAt   DateTime    @updatedAt @db.Timestamptz
+  id            Int         @id @default(autoincrement())
+  customerId    Int?
+  userId        Int?
+  orderNumber   String      @unique @db.VarChar(50)
+  subtotal      Int         @default(0)
+  totalDiscount Int         @default(0)
+  total         Int         @default(0)
+  status        OrderStatus @default(pending)
+  notes         String?     @db.Text
+  meta          Json?
+  createdAt     DateTime    @default(now()) @db.Timestamptz
+  updatedAt     DateTime    @updatedAt @db.Timestamptz
 
   customer   User?       @relation("OrderCustomer", fields: [customerId], references: [id], onDelete: SetNull)
   user       User?       @relation("OrderCashier", fields: [userId], references: [id], onDelete: SetNull)

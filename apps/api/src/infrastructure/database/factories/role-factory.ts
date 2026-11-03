@@ -17,6 +17,8 @@ export default function RoleFactory(permissions: Permission[]) {
       'Show Category',
       'Manage Product',
       'Show Product',
+      'Manage Product Discount Cycle',
+      'Show Product Discount Cycle',
       'Manage Order',
       'Show Order',
       'Manage Payment',
@@ -31,12 +33,21 @@ export default function RoleFactory(permissions: Permission[]) {
       'Show Category',
       'Manage Product',
       'Show Product',
+      'Manage Product Discount Cycle',
+      'Show Product Discount Cycle',
       'Manage Order',
       'Show Order',
       'Manage Payment',
       'Show Payment',
     ],
-    User: ['Show Order', 'Show Product', 'Show Category', 'Manage Order', 'Manage Payment'],
+    User: [
+      'Show Order',
+      'Show Product',
+      'Show Product Discount Cycle',
+      'Show Category',
+      'Manage Order',
+      'Manage Payment',
+    ],
   };
 
   const roleFactories: Array<CreateRoleDto & { id: number }> = [];

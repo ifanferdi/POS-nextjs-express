@@ -69,8 +69,14 @@ export default class OrderRepository
           ...orderData,
           subtotal,
           total,
+          meta: meta as Prisma.InputJsonValue,
           orderNumber: await generateOrderNumber(),
-          orderItems: { create: items.map((item) => ({ ...item })) },
+          orderItems: {
+            create: items.map(({ discountId, discountQty, ...item }) => ({
+              ...item,
+              meta: item.meta as Prisma.InputJsonValue,
+            })),
+          },
           status:
             payment.method === PaymentMethod.CASH ? OrderStatus.COMPLETED : OrderStatus.PENDING,
         },
@@ -81,12 +87,26 @@ export default class OrderRepository
         data: {
           ...payment,
           orderId: order.id,
-          subtotal,
+          // total order setelah diskon, sebelum rounding (bukan subtotal gross)
+          subtotal: total,
           method: payment.method,
           status:
             payment.method === PaymentMethod.CASH ? PaymentStatus.SUCCESS : PaymentStatus.PENDING,
         },
       });
+
+      // Sisa kuota = quota - usedQty. Increment di transaksi yang sama dengan order,
+      // supaya order gagal/rollback tidak memotong kuota.
+      const usedQty = new Map<number, number>();
+      items.forEach((item) => {
+        if (item.discountId && item.discountQty)
+          usedQty.set(item.discountId, (usedQty.get(item.discountId) ?? 0) + item.discountQty);
+      });
+      for (const [discountId, qty] of usedQty)
+        await tx.productDiscountCycle.updateMany({
+          where: { id: discountId },
+          data: { usedQty: { increment: qty } },
+        });
 
       // Merge duplicate lines + sort by productId so every transaction takes row locks in the same
       // order (deterministic lock order → no ABBA deadlock), and fewer round-trips.
@@ -133,6 +153,7 @@ export default class OrderRepository
   }
 
   cancelOrder(id: number) {
+    // kuota diskon hangus — tidak dikembalikan saat cancel/refund
     return this.prisma.$transaction(async (tx) => {
       const order = await tx.order.findFirst({
         where: { id, status: { not: OrderStatus.CANCELLED } },
