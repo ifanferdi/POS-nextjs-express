@@ -4,7 +4,7 @@ import { UserRelation } from '@/domain/entities/enums/user.enum';
 import { IUser } from '@/domain/entities/models/user';
 import { Repositories } from '@/domain/repositories/repositories.interface';
 import { extractUserId, getRedisKeyRole } from '@/helpers/common.helper';
-import { ErrorBadRequest } from '@/helpers/error.helper';
+import { ErrorUnauthorized } from '@/helpers/error.helper';
 import { Role } from '@/infrastructure/database/prisma/generated/client';
 import CheckValidPermission from '@/use-cases/permission/check-valid-permission';
 import FindByIdUser from '@/use-cases/user/find-by-id-user';
@@ -18,9 +18,10 @@ export default class Authorization {
 
   authorize(permissions: string | string[]) {
     return async (req: e.Request, res: e.Response, next: e.NextFunction) => {
-      const userId = extractUserId(req) || 1;
+      // Tanpa user terverifikasi = 401; jangan pernah fallback ke user tertentu.
+      const userId = extractUserId(req);
 
-      if (!userId) return next(new ErrorBadRequest(`Headers user_id: must be a number`));
+      if (!userId) return next(new ErrorUnauthorized('User identity is missing from the request.'));
 
       const isValid = await new CheckValidPermission(this.repositories).execute({
         userId,

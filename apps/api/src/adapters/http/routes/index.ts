@@ -30,8 +30,10 @@ export default function Routes(app: Express, controllers: Controllers, auth: Aut
   app.use('/api/v1/payments', PaymentRoutes(controllers.paymentController, auth));
   app.use('/api/v1/sse', SseRoutes(controllers.sseController, auth));
 
-  app.use(auth.authorize(['Manage Order']), () => {
-    app.post('/api/v1/webhooks/midtrans', controllers.midtransController.webhook);
-    app.post('/api/v1/webhooks/midtrans/mock', controllers.midtransController.mock);
-  });
+  app.post('/api/v1/webhooks/midtrans', controllers.midtransController.webhook);
+  app.post(
+    '/api/v1/webhooks/midtrans/mock',
+    auth.authorize(['Manage Order']),
+    controllers.midtransController.mock,
+  );
 }
