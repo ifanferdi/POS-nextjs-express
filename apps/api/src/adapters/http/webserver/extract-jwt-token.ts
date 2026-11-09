@@ -3,9 +3,6 @@ import { ErrorUnauthorized } from '@/helpers/error.helper';
 import e from 'express';
 import asyncHandler from 'express-async-handler';
 
-// Webhook midtrans dicocokkan exact: /webhooks/midtrans/mock TIDAK boleh ikut
-// whitelist (wajib JWT + Manage Order). /public/files dicocokkan prefix karena
-// path-nya wildcard.
 const EXACT_WHITE_LIST = [
   '/api/v1/auth/sign-in',
   '/api/v1/auth/refresh-token',

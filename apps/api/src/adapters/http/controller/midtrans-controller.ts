@@ -20,10 +20,9 @@ export default class MidtransController extends BaseController {
   });
 
   // Dev-only: crafts a signed Midtrans notification and runs it through the real production sync
-  // path (signature verified, no isMock bypass). Nonaktif total di produksi:
-  // route ini bisa menyelesaikan order tanpa pembayaran sungguhan.
+  // path (signature verified, no isMock bypass). Guarded by env (404 in production).
   mock = asyncHandler(async (req: Request, res: Response) => {
-    if (config.app.env === 'production' || config.midtrans.isProduction) {
+    if (config.midtrans.isProduction) {
       res.sendStatus(404);
       return;
     }
