@@ -30,8 +30,15 @@ export default function Routes(app: Express, controllers: Controllers, auth: Aut
   app.use('/api/v1/payments', PaymentRoutes(controllers.paymentController, auth));
   app.use('/api/v1/sse', SseRoutes(controllers.sseController, auth));
 
-  app.use(auth.authorize(['Manage Order']), () => {
-    app.post('/api/v1/webhooks/midtrans', controllers.midtransController.webhook);
-    app.post('/api/v1/webhooks/midtrans/mock', controllers.midtransController.mock);
-  });
+  // Midtrans: webhook asli publik (keamanan = verifikasi signature di use case);
+  // mock wajib JWT + Manage Order dan dinonaktifkan di produksi (controller).
+  // Catatan: pendaftaran harus langsung di level app — sebelumnya dibungkus
+  // callback middleware yang tidak memanggil next(), membuat request apa pun
+  // yang sampai ke sini (termasuk semua route tak dikenal) hang selamanya.
+  app.post('/api/v1/webhooks/midtrans', controllers.midtransController.webhook);
+  app.post(
+    '/api/v1/webhooks/midtrans/mock',
+    auth.authorize(['Manage Order']),
+    controllers.midtransController.mock,
+  );
 }

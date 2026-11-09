@@ -3,16 +3,22 @@ import { ErrorUnauthorized } from '@/helpers/error.helper';
 import e from 'express';
 import asyncHandler from 'express-async-handler';
 
-const WHITE_LIST_ROUTES = [
+// Webhook midtrans dicocokkan exact: /webhooks/midtrans/mock TIDAK boleh ikut
+// whitelist (wajib JWT + Manage Order). /public/files dicocokkan prefix karena
+// path-nya wildcard.
+const EXACT_WHITE_LIST = [
   '/api/v1/auth/sign-in',
   '/api/v1/auth/refresh-token',
   '/api/v1/webhooks/midtrans',
-  '/public/files',
 ];
+const PREFIX_WHITE_LIST = ['/public/files'];
 export default (useCases: UseCases) =>
   asyncHandler(
     async (req: e.Request & Record<string, any>, _res: e.Response, next: e.NextFunction) => {
-      if (WHITE_LIST_ROUTES.map((route) => req.path.includes(route)).includes(true)) return next();
+      const isWhitelisted =
+        EXACT_WHITE_LIST.includes(req.path) ||
+        PREFIX_WHITE_LIST.some((route) => req.path.startsWith(route));
+      if (isWhitelisted) return next();
 
       const bearerToken = req.headers.authorization;
 
