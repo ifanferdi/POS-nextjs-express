@@ -82,14 +82,14 @@ export function AppSidebar({ username, permissions }: AppSidebarProps) {
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
               <Link href="/dashboard">
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-linear-to-br from-primary to-primary/70 text-primary-foreground shadow-sm">
+                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
                   <Store className="size-4" />
                 </div>
                 <div className="flex flex-col gap-0.5 leading-none">
                   <span className="font-semibold tracking-tight" suppressHydrationWarning>
                     {app.name}
                   </span>
-                  <span className="text-xs text-muted-foreground">Admin Panel</span>
+                  <span className="text-[13px] text-muted-foreground">Admin Panel</span>
                 </div>
               </Link>
             </SidebarMenuButton>
@@ -101,7 +101,7 @@ export function AppSidebar({ username, permissions }: AppSidebarProps) {
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel className="px-0">Management</SidebarGroupLabel>
+          <SidebarGroupLabel className="px-0 text-[13px]">Management</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu className="gap-1">
               {visibleItems.map((item) => {
@@ -112,13 +112,9 @@ export function AppSidebar({ username, permissions }: AppSidebarProps) {
                       asChild
                       isActive={isActive}
                       tooltip={item.title}
-                      className={`h-10 px-4 ${
-                        isActive
-                          ? 'relative bg-primary/10 text-primary font-bold! before:absolute before:inset-y-1.5 before:left-0 before:w-1 before:rounded-full before:bg-primary'
-                          : ''
-                      }`}
+                      className="h-11 px-4"
                     >
-                      <Link href={item.href}>
+                      <Link href={item.href} aria-current={isActive ? 'page' : undefined}>
                         <item.icon className={isActive ? 'text-primary' : ''} />
                         <span>{item.title}</span>
                       </Link>
@@ -146,7 +142,7 @@ export function AppSidebar({ username, permissions }: AppSidebarProps) {
               </Avatar>
               <div className="flex flex-1 flex-col gap-0.5 leading-none group-data-[collapsible=icon]:hidden">
                 <span className="text-sm font-medium">{displayName}</span>
-                <span className="text-xs text-muted-foreground">Administrator</span>
+                <span className="text-[13px] text-muted-foreground">Administrator</span>
               </div>
             </SidebarMenuButton>
           </SidebarMenuItem>

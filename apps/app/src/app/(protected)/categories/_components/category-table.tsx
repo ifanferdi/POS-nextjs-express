@@ -24,6 +24,7 @@ export async function CategoriesTableSection(props: categoriesTableSectionProps)
         totalPages={meta.totalPages}
         total={meta.total}
         baseUrl="/categories"
+        className="md:w-xl"
       />
     </>
   );

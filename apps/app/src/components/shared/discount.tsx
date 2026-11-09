@@ -18,7 +18,7 @@ export function PriceTag({
   const discounted = finalPrice < price;
 
   return (
-    <span className={cn('inline-flex items-baseline gap-1.5 tabular-nums', className)}>
+    <span className={cn('flex flex-col items-baseline gap-1.5 tabular-nums', className)}>
       <span
         suppressHydrationWarning
         className={cn('text-primary font-semibold tabular-nums', finalClassName)}

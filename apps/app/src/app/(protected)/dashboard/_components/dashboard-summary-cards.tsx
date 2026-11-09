@@ -79,7 +79,7 @@ export function DashboardSummaryCards({ range, initialData }: DashboardSummaryCa
   if (isError) return <QueryError onRetry={() => refetch()} />;
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       {METRICS.map((metric) => (
         <Card key={metric.key}>
           <CardContent className="flex flex-col gap-1">
@@ -91,7 +91,7 @@ export function DashboardSummaryCards({ range, initialData }: DashboardSummaryCa
               <Skeleton className="mt-1 h-8 w-28" />
             ) : (
               <>
-                <div className="text-2xl font-bold tabular-nums tracking-tight">
+                <div className="text-xl font-bold tabular-nums tracking-tight wrap-break-word xl:text-2xl">
                   {metric.format(data[metric.key])}
                 </div>
                 <DeltaChip value={data.delta[metric.key]} />

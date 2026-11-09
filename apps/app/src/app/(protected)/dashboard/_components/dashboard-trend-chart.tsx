@@ -36,6 +36,20 @@ function bucketLabel(bucket: string, granularity: DashboardGranularity) {
   return moment(bucket).format(granularity === 'month' ? 'MMM YYYY' : 'D MMM');
 }
 
+/**
+ * Label lengkap untuk header hover. Bucket `week` dari API = tanggal Senin,
+ * jadi tampilkan sebagai rentang Senin–Minggu supaya tidak terbaca sebagai satu hari.
+ */
+function bucketRangeLabel(bucket: string, granularity: DashboardGranularity) {
+  const start = moment(bucket);
+  if (granularity === 'month') return start.format('MMMM YYYY');
+  if (granularity === 'week') {
+    const end = start.clone().add(6, 'days');
+    return `${start.format('D MMM')} – ${end.format('D MMM YYYY')}`;
+  }
+  return start.format('D MMMM YYYY');
+}
+
 function tickLabel(value: number, metric: Metric) {
   return metric === 'revenue' ? formatCompactCurrency(value) : String(Math.round(value));
 }
@@ -52,7 +66,7 @@ export function DashboardTrendChart({ range, granularity, className }: Dashboard
   const svgRef = useRef<SVGSVGElement>(null);
 
   const { data, isPending, isError, refetch } = useQuery({
-    queryKey: dashboardKeys.trend(range),
+    queryKey: dashboardKeys.trend({ ...range, granularity }),
     queryFn: () => getDashboardTrendAction({ ...range, granularity, tz: TZ }),
   });
 
@@ -129,7 +143,7 @@ export function DashboardTrendChart({ range, granularity, className }: Dashboard
         ) : (
           <>
             <p className="text-sm tabular-nums text-muted-foreground" aria-live="polite">
-              {bucketLabel(active.bucket, granularity)}
+              {bucketRangeLabel(active.bucket, granularity)}
               <span className="text-foreground"> · {active.orders} orders</span> ·{' '}
               {formatCurrency(active.revenue, 0)}
             </p>

@@ -81,7 +81,7 @@ export function DashboardFilter({
           value={range.from}
           max={range.to}
           onChange={(e) => e.target.value && changeFrom(e.target.value)}
-          className="w-38 dark:[color-scheme:dark]"
+          className="w-38 dark:scheme-dark"
         />
       </label>
       <label className="flex flex-col gap-1 text-xs font-medium text-muted-foreground">
@@ -91,7 +91,7 @@ export function DashboardFilter({
           value={range.to}
           min={range.from}
           onChange={(e) => e.target.value && changeTo(e.target.value)}
-          className="w-38 dark:[color-scheme:dark]"
+          className="w-38 dark:scheme-dark"
         />
       </label>
       <label className="flex flex-col gap-1 text-xs font-medium text-muted-foreground">

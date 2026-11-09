@@ -2,6 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { buildPageItems } from '@/lib/helper';
+import { cn } from '@/lib/utils';
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useTransition } from 'react';
@@ -11,8 +12,15 @@ interface TablePaginationProps {
   totalPages: number;
   total: number;
   baseUrl: string;
+  className?: string;
 }
-export function TablePagination({ page, totalPages, total, baseUrl }: TablePaginationProps) {
+export function TablePagination({
+  page,
+  totalPages,
+  total,
+  baseUrl,
+  className,
+}: TablePaginationProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
@@ -30,7 +38,9 @@ export function TablePagination({ page, totalPages, total, baseUrl }: TablePagin
   const pageItems = buildPageItems(page, totalPages);
 
   return (
-    <div className="flex flex-col items-center justify-between gap-3 px-2 sm:flex-row">
+    <div
+      className={cn('flex flex-col items-center justify-between gap-3 px-2 sm:flex-row', className)}
+    >
       <p className="text-sm text-muted-foreground">
         {total} record{total !== 1 ? 's' : ''} · page {page} of {totalPages}
       </p>

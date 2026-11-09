@@ -109,7 +109,7 @@ function TableCellByType({
 export function TooltipedCell(string: string) {
   return (
     <Tooltip>
-      <TooltipTrigger>
+      <TooltipTrigger asChild>
         <span className="font-medium group-hover:underline">{stringEllipsis(string)}</span>
       </TooltipTrigger>
       <TooltipContent>{string}</TooltipContent>

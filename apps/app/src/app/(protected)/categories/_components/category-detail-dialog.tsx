@@ -20,9 +20,7 @@ export function CategoryDetailDialog({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {trigger ?? (
-          <button suppressHydrationWarning className="w-full gap-3 text-left group">
-            {TooltipedCell(category.name)}
-          </button>
+          <button className="w-full gap-3 text-left group">{TooltipedCell(category.name)}</button>
         )}
       </DialogTrigger>
       <DialogContent className="lg:max-w-2xl max-h-[calc(100vh-4rem)] flex flex-col p-0 gap-0">

@@ -20,7 +20,7 @@ const METHOD_COLORS: Record<PaymentMethod, string> = {
   [PaymentMethod.VA_BCA]: 'var(--chart-2)',
   [PaymentMethod.VA_BNI]: 'var(--chart-4)',
   [PaymentMethod.VA_BRI]: 'var(--chart-5)',
-  [PaymentMethod.VA_MANDIRI]: 'oklch(0.58 0.14 300)',
+  [PaymentMethod.VA_MANDIRI]: 'var(--chart-6)',
 };
 
 const CENTER = 100;
