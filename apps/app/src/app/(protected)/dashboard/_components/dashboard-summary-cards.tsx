@@ -67,9 +67,10 @@ function DeltaChip({ value }: { value: number | null | undefined }) {
 interface DashboardSummaryCardsProps {
   range: { from: string; to: string };
   initialData?: DashboardSummary | null;
+  isKasir?: boolean;
 }
 
-export function DashboardSummaryCards({ range, initialData }: DashboardSummaryCardsProps) {
+export function DashboardSummaryCards({ range, initialData, isKasir }: DashboardSummaryCardsProps) {
   const { data, isPending, isError, refetch } = useQuery({
     queryKey: dashboardKeys.summary(range),
     queryFn: () => getDashboardSummaryAction({ ...range, tz: TZ }),
@@ -78,9 +79,11 @@ export function DashboardSummaryCards({ range, initialData }: DashboardSummaryCa
 
   if (isError) return <QueryError onRetry={() => refetch()} />;
 
+  const metrics = isKasir ? METRICS.filter((metric) => metric.key === 'totalProducts') : METRICS;
+
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      {METRICS.map((metric) => (
+      {metrics.map((metric) => (
         <Card key={metric.key}>
           <CardContent className="flex flex-col gap-1">
             <div className="flex items-center justify-between text-sm font-medium text-muted-foreground">

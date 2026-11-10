@@ -44,7 +44,7 @@ const BaseUserSchema = z.object({
 });
 
 export const CreateUserSchema = BaseUserSchema.extend({
-  password: passwordSchema.min(1, 'Password cannot be empty.'),
+  password: passwordSchema,
 }).refine((data) => data.password === data.confirmPassword, {
   message: 'Password and Confirm Password do not match.',
   path: ['confirmPassword'],
