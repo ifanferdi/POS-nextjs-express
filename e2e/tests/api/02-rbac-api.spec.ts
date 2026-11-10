@@ -53,40 +53,93 @@ test.describe("api: RBAC matrix", () => {
     expect(res.status()).toBe(200);
   });
 
-  test("dashboard tanpa permission gate: user1 bisa baca data finansial (temuan audit)", async ({
+  test("dashboard RBAC: user1 terbatas — hanya top products, order by status, total products (fix #6)", async ({
     request,
   }) => {
     const { body } = await signIn(request, "user1", "password");
+    // Perhatian: gagal sampai PR terdeploy (produksi belum digate).
+    const summary = await request.get("v1/dashboard", { headers: authHeaders(body.token) });
+    expect(summary.status()).toBe(200);
+    const summaryBody = await summary.json();
+    expect(summaryBody.totalProducts).toBeTruthy();
+    expect(summaryBody.totalRevenue).toBeUndefined();
+    expect(summaryBody.totalOrders).toBeUndefined();
+
     for (const path of [
-      "v1/dashboard",
       "v1/dashboard/orders-trend",
-      "v1/dashboard/orders-by-status",
       "v1/dashboard/payments",
-      "v1/dashboard/top-products",
+      "v1/dashboard/orders/export",
     ]) {
       const res = await request.get(path, { headers: authHeaders(body.token) });
-      expect(res.status(), `user1 harusnya 200 di ${path} (JWT-only, tanpa permission)`).toBe(200);
+      expect(res.status(), `user1 harusnya 403 di ${path}`).toBe(403);
+    }
+
+    for (const path of ["v1/dashboard/orders-by-status", "v1/dashboard/top-products"]) {
+      const res = await request.get(path, { headers: authHeaders(body.token) });
+      expect(res.status(), `user1 harusnya 200 di ${path}`).toBe(200);
     }
   });
 
-  test("IDOR: user1 bisa membaca order milik user lain (temuan audit)", async ({ request }) => {
-    // Ambil satu order via admin (order seeder tidak dijamin milik admin),
-    // lalu baca detailnya sebagai user1 — tidak ada cek kepemilikan di GET /orders/:id.
+  test("IDOR ditutup: user1 403 order milik user lain, 200 milik sendiri (fix #5)", async ({
+    request,
+  }) => {
     const admin = await signIn(request, "admin", "password");
-    const list = await request.get("v1/orders?limit=1", {
+    const user1 = await signIn(request, "user1", "password");
+    const user1Id = user1.body.user.id;
+
+    const list = await request.get("v1/orders", {
       headers: authHeaders(admin.body.token),
+      params: { limit: 25 },
     });
     expect(list.status()).toBe(200);
-    const order = (await list.json()).data?.[0];
-    test.skip(!order, "Tidak ada order untuk diverifikasi");
+    const orders = (await list.json()).data ?? [];
 
-    const user1 = await signIn(request, "user1", "password");
-    const res = await request.get(`v1/orders/${order.id}`, {
+    // Order milik user lain → 403. Perhatian: gagal sampai PR terdeploy.
+    const others = orders.filter((o: { userId: number }) => o.userId !== user1Id);
+    test.skip(!others.length, "Tidak ada order milik user lain untuk diverifikasi");
+    const res = await request.get(`v1/orders/${others[0].id}`, {
       headers: authHeaders(user1.body.token),
     });
-    // Seharusnya 403 jika ada ownership check; kenyataannya 200.
-    expect(res.status()).toBe(200);
-    const detail = await res.json();
-    expect(detail.orderNumber ?? detail.id ?? detail).toBeTruthy();
+    expect(res.status()).toBe(403);
+
+    // Order milik sendiri tetap terbaca.
+    const own = orders.find((o: { userId: number }) => o.userId === user1Id);
+    if (own) {
+      const ownRes = await request.get(`v1/orders/${own.id}`, {
+        headers: authHeaders(user1.body.token),
+      });
+      expect(ownRes.status()).toBe(200);
+    }
+  });
+
+  test("presign digate per folder (fix #12)", async ({ request }) => {
+    const user1 = await signIn(request, "user1", "password");
+    const admin = await signIn(request, "admin", "password");
+    const payload = {
+      filename: "test.png",
+      fileType: "image",
+      contentType: "image/png",
+      fileSize: 1000,
+      folder: "products",
+    };
+    // Perhatian: gagal sampai PR terdeploy (produksi belum digate).
+    const user1Products = await request.post("v1/uploads/generate-presign-url", {
+      headers: authHeaders(user1.body.token),
+      data: payload,
+    });
+    expect(user1Products.status()).toBe(403);
+
+    const adminProducts = await request.post("v1/uploads/generate-presign-url", {
+      headers: authHeaders(admin.body.token),
+      data: payload,
+    });
+    expect(adminProducts.status()).toBe(200);
+
+    // Foto profil sendiri tetap boleh untuk semua role terautentikasi.
+    const user1Profile = await request.post("v1/uploads/generate-presign-url", {
+      headers: authHeaders(user1.body.token),
+      data: { ...payload, folder: "profiles" },
+    });
+    expect(user1Profile.status()).toBe(200);
   });
 });

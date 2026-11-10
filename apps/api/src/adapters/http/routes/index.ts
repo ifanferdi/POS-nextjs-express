@@ -10,12 +10,26 @@ import RoleRoutes from '@/adapters/http/routes/role.routes';
 import UserRoutes from '@/adapters/http/routes/user.routes';
 import { Controllers } from '@/domain/adapters/controller.interface';
 import Authorization from '@/use-cases/auth/authorization';
-import { Express } from 'express';
+import e, { Express } from 'express';
+import asyncHandler from 'express-async-handler';
 import SseRoutes from './sse.route';
 
 export default function Routes(app: Express, controllers: Controllers, auth: Authorization) {
   app.use('/api/v1/dashboard', DashboardRoutes(controllers.dashboardController));
-  app.post('/api/v1/uploads/generate-presign-url', controllers.appController.presignUrl);
+  // Presign S3 digate per folder (fix #12): upload gambar produk → Manage Product;
+  // folder 'profiles' (foto profil sendiri) cukup user terautentikasi.
+  // Folder sudah divalidasi enum UploadEntity di storage.validation.
+  app.post(
+    '/api/v1/uploads/generate-presign-url',
+    asyncHandler(async (req: e.Request, _res: e.Response, next: e.NextFunction) => {
+      if (req.body?.folder === 'products') {
+        await auth.authorize(['Manage Product'])(req, _res, next);
+        return;
+      }
+      next();
+    }),
+    controllers.appController.presignUrl,
+  );
   app.use('/api/v1/auth', AuthRoutes(controllers.authController));
   app.use('/api/v1/users', UserRoutes(controllers.userController, auth));
   app.use('/api/v1/permissions', PermissionRoutes(controllers.permissionController, auth));

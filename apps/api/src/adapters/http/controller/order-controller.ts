@@ -47,7 +47,7 @@ export default class OrderController extends BaseController {
     res.send(result);
   });
 
-  findOne = asyncHandler(async (req: e.Request, res: e.Response) => {
+  findOne = asyncHandler(async (req: e.Request & Record<string, any>, res: e.Response) => {
     const params: FindByIdOrderDto = {
       id: Number(req.params.id),
       with: req.query.with as any,
@@ -57,6 +57,9 @@ export default class OrderController extends BaseController {
     FindByIdOrderSchema.parse(params);
 
     const result = await this.order.findByIdOrder.execute(params);
+
+    // Fix IDOR: kasir hanya boleh membaca order miliknya sendiri.
+    await this.order.authorizationOrder.canAccessOrder(result?.userId, req.user.id);
 
     res.send(result);
   });
@@ -78,7 +81,7 @@ export default class OrderController extends BaseController {
     res.status(result.isIdempoten ? HttpStatusCode.OK : HttpStatusCode.CREATED).send(result.data);
   });
 
-  updateStatus = asyncHandler(async (req: e.Request, res: e.Response) => {
+  updateStatus = asyncHandler(async (req: e.Request & Record<string, any>, res: e.Response) => {
     const payload: UpdateOrderStatusDto = {
       id: Number(req.params.id),
       status: req.body.status,
@@ -86,14 +89,25 @@ export default class OrderController extends BaseController {
 
     UpdateOrderStatusSchema.parse(payload);
 
+    // Fix IDOR: periksa kepemilikan sebelum mengubah status.
+    const target = await this.order.findByIdOrder.execute({
+      id: payload.id,
+      columns: ['userId'],
+    });
+    await this.order.authorizationOrder.canAccessOrder(target?.userId, req.user.id);
+
     const order = await this.order.updateOrderStatus.execute(payload);
 
     res.send({ message: 'Success.', order });
   });
 
-  cancel = asyncHandler(async (req: e.Request, res: e.Response) => {
+  cancel = asyncHandler(async (req: e.Request & Record<string, any>, res: e.Response) => {
     const params = { id: Number(req.params.id) };
     BaseFindById.parse(params);
+
+    // Fix IDOR: periksa kepemilikan sebelum membatalkan.
+    const target = await this.order.findByIdOrder.execute({ id: params.id, columns: ['userId'] });
+    await this.order.authorizationOrder.canAccessOrder(target?.userId, req.user.id);
 
     await this.order.cancelOrder.execute(params as BaseFindById);
 
