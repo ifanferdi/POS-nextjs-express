@@ -34,6 +34,23 @@ test.describe("security: RBAC & middleware (user1)", () => {
     await page.goto("/orders");
     await expect(page.getByRole("heading", { name: "Orders", exact: true })).toBeVisible();
   });
+
+  test("dashboard kasir hanya menampilkan section yang diizinkan (fix #6 frontend)", async ({
+    page,
+  }) => {
+    await page.goto("/dashboard");
+    await expect(page.getByRole("heading", { name: "Dashboard", exact: true })).toBeVisible();
+    await expect(page.getByText("Total Products").first()).toBeVisible();
+    await expect(page.getByText("Top Products").first()).toBeVisible();
+    await expect(page.getByText("Orders by Status").first()).toBeVisible();
+
+    // Section finansial tersembunyi untuk role User.
+    // Perhatian: gagal sampai app terdeploy.
+    await expect(page.getByText("Revenue")).toHaveCount(0);
+    await expect(page.getByText("Sales Trend")).toHaveCount(0);
+    await expect(page.getByText("Payments")).toHaveCount(0);
+    await expect(page.getByRole("button", { name: /export csv/i })).toHaveCount(0);
+  });
 });
 
 test.describe("security: SSE proxy access control", () => {

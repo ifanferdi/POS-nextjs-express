@@ -20,13 +20,11 @@ test.describe("auth: login form", () => {
     await form.locator("#password").fill("wrong-password-e2e");
     await form.getByRole("button", { name: /sign in to dashboard/i }).click();
 
-    // Temuan bug: <Toaster> tidak dirender di layout (auth), jadi toast error
-    // login TIDAK PERNAH muncul di produksi (server action membalas
-    // {success:false,error:"Username or password invalid."} — diverifikasi via
-    // network). Assert perilaku aktual + dokumentasikan ketiadaan feedback.
+    // Toaster kini di root layout (fix kualitas #1): toast error login harus
+    // terlihat. Perhatian: gagal sampai app terdeploy.
     await expect(page).toHaveURL(hasPath(/^\/login$/));
-    await expect(page.getByText("Login failed")).toHaveCount(0);
-    await expect(page.getByText("Username or password invalid.")).toHaveCount(0);
+    await expect(page.getByText("Login failed")).toBeVisible({ timeout: 25_000 });
+    await expect(page.getByText("Username or password invalid.")).toBeVisible();
   });
 
   test("valid credentials (admin) lands on /dashboard", async ({ page }) => {
