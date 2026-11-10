@@ -2,7 +2,7 @@ import config from '@/config/config';
 import { JwtData } from '@/domain/entities/types/auth.types';
 import { ErrorUnauthorized } from '@/helpers/error.helper';
 import * as jwt from 'jsonwebtoken';
-import { TokenExpiredError } from 'jsonwebtoken';
+import { JsonWebTokenError, NotBeforeError, TokenExpiredError } from 'jsonwebtoken';
 import type { StringValue } from 'ms';
 
 const SECRET = config.secret;
@@ -16,8 +16,11 @@ export function verify(token: string) {
   try {
     return jwt.verify(token, SECRET) as JwtData;
   } catch (e) {
-    if (e instanceof TokenExpiredError) throw new ErrorUnauthorized(e.message);
-    throw e; // rethrow others
+    // Semua kegagalan verifikasi token adalah masalah auth klien → 401,
+    // bukan 500 (sebelumnya hanya expiry yang dipetakan).
+    if (e instanceof TokenExpiredError || e instanceof JsonWebTokenError || e instanceof NotBeforeError)
+      throw new ErrorUnauthorized(e.message);
+    throw e;
   }
 }
 

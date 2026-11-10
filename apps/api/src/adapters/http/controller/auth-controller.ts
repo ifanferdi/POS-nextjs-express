@@ -22,6 +22,9 @@ export default class AuthController extends BaseController {
     };
     SignInAuthSchema.parse(params);
 
+    // trust proxy sudah aktif → req.ip = IP klien asli (di belakang Caddy).
+    params.ipAddress = req.ip;
+
     const token = await this.useCases.authUseCase.signIn.execute(params);
 
     res.json({ message: 'Success', ...token });

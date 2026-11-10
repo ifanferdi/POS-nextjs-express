@@ -108,10 +108,11 @@ export default class RoleController {
     res.send({ message: 'Success.' });
   });
 
-  assignPermissions = asyncHandler(async (req: e.Request, res: e.Response) => {
+  assignPermissions = asyncHandler(async (req: e.Request & Record<string, any>, res: e.Response) => {
     const roleId = req.body.roleId;
     const params: RoleAssignPermissionDto = {
       roleId: req.body.roleId,
+      actorRoleId: Number(req.user?.roleId ?? 0),
       permissionIds: req.body.permissionIds,
       permissions: req.body.permissions,
       addPermissions: req.body.addPermissions,

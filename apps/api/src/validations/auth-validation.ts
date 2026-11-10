@@ -12,7 +12,9 @@ export const VerifyOtpSchema = z.object({
   userId: NumberSchema,
 });
 
-export interface SignInAuthDto extends z.infer<typeof SignInAuthSchema> {}
+export interface SignInAuthDto extends z.infer<typeof SignInAuthSchema> {
+  ipAddress?: string;
+}
 export interface VerifyOtpDto extends z.infer<typeof VerifyOtpSchema> {}
 export interface ResendOtpDto extends z.infer<typeof ResendOtpSchema> {}
 export type TokenDto = z.infer<typeof TokenSchema>;

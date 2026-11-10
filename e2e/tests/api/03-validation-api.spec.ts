@@ -65,4 +65,42 @@ test.describe("api: validasi input", () => {
     // Bersihkan.
     await request.delete(`v1/categories/${cat.id}`, { headers: authHeaders(body.token) });
   });
+
+  test("order saat stok 0 → 400 (business error, bukan 500 — fix #15)", async ({ request }) => {
+    const { body } = await signIn(request, "admin", "password");
+    const uniq = `e2e-zero-${Date.now()}`;
+    const create = await request.post("v1/products", {
+      headers: authHeaders(body.token),
+      data: { name: `E2E Zero Stock ${uniq}`, price: 1000, sku: uniq, stock: 0 },
+    });
+    expect(create.status()).toBe(201);
+    const product = (await create.json()).product;
+
+    const res = await request.post("v1/orders", {
+      headers: { ...authHeaders(body.token), "Idempotency-Key": crypto.randomUUID() },
+      data: {
+        userId: body.user.id,
+        items: [{ productId: product.id, quantity: 1 }],
+        paymentMethod: "cash",
+        amount: product.price,
+      },
+    });
+    // Perhatian: gagal sampai PR terdeploy (produksi masih 500).
+    expect(res.status()).toBe(400);
+
+    // Bersihkan produk uji.
+    await request.delete(`v1/products/${product.id}`, { headers: authHeaders(body.token) });
+  });
+
+  test("rate limit: percobaan login gagal berulang → 429 (fix #10)", async ({ request }) => {
+    // Adaptive: counter 15 menit per IP+username bisa sudah terisi oleh test lain.
+    let status = 0;
+    for (let i = 0; i < 15; i++) {
+      const res = await signIn(request, "admin", `salah-rate-${i}`);
+      status = res.status;
+      if (status === 429) break;
+    }
+    // Perhatian: gagal sampai PR terdeploy (produksi belum ada limiter).
+    expect(status).toBe(429);
+  });
 });

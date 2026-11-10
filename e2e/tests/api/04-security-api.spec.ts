@@ -6,7 +6,7 @@ import { authHeaders, signIn } from "../../helpers/api";
  * yang dinyatakan.
  */
 test.describe("api: security probes", () => {
-  test("columns=password membocorkan hash Argon2 ke pemegang Show User (temuan #4)", async ({
+  test("columns[]=password DITOLAK — hash Argon2 tidak lagi bocor (fix #3)", async ({
     request,
   }) => {
     const { body } = await signIn(request, "admin", "password");
@@ -15,17 +15,15 @@ test.describe("api: security probes", () => {
       // kolom diulang ([]-style) agar parser query Express menghasilkan array.
       params: { "columns[]": "password", limit: 1 },
     });
-    expect(res.status()).toBe(200);
-    const payload = await res.json();
-    const user = payload.data?.[0];
-    expect(user).toBeTruthy();
-    expect(user.password ?? "", "hash Argon2 terekspos ke pemegang Show User").toMatch(/^\$argon2/);
+    // Perhatian: gagal sampai PR terdeploy (produksi masih membocorkan hash).
+    expect(res.status()).toBe(400);
+    expect((await res.json()).message).toContain("columns");
   });
 
-  test("swagger /docs publik tanpa auth", async ({ request }) => {
+  test("swagger /docs TIDAK tersedia di produksi (fix #13)", async ({ request }) => {
+    // Perhatian: gagal sampai PR terdeploy (produksi masih 200).
     const res = await request.get("/docs", { maxRedirects: 5 });
-    expect(res.status()).toBe(200);
-    expect((await res.text()).length).toBeGreaterThan(1000);
+    expect(res.status()).toBe(404);
   });
 
   test("CORS: origin tak dikenal tidak dapat ACAO header", async ({ request }) => {
@@ -36,9 +34,10 @@ test.describe("api: security probes", () => {
     expect(res.headers()["access-control-allow-origin"] ?? "").not.toContain("evil");
   });
 
-  test("header server membocorkan X-Powered-By", async ({ request }) => {
+  test("header X-Powered-By dihapus oleh helmet (fix #10)", async ({ request }) => {
+    // Perhatian: gagal sampai PR terdeploy (produksi masih menampilkannya).
     const res = await request.get("/");
-    expect(res.headers()["x-powered-by"] ?? "").toContain("Express");
+    expect(res.headers()["x-powered-by"]).toBeUndefined();
   });
 
   test("route tak dikenal → hang (404 handler tak tercapai, temuan #3)", async ({ request }) => {

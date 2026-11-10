@@ -35,12 +35,13 @@ test.describe("api: auth endpoints", () => {
     expect(res.status()).toBe(401);
   });
 
-  test("token rusak/forged → 500 (bug: seharusnya 401)", async ({ request }) => {
-    // Temuan audit: JsonWebTokenError tidak dipetakan ke 401, jatuh ke 500.
+  test("token rusak/forged → 401 (fix #14)", async ({ request }) => {
+    // Sebelumnya JsonWebTokenError bocor sebagai 500; sekarang 401.
+    // Perhatian: gagal sampai PR terdeploy (produksi masih 500).
     const res = await request.get("v1/users/me", {
       headers: { Authorization: "Bearer ini.bukan.jwt" },
     });
-    expect(res.status()).toBe(500);
+    expect(res.status()).toBe(401);
   });
 
   test("refresh-token: rotasi & token lama invalid (stateful)", async ({ request }) => {
