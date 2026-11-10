@@ -7,7 +7,6 @@ import { ArrowLeftIcon } from 'lucide-react';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import React from 'react';
-import { Toaster } from 'sonner';
 
 export default async function PosLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -36,7 +35,6 @@ export default async function PosLayout({ children }: { children: React.ReactNod
         </header>
         <main className="min-h-0 flex-1 overflow-hidden bg-background">{children}</main>
       </div>
-      <Toaster richColors position="top-right" />
     </TooltipProvider>
   );
 }

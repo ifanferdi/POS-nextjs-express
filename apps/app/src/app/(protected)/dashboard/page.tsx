@@ -1,4 +1,5 @@
 import { DashboardView } from '@/app/(protected)/dashboard/_components/dashboard-view';
+import { auth } from '@/auth';
 import { dashboard as dashboardConfig } from '@/config/config';
 import { DashboardSummary } from '@/domain';
 import { getDashboardSummary } from '@/features/dashboard/api';
@@ -10,6 +11,11 @@ export default async function DashboardPage() {
   const tz = dashboardConfig.timezone;
   const range = getDefaultDateRange(tz, dashboardConfig.defaultRangeDays);
 
+  const session = await auth();
+  // RBAC dashboard (backend #6): kasir hanya lihat top products, order by status,
+  // dan jumlah produk — widget finansial disembunyikan di render.
+  const isKasir = session?.user?.role?.name === 'User';
+
   let initialSummary: DashboardSummary | null;
   try {
     initialSummary = await getDashboardSummary({ ...range, tz });
@@ -19,5 +25,5 @@ export default async function DashboardPage() {
     initialSummary = null;
   }
 
-  return <DashboardView initialSummary={initialSummary} initialRange={range} />;
+  return <DashboardView initialSummary={initialSummary} initialRange={range} isKasir={isKasir} />;
 }

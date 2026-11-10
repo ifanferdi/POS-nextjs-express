@@ -26,6 +26,8 @@ interface DashboardFilterProps {
   granularity: DashboardGranularity;
   onRangeChange: (range: { from: string; to: string }) => void;
   onGranularityChange: (granularity: DashboardGranularity) => void;
+  // Kasir tidak boleh export order (backend #6 → 403).
+  isKasir?: boolean;
 }
 
 export function DashboardFilter({
@@ -33,6 +35,7 @@ export function DashboardFilter({
   granularity,
   onRangeChange,
   onGranularityChange,
+  isKasir,
 }: DashboardFilterProps) {
   const [isExporting, setIsExporting] = useState(false);
 
@@ -112,10 +115,12 @@ export function DashboardFilter({
           </SelectContent>
         </Select>
       </label>
-      <Button variant="outline" onClick={handleExport} disabled={isExporting}>
-        <DownloadIcon />
-        {isExporting ? 'Exporting…' : 'Export CSV'}
-      </Button>
+      {!isKasir && (
+        <Button variant="outline" onClick={handleExport} disabled={isExporting}>
+          <DownloadIcon />
+          {isExporting ? 'Exporting…' : 'Export CSV'}
+        </Button>
+      )}
     </div>
   );
 }

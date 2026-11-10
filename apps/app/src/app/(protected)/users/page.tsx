@@ -49,6 +49,12 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
     orderBy: ['name:asc'],
   });
 
+  // Backend kini menolak roleId=1 (Developer) — sembunyikan opsi dari form
+  // untuk non-developer agar tidak selalu 403. Filter/list tetap memakai
+  // roles lengkap (nama role di baris tabel diambil dari user.role.name).
+  const isDeveloper = session?.user?.role?.name === 'Developer';
+  const roleOptions = isDeveloper ? roles : roles.filter((role) => role.name !== 'Developer');
+
   return (
     <div className="space-y-6">
       {!result.success && <ParamsError errors={z.flattenError(result.error).fieldErrors} />}
@@ -57,14 +63,14 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
           <h1 className="text-2xl font-semibold tracking-tight">Users</h1>
           <p className="mt-1 text-sm text-muted-foreground">Manage your application users</p>
         </div>
-        {canManage && <UserFormDialog mode="create" roles={roles} />}
+        {canManage && <UserFormDialog mode="create" roles={roleOptions} />}
       </div>
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <UserSearch />
         <UserFilter roles={roles} />
       </div>
       <Suspense fallback={<UserTableSkeleton />}>
-        <UserTableSection params={params} roles={roles} canManage={canManage} />
+        <UserTableSection params={params} roles={roleOptions} canManage={canManage} />
       </Suspense>
     </div>
   );
