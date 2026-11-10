@@ -2,7 +2,37 @@
 
 Tanggal: 2026-11-09 · Metode: review kode (repo `api/apps/api` + `app/apps/app`) + verifikasi
 live di produksi (`https://pos-app-ifan.vercel.app` dan `https://pos-ifan.duckdns.org/api`).
-Tidak ada perubahan kode yang dilakukan — ini laporan audit read-only.
+
+## Status perbaikan (11 Nov 2026)
+
+| Temuan | Status |
+|---|---|
+| #1, #2, #8 | ✅ PR #4 (merged) — webhook routing, fallback user 1, 404 handler |
+| #3, #7, #10, #13, #14, #15 | ✅ PR #5 (merged) — hardening medium |
+| #4 | ✅ Commit langsung owner — HASH_SECRET wajib + pin HS256 |
+| #5, #6, #12 | ✅ PR #7 (merged) — ownership order, dashboard RBAC, presign per-folder |
+| #16, #18, #19, #20, #22, #23 | 🚧 PR #8 (review) — hardening rendah |
+| #9, #11, #17, #21 | ⏭️ Skip sesuai keputusan owner |
+| Dampak frontend (lihat bawah) | 🚧 PR #9 — branch `app` |
+
+### Catatan lanjutan: dampak perubahan backend ke frontend (PR #9, branch `app`)
+
+Cross-check perubahan backend vs frontend menemukan 3 penyesuaian wajib di luar
+scope awal:
+
+1. **Tombol "Mock Midtrans Payment" di POS** — backend kini 404 untuk mock saat
+   `APP_ENV=production`, tapi `pos-payment-module.tsx` masih menampilkan tombol
+   selama `midtrans.isProduction === false` (default Vercel). Tombol wajib
+   disembunyikan saat produksi — kalau tidak, tombol tampil tapi selalu gagal.
+2. **Schema password form user** — `features/users/schema.ts` menimpa
+   `passwordSchema` (base sudah `min(8).max(16)`) menjadi `.min(1)`; backend kini
+   menolak password baru < 8 karakter (temuan #16). Form harus sinkron ke min 8,
+   kalau tidak error hanya muncul setelah submit.
+3. **Opsi "Developer" di select Role** — form create/edit user memuat semua role
+   tanpa filter; backend kini menolak `roleId: 1` (temuan #7). Opsi Developer wajib
+   disembunyikan untuk non-developer, kalau tidak memilihnya = selalu 403.
+4. (Bonus) Toaster di layout `(auth)` — lihat temuan non-security #1: toast login
+   tidak pernah tampil di produksi.
 
 Ringkasan: **4 kritikal, 5 tinggi, 6 medium, 8 rendah**. Semua temuan kritikal/tinggi
 terverifikasi live (bukan dugaan dari kode).
@@ -193,14 +223,14 @@ lakukan perbaikan error 400t
 
 | # | Temuan | Lokasi |
 |---|---|---|
-| 16 | Argon2d + default cost, salt 50, kebijakan password min 1 char | `helpers/password.helper.ts:3-5`, `validations/base-validation.ts:31` |
-| 17 | Upload memvalidasi MIME saja (client-controlled); memoryStorage 15 MB | `helpers/multer.helper.ts` |
-| 18 | Access token 5 menit di env aktif (bagus), tapi payload memuat seluruh profil user; tidak revocable; user dinonaktifkan tetap bisa akses JWT-only (dashboard, `/users/me`, SSE, presign) sampai exp | `use-cases/auth/check-token.ts:10-17` |
-| 19 | Cache permission 24 jam (`ME_CACHE_TTL`); Redis lokal tanpa auth; siapa pun di network bisa menulis ulang `permissions:user-*` | `config.ts:50`, `docker-compose.yml:20-32` |
-| 20 | `console.log(e.response)` Midtrans bisa mencetak Basic auth server key; morgan log signed URL (`sig`, `expires`) | `repositories/midtrans/midtrans-repository.ts:19-21`, `express.ts:21` |
-| 21 | `/public/files` path traversal bila `STORAGE_SECRET` fallback `'secret'`; perbandingan HMAC tidak timing-safe | `webserver/express.ts:44-54`, `config/storage.config.ts:2` |
-| 22 | 2FA dead code; email OTP hardcoded ke alamat developer; nilai OTP dilog plaintext | `use-cases/auth/send-otp.ts:46`, `verify-otp.ts:28` |
-| 23 | `restoreUser` tanpa `await`; `delete-product` tanpa `await` + selalu soft-delete | `adapters/http/controller/user-controller.ts:188`, `use-cases/product/delete-product.ts:9-11` |
+| 16 | Argon2d + default cost, salt 50, kebijakan password min 1 char | `helpers/password.helper.ts:3-5`, `validations/base-validation.ts:31` | perbaiki
+| 17 | Upload memvalidasi MIME saja (client-controlled); memoryStorage 15 MB | `helpers/multer.helper.ts` | skip
+| 18 | Access token 5 menit di env aktif (bagus), tapi payload memuat seluruh profil user; tidak revocable; user dinonaktifkan tetap bisa akses JWT-only (dashboard, `/users/me`, SSE, presign) sampai exp | `use-cases/auth/check-token.ts:10-17` | perbaiki
+| 19 | Cache permission 24 jam (`ME_CACHE_TTL`); Redis lokal tanpa auth; siapa pun di network bisa menulis ulang `permissions:user-*` | `config.ts:50`, `docker-compose.yml:20-32` | perbaiki
+| 20 | `console.log(e.response)` Midtrans bisa mencetak Basic auth server key; morgan log signed URL (`sig`, `expires`) | `repositories/midtrans/midtrans-repository.ts:19-21`, `express.ts:21` | perbaiki tapi tetep manampilkan error yang terjadi
+| 21 | `/public/files` path traversal bila `STORAGE_SECRET` fallback `'secret'`; perbandingan HMAC tidak timing-safe | `webserver/express.ts:44-54`, `config/storage.config.ts:2` | skip, tidak digunakan, menggunakan s3
+| 22 | 2FA dead code; email OTP hardcoded ke alamat developer; nilai OTP dilog plaintext | `use-cases/auth/send-otp.ts:46`, `verify-otp.ts:28` | perbaiki reference ke config -> env, tanpa default value
+| 23 | `restoreUser` tanpa `await`; `delete-product` tanpa `await` + selalu soft-delete | `adapters/http/controller/user-controller.ts:188`, `use-cases/product/delete-product.ts:9-11` | perbaiki
 
 ## Yang sudah benar (jangan diubah)
 

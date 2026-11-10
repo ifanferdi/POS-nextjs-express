@@ -48,20 +48,24 @@ selector, bukan perubahan aplikasi).
 Detail + bukti lengkap: **`security-audit.md`** (4 kritikal, 5 tinggi, 6 medium,
 8 rendah — semua kritikal/tinggi terverifikasi live di produksi, bukan dugaan).
 
-Yang paling mendesak:
+**Status perbaikan (11 Nov 2026):** #1/#2/#8 → PR #4 merged · #3/#7/#10/#13/#14/#15
+→ PR #5 merged · #4 → commit owner · #5/#6/#12 → PR #7 merged · #16/#18/#19/#20/#22/#23
+→ PR #8 (review) · #9/#11/#17/#21 → skip. **Sisa: PR #9 (frontend, branch `app`).**
 
-1. **Webhook Midtrans hang selamanya di produksi** — order QRIS/VA tidak akan
-   pernah settle otomatis (routing bug di `routes/index.ts:33-36`).
-2. **Fallback otorisasi ke user 1 (Developer)** di `authorization.ts:21` —
-   celah auth masa depan = akses penuh.
-3. **Hash password Argon2 bocor** via `GET /v1/users?columns[]=password`.
-4. **JWT secret fallback hardcoded** + tanpa pinning HS256.
-5. **IDOR order** + **dashboard finansial tanpa permission** — kasir melihat
-   data semua orang (keduanya diverifikasi live).
-6. **Kredensial `admin`/`password` ter-prefill di form login produksi.**
-7. Bug UX: **toast error login tidak pernah tampil** (Toaster tidak dirender di
-   layout `(auth)`).
-8. Business error "stok tidak cukup" dibalas **500**, bukan 4xx.
+### Catatan lanjutan: dampak perubahan backend ke frontend (PR #9)
+
+Cross-check menemukan 3 penyesuaian frontend wajib akibat perubahan backend:
+
+1. **Tombol "Mock Midtrans Payment"** — backend kini 404 untuk mock di produksi,
+   tapi POS masih menampilkan tombol (kondisi `midtrans.isProduction` saja) →
+   disembunyikan saat `APP_ENV=production`.
+2. **Password form user** — `features/users/schema.ts` menimpa jadi `.min(1)`
+   padahal backend kini menolak < 8 karakter → sinkron ke min 8 (base schema app
+   sudah `min(8).max(16)`).
+3. **Opsi "Developer" di select Role** — backend kini 403 untuk `roleId: 1`, tapi
+   form masih menampilkan opsi Developer → disembunyikan untuk non-developer.
+4. Bonus: Toaster di layout `(auth)` — toast login tak pernah tampil di produksi
+   (temuan kualitas #1 di audit).
 
 ## Cara menjalankan ulang
 
