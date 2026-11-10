@@ -188,7 +188,7 @@ export default class UserController extends BaseController {
     /** Request Validation **/
     BaseFindById.parse(params);
 
-    this.user.restoreUser.execute(params as BaseFindById);
+    await this.user.restoreUser.execute(params as BaseFindById);
 
     res.send({ message: 'Success.' });
   });

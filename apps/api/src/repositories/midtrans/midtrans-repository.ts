@@ -17,7 +17,7 @@ export default class MidtransRepository {
       const { data } = await api.post<MidtransChargeResponse>('/v2/charge', payload);
       return data;
     } catch (e: any) {
-      console.log(e.response);
+      console.error('Midtrans charge failed:', e.response?.data ?? e.message);
       throw new AppError('Midtrans payment error.', 500);
     }
   }

@@ -25,8 +25,8 @@ export default class VerifyOtp extends BaseUseCase {
     const isValidOtp = await password.verify(hashedOtp, params.otp);
 
     if (!isValidOtp) {
-      console.error(`⚠️  User id {${params.userId}} has been send invalid OTP: ${params.otp}`);
-      throw new ErrorBadRequest(`Invalid Otp: ${params.otp}`);
+      console.error(`Invalid OTP attempt for user id ${params.userId}.`);
+      throw new ErrorBadRequest('Invalid Otp.');
     }
 
     // DELETE REDIS IF OTP HAS BEEN VERIFIED

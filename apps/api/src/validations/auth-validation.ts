@@ -3,7 +3,7 @@ import { z } from 'zod';
 
 export const SignInAuthSchema = z.object({
   username: Username.min(1, 'Username cannot be empty.'),
-  password: Password.min(1, 'Password cannot be empty.'),
+  password: Password,
 });
 export const TokenSchema = z.object({ token: StringSchema.min(1, 'Token cannot be empty.') });
 export const ResendOtpSchema = z.object({ userId: NumberSchema });

@@ -10,6 +10,7 @@ export default {
     30 * 24 * 60 * 60 * 1000) as number, // 30 days
   otpTimeout: (process.env.AUTH_OTP_TIMEOUT || '10m') as Timeout, // 10 minutes
   otpTimeoutLabel: process.env.AUTH_OTP_TIMEOUT_LABEL || '10 minutes', // 10 minutes
+  otpEmail: process.env.AUTH_OTP_EMAIL,
   otpRateLimitNum: process.env.AUTH_OTP_RATE_LIMIT_NUM || 5,
   otpRateLimitTime: (process.env.AUTH_OTP_RATE_LIMIT_TIME || '10m') as Timeout, // 10 minutes
   // Anti brute-force sign-in: N kegagalan per IP+username dalam window ini → 429.

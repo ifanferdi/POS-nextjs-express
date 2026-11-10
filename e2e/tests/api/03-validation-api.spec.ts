@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { authHeaders, signIn } from "../../helpers/api";
+import { authHeaders, getRoleIdByName, signIn } from "../../helpers/api";
 
 test.describe("api: validasi input", () => {
   test("sign-in tanpa field → 400 dengan message", async ({ request }) => {
@@ -102,5 +102,22 @@ test.describe("api: validasi input", () => {
     }
     // Perhatian: gagal sampai PR terdeploy (produksi belum ada limiter).
     expect(status).toBe(429);
+  });
+
+  test("password user baru minimal 8 karakter → 400 (fix #16)", async ({ request }) => {
+    const { body } = await signIn(request, "admin", "password");
+    const roleId = await getRoleIdByName(request, body.token, "User");
+
+    const res = await request.post("v1/users", {
+      headers: authHeaders(body.token),
+      data: {
+        username: `e2eshort${Date.now()}`.slice(0, 30),
+        roleId,
+        password: "short",
+        confirmPassword: "short",
+      },
+    });
+    // Perhatian: gagal sampai PR terdeploy (produksi masih menerima 1 char).
+    expect(res.status()).toBe(400);
   });
 });

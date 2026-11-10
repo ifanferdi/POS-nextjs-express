@@ -28,7 +28,9 @@ export const BasePagination = <T extends EnumLike>(columns: T) => {
 export const BaseFindById = z.object({ id: NumberSchema });
 
 export const Username = StringSchema.min(1, 'Username cannot be empty.').min(3).max(255);
-export const Password = StringSchema.min(1, 'Password cannot be empty.').max(255);
+export const Password = StringSchema.min(1, 'Password cannot be empty.')
+  .min(8, 'Password minimal 8 karakter.')
+  .max(255);
 
 export interface BaseFindById extends z.infer<typeof BaseFindById> {}
 export type NumberSchema = z.infer<typeof NumberSchema>;
