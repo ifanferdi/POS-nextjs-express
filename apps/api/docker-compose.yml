@@ -21,8 +21,6 @@ services:
     image: redis:7-alpine
     container_name: pos-redis
     restart: unless-stopped
-    # Redis lokal tanpa auth = siapa pun di network bisa menulis ulang
-    # cache permission. Default hanya untuk dev; override REDIS_PASSWORD.
     command: redis-server --requirepass ${REDIS_PASSWORD:-pos-dev-only}
     ports:
       - '6379:6379'

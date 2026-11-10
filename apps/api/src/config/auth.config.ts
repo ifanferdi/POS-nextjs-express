@@ -10,8 +10,6 @@ export default {
     30 * 24 * 60 * 60 * 1000) as number, // 30 days
   otpTimeout: (process.env.AUTH_OTP_TIMEOUT || '10m') as Timeout, // 10 minutes
   otpTimeoutLabel: process.env.AUTH_OTP_TIMEOUT_LABEL || '10 minutes', // 10 minutes
-  // Tanpa default: alamat email penerima OTP wajib dari env (sebelumnya
-  // hardcoded alamat developer pribadi).
   otpEmail: process.env.AUTH_OTP_EMAIL,
   otpRateLimitNum: process.env.AUTH_OTP_RATE_LIMIT_NUM || 5,
   otpRateLimitTime: (process.env.AUTH_OTP_RATE_LIMIT_TIME || '10m') as Timeout, // 10 minutes

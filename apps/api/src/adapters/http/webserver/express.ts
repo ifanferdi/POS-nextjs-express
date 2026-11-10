@@ -22,8 +22,6 @@ export default function routes(app: Express, controllers: Controllers, useCases:
   app.use(express.urlencoded({ extended: true }));
   app.use(helmet());
   app.disable('x-powered-by');
-  // Request log hanya di development: morgan mencatat URL lengkap termasuk
-  // query (sig/expires signed URL) yang tidak boleh ada di log produksi.
   if (config.app.env === 'development') app.use(morgan('dev'));
 
   app.use(cors({ origin: ['http://localhost:3000', ...config.cors.origins], credentials: true }));

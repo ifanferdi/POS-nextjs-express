@@ -25,7 +25,6 @@ export default class VerifyOtp extends BaseUseCase {
     const isValidOtp = await password.verify(hashedOtp, params.otp);
 
     if (!isValidOtp) {
-      // Jangan pernah mencetak nilai OTP ke log ATAU ke pesan error klien.
       console.error(`Invalid OTP attempt for user id ${params.userId}.`);
       throw new ErrorBadRequest('Invalid Otp.');
     }
