@@ -58,7 +58,7 @@ export default class OrderController extends BaseController {
 
     const result = await this.order.findByIdOrder.execute(params);
 
-    // Fix IDOR: kasir hanya boleh membaca order miliknya sendiri.
+    // Kasir hanya boleh membaca order miliknya sendiri.
     await this.order.authorizationOrder.canAccessOrder(result?.userId, req.user.id);
 
     res.send(result);
@@ -89,7 +89,7 @@ export default class OrderController extends BaseController {
 
     UpdateOrderStatusSchema.parse(payload);
 
-    // Fix IDOR: periksa kepemilikan sebelum mengubah status.
+    // Periksa kepemilikan sebelum mengubah status.
     const target = await this.order.findByIdOrder.execute({
       id: payload.id,
       columns: ['userId'],
@@ -105,7 +105,7 @@ export default class OrderController extends BaseController {
     const params = { id: Number(req.params.id) };
     BaseFindById.parse(params);
 
-    // Fix IDOR: periksa kepemilikan sebelum membatalkan.
+    // Periksa kepemilikan sebelum membatalkan.
     const target = await this.order.findByIdOrder.execute({ id: params.id, columns: ['userId'] });
     await this.order.authorizationOrder.canAccessOrder(target?.userId, req.user.id);
 

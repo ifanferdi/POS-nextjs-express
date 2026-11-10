@@ -12,8 +12,6 @@ export default class AuthorizationOrder extends BaseUseCase {
     return params;
   }
 
-  // Kasir (role User) hanya boleh akses/detail/ubah order miliknya sendiri;
-  // Admin/Developer bebas. Dipanggil SETELAH order ter-fetch.
   async canAccessOrder(orderUserId: number | null | undefined, actorId: number) {
     if (await this.authorization.hasRole(actorId, 'User')) {
       if (orderUserId !== actorId)

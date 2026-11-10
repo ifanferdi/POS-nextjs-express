@@ -16,9 +16,6 @@ import SseRoutes from './sse.route';
 
 export default function Routes(app: Express, controllers: Controllers, auth: Authorization) {
   app.use('/api/v1/dashboard', DashboardRoutes(controllers.dashboardController));
-  // Presign S3 digate per folder (fix #12): upload gambar produk → Manage Product;
-  // folder 'profiles' (foto profil sendiri) cukup user terautentikasi.
-  // Folder sudah divalidasi enum UploadEntity di storage.validation.
   app.post(
     '/api/v1/uploads/generate-presign-url',
     asyncHandler(async (req: e.Request, _res: e.Response, next: e.NextFunction) => {

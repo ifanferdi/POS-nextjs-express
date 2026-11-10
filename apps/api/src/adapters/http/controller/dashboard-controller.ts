@@ -35,7 +35,7 @@ export default class DashboardController extends BaseController {
 
   ordersTrend = asyncHandler(async (req: e.Request & Record<string, any>, res: e.Response) => {
     if (await this.isRoleUser(req))
-      throw new ErrorForbidden('Data trend penjualan hanya untuk non-kasir.');
+      throw new ErrorForbidden('Kasir tidak dapat melihat data trend penjualan.');
 
     const params = DashboardQuerySchema.parse(buildQuery(req));
     res.json(await this.dashboard.ordersTrend.execute(params));
@@ -48,7 +48,7 @@ export default class DashboardController extends BaseController {
 
   payments = asyncHandler(async (req: e.Request & Record<string, any>, res: e.Response) => {
     if (await this.isRoleUser(req))
-      throw new ErrorForbidden('Data pembayaran hanya untuk non-kasir.');
+      throw new ErrorForbidden('Kasir tidak dapat melihat data pembayaran.');
 
     const params = DashboardQuerySchema.parse(buildQuery(req));
     res.json(await this.dashboard.payments.execute(params));
@@ -61,7 +61,7 @@ export default class DashboardController extends BaseController {
 
   ordersExport = asyncHandler(async (req: e.Request & Record<string, any>, res: e.Response) => {
     if (await this.isRoleUser(req))
-      throw new ErrorForbidden('Export order hanya untuk non-kasir.');
+      throw new ErrorForbidden('Kasir tidak dapat melakukan export data order.');
 
     const params = DashboardQuerySchema.parse(buildQuery(req));
     const { csv, filename } = await this.dashboard.ordersExport.execute(params);
