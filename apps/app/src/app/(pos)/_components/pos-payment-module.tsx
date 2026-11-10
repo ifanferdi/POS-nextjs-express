@@ -78,7 +78,7 @@ export function PosPaymentModule({
             <p className="max-w-xs text-center text-xs text-muted-foreground">
               Open your e-wallet app and scan this code to complete payment
             </p>
-            {!config.midtrans.isProduction && config.app.env !== 'production' && (
+            {!config.midtrans.isProduction && (
               <MockMidtransPaymentButton
                 orderNumber={orderNumber}
                 onPaid={onPaid}
