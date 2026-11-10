@@ -43,7 +43,12 @@ export default class SendOtp extends BaseUseCase {
     if (!isSessionExist) throw new AppError('Invalid OTP request. Session does not exist.');
   }
 
-  private async sendOtpToEmail(otp: string, email = 'ifan.develop@gmail.com') {
+  private async sendOtpToEmail(otp: string, email = config.auth.otpEmail) {
+    if (!email) {
+      console.error('AUTH_OTP_EMAIL belum dikonfigurasi — OTP tidak dikirim.');
+      return;
+    }
+
     await this.repositories.nodemailerRepository?.sendMail({
       from: `"${APP_NAME}" <bigdata@pjj-test.dstagingserver.com>`,
       to: email,

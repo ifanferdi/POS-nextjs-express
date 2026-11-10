@@ -5,10 +5,11 @@ import { BaseFindById } from '@/validations/base-validation';
 
 export default class DeleteProduct extends BaseUseCase {
   async execute({ id }: BaseFindById, options?: { isPermanently: boolean }) {
-    let destroy;
-    if (options?.isPermanently) destroy = this.handleDeletePermanently(id);
-
-    destroy = this.repositories.productRepository.destroy(id);
+    // Sebelumnya hasil branch permanent ditimpa soft-delete (dan tak di-await):
+    // /permanently selalu berperilaku soft delete. Await kedua jalur.
+    const destroy = options?.isPermanently
+      ? await this.handleDeletePermanently(id)
+      : await this.repositories.productRepository.destroy(id);
 
     await publishSSEEvent({
       scope: 'product',

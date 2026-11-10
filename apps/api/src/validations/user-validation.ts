@@ -10,6 +10,7 @@ import {
   NumberSchema,
   Password,
   StringSchema,
+  StrongPassword,
   Username,
 } from '@/validations/base-validation';
 import { z } from 'zod';
@@ -58,16 +59,16 @@ const UserBaseCreateUpdate = z.object({
   roleId: z.number(),
 });
 export const CreateUserSchema = UserBaseCreateUpdate.extend({
-  password: Password,
-  confirmPassword: Password,
+  password: StrongPassword,
+  confirmPassword: StrongPassword,
 }).refine((data) => data.password === data.confirmPassword, {
   message: 'Password and Confirm Password must match.',
   path: ['confirmPassword'],
 });
 export const UpdateUserSchema = UserBaseCreateUpdate.extend({
   id: z.number(),
-  password: Password.optional(),
-  confirmPassword: Password.optional(),
+  password: StrongPassword.optional(),
+  confirmPassword: StrongPassword.optional(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: 'Password and Confirm Password must match.',
   path: ['confirmPassword'],
@@ -95,8 +96,8 @@ export const UpdateProfileSchema = CreateProfileSchema;
 
 export const CreateUserProfileSchema = UserBaseCreateUpdate.extend({
   profile: CreateProfileSchema.optional(),
-  password: Password,
-  confirmPassword: Password.optional(),
+  password: StrongPassword,
+  confirmPassword: StrongPassword.optional(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: 'Password and Confirm Password must match.',
   path: ['confirmPassword'],
@@ -105,8 +106,8 @@ export const CreateUserProfileSchema = UserBaseCreateUpdate.extend({
 export const UpdateUserProfileSchema = UserBaseCreateUpdate.extend({
   id: z.number(),
   profile: UpdateProfileSchema.optional(),
-  password: Password.optional(),
-  confirmPassword: Password.optional(),
+  password: StrongPassword.optional(),
+  confirmPassword: StrongPassword.optional(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: 'Password and Confirm Password must match.',
   path: ['confirmPassword'],
@@ -115,8 +116,8 @@ export const UpdateUserProfileSchema = UserBaseCreateUpdate.extend({
 // Password Validation
 export const ChangePasswordSchema = z.object({
   oldPassword: Password.optional(),
-  password: Password.optional(),
-  confirmPassword: Password.optional(),
+  password: StrongPassword.optional(),
+  confirmPassword: StrongPassword.optional(),
 });
 
 // Data Transfer Object All Validation
