@@ -2,12 +2,10 @@ import * as argon2 from 'argon2';
 
 export async function hash(password: string) {
   return await argon2.hash(password, {
-    // argon2id (bukan argon2d) dengan cost eksplisit setara hash lama (m=65536, t=3, p=4).
-    // Hash lama argon2d tetap bisa diverifikasi (parameter tersimpan di hash).
     type: argon2.argon2id,
-    memoryCost: 65536,
-    timeCost: 3,
-    parallelism: 4,
+    memoryCost: 65536, // memori (KiB) yang dipakai per hash — memperlambat serangan GPU
+    timeCost: 3, // iterasi hashing — menambah waktu komputasi
+    parallelism: 4, // jumlah thread paralel — batas buat GPU/ASIC, bukan percepatan serangan
   });
 }
 
