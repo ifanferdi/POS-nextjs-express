@@ -6,9 +6,6 @@ import storageConfig from './storage.config';
 
 const APP_PORT = process.env.APP_PORT || 3000;
 
-// Wajib eksplisit — fallback literal = secret publik yang bisa dipakai siapa
-// pun untuk memalsukan token (temuan audit #4).
-// Generate: openssl rand -hex 64
 const HASH_SECRET = process.env.HASH_SECRET;
 if (!HASH_SECRET) {
   throw new Error('HASH_SECRET wajib diisi di environment. Generate dengan: openssl rand -hex 64');
