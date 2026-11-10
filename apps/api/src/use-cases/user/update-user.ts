@@ -1,12 +1,30 @@
 import { IUserWithPassword } from '@/domain/entities/models/user';
-import { ErrorBadRequest } from '@/helpers/error.helper';
+import { ErrorBadRequest, ErrorForbidden } from '@/helpers/error.helper';
 import * as password from '@/helpers/password.helper';
 import BaseUseCase from '@/use-cases/_base-use-case';
 import ResetCachePermission from '@/use-cases/permission/reset-cache-permission';
 import { ChangePasswordDto, UpdateUserProfileDto } from '@/validations/user-validation';
 
 export default class UpdateUser extends BaseUseCase {
-  async execute(payload: UpdateUserProfileDto, payloadPassword?: ChangePasswordDto) {
+  async execute(
+    payload: UpdateUserProfileDto,
+    payloadPassword?: ChangePasswordDto,
+    actorRoleId?: number,
+  ) {
+    if (payload.roleId === 1)
+      throw new ErrorForbidden('Role Developer tidak dapat dikelola lewat API.');
+
+    // Hanya Developer yang boleh mengubah akun Developer (mencegah admin
+    // mereset password Developer = eskalasi tersembunyi).
+    if (actorRoleId !== 1) {
+      const target = await this.repositories.userRepository.findOne({
+        id: payload.id,
+        columns: ['roleId'],
+      });
+      if (target?.roleId === 1)
+        throw new ErrorForbidden('Hanya Developer yang dapat mengubah akun Developer.');
+    }
+
     // DATE FORMAT DATE_OF_BIRTH
     if ('profile' in payload && payload?.profile && payload.profile.dateOfBirth)
       payload.profile.dateOfBirth = new Date(payload.profile.dateOfBirth);

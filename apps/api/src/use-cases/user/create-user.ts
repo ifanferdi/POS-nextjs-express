@@ -1,10 +1,14 @@
-import { ErrorBadRequest } from '@/helpers/error.helper';
+import { ErrorBadRequest, ErrorForbidden } from '@/helpers/error.helper';
 import * as password from '@/helpers/password.helper';
-import { CreateUserDto, CreateUserProfileDto } from '@/validations/user-validation';
 import BaseUseCase from '@/use-cases/_base-use-case';
+import { CreateUserDto, CreateUserProfileDto } from '@/validations/user-validation';
 
 export default class CreateUser extends BaseUseCase {
   async execute(payload: CreateUserDto | CreateUserProfileDto) {
+    // Role Developer (id 1) dibuat hanya oleh seeder — tidak boleh lewat API.
+    if (payload.roleId === 1)
+      throw new ErrorForbidden('Role Developer tidak dapat dikelola lewat API.');
+
     // HASH PASSWORD
     payload.password = await password.hash(payload.password);
 

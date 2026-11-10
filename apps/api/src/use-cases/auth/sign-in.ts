@@ -3,7 +3,7 @@ import { UserRelation } from '@/domain/entities/enums/user.enum';
 import { IUser, IUserWithPassword, USER_FIELDS } from '@/domain/entities/models/user';
 import { RedisDataAuth } from '@/domain/entities/types/auth.types';
 import { ttl } from '@/helpers/common.helper';
-import { ErrorBadRequest } from '@/helpers/error.helper';
+import { ErrorBadRequest, ErrorTooManyRequests } from '@/helpers/error.helper';
 import * as jwt from '@/helpers/jwt.helper';
 import * as password from '@/helpers/password.helper';
 import * as refreshTokenHelper from '@/helpers/refresh-token.helper';
@@ -16,12 +16,29 @@ const REFRESH_TOKEN_TIMEOUT = config.auth.refreshTokenTimeout;
 const AUTH_MODE = config.auth.mode;
 const IS_USE_2FA = config.auth.use2FA;
 const NEED_2FA_AFTER_MINUTES = config.auth.need2FAAfterMinutes;
+const LOGIN_RATE_LIMIT_NUM = Number(config.auth.loginRateLimitNum);
+const LOGIN_RATE_LIMIT_TIME = config.auth.loginRateLimitTime;
 
 export default class SignIn extends BaseUseCase {
   getToken = (user: IUser & {  sessionId?: string }) =>
     jwt.hash(user, TOKEN_TIMEOUT);
 
-  async execute(params: SignInAuthDto) {
+  // Anti brute-force: hitung kegagalan per IP+username, bukan per permintaan,
+  // agar login sukses tidak ikut terhitung.
+  private rateLimiterKey = (ip: string, username: string) => `sign-in-failures:${ip}:${username}`;
+
+  private async countFailure(key: string) {
+    const count = Number(await this.repositories.redisRepository.incr(key));
+    if (count === 1) await this.repositories.redisRepository.expire(key, ttl(LOGIN_RATE_LIMIT_TIME));
+  }
+
+  async execute(params: SignInAuthDto & { ipAddress?: string }) {
+    const ip = params.ipAddress || 'unknown';
+    const rateKey = this.rateLimiterKey(ip, params.username);
+    const failures = Number((await this.repositories.redisRepository.findOne(rateKey)) ?? 0);
+    if (failures >= LOGIN_RATE_LIMIT_NUM)
+      throw new ErrorTooManyRequests('Terlalu banyak percobaan login. Silakan coba lagi nanti.');
+
     const user = (await this.repositories.userRepository.findOne({
       username: params.username,
       isActive: true,
@@ -29,11 +46,17 @@ export default class SignIn extends BaseUseCase {
       columns: USER_FIELDS,
     })) as IUserWithPassword;
 
-    if (!user) throw new ErrorBadRequest('Username atau password tidak valid.');
+    if (!user) {
+      await this.countFailure(rateKey);
+      throw new ErrorBadRequest('Username atau password tidak valid.');
+    }
 
     const isValidPassword = await password.verify(user?.password, params.password);
 
-    if (!isValidPassword) throw new ErrorBadRequest('Username atau password tidak valid.');
+    if (!isValidPassword) {
+      await this.countFailure(rateKey);
+      throw new ErrorBadRequest('Username atau password tidak valid.');
+    }
 
     const userWithoutPassword = _.omit(user, 'password') as IUser;
 

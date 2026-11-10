@@ -9,6 +9,7 @@ import { Controllers } from '@/domain/adapters/controller.interface';
 import { UseCases } from '@/domain/use-cases/use-case.interface';
 import cors from 'cors';
 import { default as express, Express } from 'express';
+import helmet from 'helmet';
 import morgan from 'morgan';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
@@ -16,17 +17,22 @@ import swaggerUi from 'swagger-ui-express';
 import { parse } from 'yaml';
 
 export default function routes(app: Express, controllers: Controllers, useCases: UseCases) {
+  app.set('trust proxy', 1);
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
+  app.use(helmet());
+  app.disable('x-powered-by');
   app.use(morgan('dev'));
 
   app.use(cors({ origin: ['http://localhost:3000', ...config.cors.origins], credentials: true }));
 
-  // SWAGGER UI
-  const swaggerDocument = parse(
-    readFileSync(path.join(__dirname, '../../../../docs/openapi.yaml'), 'utf8'),
-  );
-  app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+  // SWAGGER UI — hanya di luar produksi (kontrak API tidak perlu publik).
+  if (config.app.env !== 'production') {
+    const swaggerDocument = parse(
+      readFileSync(path.join(__dirname, '../../../../docs/openapi.yaml'), 'utf8'),
+    );
+    app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+  }
 
   // API INDEX
   app.get('/', (_req, res) => {

@@ -12,5 +12,8 @@ export default {
   otpTimeoutLabel: process.env.AUTH_OTP_TIMEOUT_LABEL || '10 minutes', // 10 minutes
   otpRateLimitNum: process.env.AUTH_OTP_RATE_LIMIT_NUM || 5,
   otpRateLimitTime: (process.env.AUTH_OTP_RATE_LIMIT_TIME || '10m') as Timeout, // 10 minutes
+  // Anti brute-force sign-in: N kegagalan per IP+username dalam window ini → 429.
+  loginRateLimitNum: Number(process.env.AUTH_LOGIN_RATE_LIMIT_NUM) || 10,
+  loginRateLimitTime: (process.env.AUTH_LOGIN_RATE_LIMIT_TIME || '15m') as Timeout,
   need2FAAfterMinutes: Number(process.env.AUTH_NEED_2FA_AFTER_MINUTES) || 15, // 15 minutes
 };

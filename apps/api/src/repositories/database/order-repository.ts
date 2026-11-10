@@ -3,7 +3,7 @@ import { PaymentMethod, PaymentStatus } from '@/domain/entities/enums/payment.en
 import { MidtransPaymentUpdate } from '@/domain/entities/models/midtrans-payment-detail';
 import { StoreOrderDto, StoreOrderResponse } from '@/domain/entities/models/order';
 import { Repository } from '@/domain/repositories/database.interface';
-import AppError from '@/helpers/error.helper';
+import { ErrorBadRequest } from '@/helpers/error.helper';
 import { generateOrderNumber } from '@/helpers/generate-string';
 import { Order, Prisma } from '@/infrastructure/database/prisma/generated/client';
 import DatabaseBaseRepository from '@/repositories/database/_database-base-repository';
@@ -127,9 +127,8 @@ export default class OrderRepository
           data: { stock: { decrement: quantity } },
         });
 
-        // 0 row ter-update → stok tidak cukup → throw → transaction rollback
         if (result.count === 0) {
-          throw new AppError(`Stok produk ID ${productId} tidak mencukupi.`);
+          throw new ErrorBadRequest(`Stok produk ID ${productId} tidak mencukupi.`);
         }
       }
       return order;

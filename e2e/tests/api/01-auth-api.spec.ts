@@ -2,7 +2,9 @@ import { expect, test } from "@playwright/test";
 import { authHeaders, signIn } from "../../helpers/api";
 
 test.describe("api: auth endpoints", () => {
-  test("sign-in sukses mengembalikan token + user (admin)", async ({ request }) => {
+  test("sign-in sukses mengembalikan token + user (admin)", async ({
+    request,
+  }) => {
     const { status, body } = await signIn(request, "admin", "password");
     expect(status).toBe(200);
     expect(body.message).toBe("Success");
@@ -12,7 +14,11 @@ test.describe("api: auth endpoints", () => {
   });
 
   test("sign-in dengan password salah → 400", async ({ request }) => {
-    const { status, body } = await signIn(request, "admin", "salah-password-e2e");
+    const { status, body } = await signIn(
+      request,
+      "admin",
+      "salah-password-e2e",
+    );
     expect(status).toBe(400);
     expect(body.message).toContain("tidak valid");
   });
@@ -35,17 +41,21 @@ test.describe("api: auth endpoints", () => {
     expect(res.status()).toBe(401);
   });
 
-  test("token rusak/forged → 500 (bug: seharusnya 401)", async ({ request }) => {
-    // Temuan audit: JsonWebTokenError tidak dipetakan ke 401, jatuh ke 500.
+  test("token rusak/forged → 401 (fix #14)", async ({ request }) => {
     const res = await request.get("v1/users/me", {
       headers: { Authorization: "Bearer ini.bukan.jwt" },
     });
-    expect(res.status()).toBe(500);
+    expect(res.status()).toBe(401);
   });
 
-  test("refresh-token: rotasi & token lama invalid (stateful)", async ({ request }) => {
+  test("refresh-token: rotasi & token lama invalid (stateful)", async ({
+    request,
+  }) => {
     const { body } = await signIn(request, "admin", "password");
-    test.skip(!body.refreshToken, "Mode stateless: refresh token tidak diterbitkan");
+    test.skip(
+      !body.refreshToken,
+      "Mode stateless: refresh token tidak diterbitkan",
+    );
 
     // Refresh pertama → token + refreshToken baru.
     const first = await request.post("v1/auth/refresh-token", {
