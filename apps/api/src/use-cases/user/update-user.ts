@@ -6,10 +6,13 @@ import ResetCachePermission from '@/use-cases/permission/reset-cache-permission'
 import { ChangePasswordDto, UpdateUserProfileDto } from '@/validations/user-validation';
 
 export default class UpdateUser extends BaseUseCase {
-  async execute(payload: UpdateUserProfileDto, payloadPassword?: ChangePasswordDto, actorRoleId?: number) {
-    // Role Developer (id 1) tidak dapat diberikan lewat API.
+  async execute(
+    payload: UpdateUserProfileDto,
+    payloadPassword?: ChangePasswordDto,
+    actorRoleId?: number,
+  ) {
     if (payload.roleId === 1)
-      throw new ErrorForbidden('Role Developer tidak dapat diberikan lewat API.');
+      throw new ErrorForbidden('Role Developer tidak dapat dikelola lewat API.');
 
     // Hanya Developer yang boleh mengubah akun Developer (mencegah admin
     // mereset password Developer = eskalasi tersembunyi).

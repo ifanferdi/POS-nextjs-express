@@ -17,8 +17,6 @@ import swaggerUi from 'swagger-ui-express';
 import { parse } from 'yaml';
 
 export default function routes(app: Express, controllers: Controllers, useCases: UseCases) {
-  // Di belakang satu reverse proxy (Caddy): percayai X-Forwarded-For agar req.ip
-  // (dipakai rate-limiter login) berisi IP klien asli, bukan IP Caddy.
   app.set('trust proxy', 1);
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));

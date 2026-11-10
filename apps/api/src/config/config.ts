@@ -5,6 +5,15 @@ import midtransConfig from './midtrans.config';
 import storageConfig from './storage.config';
 
 const APP_PORT = process.env.APP_PORT || 3000;
+
+// Wajib eksplisit — fallback literal = secret publik yang bisa dipakai siapa
+// pun untuk memalsukan token (temuan audit #4).
+// Generate: openssl rand -hex 64
+const HASH_SECRET = process.env.HASH_SECRET;
+if (!HASH_SECRET) {
+  throw new Error('HASH_SECRET wajib diisi di environment. Generate dengan: openssl rand -hex 64');
+}
+
 const config = {
   app: {
     name: process.env.APP_NAME || 'ExpressJS Typescript',
@@ -35,7 +44,7 @@ const config = {
       // add other service
     },
   },
-  secret: process.env.HASH_SECRET || 'zN6p9JfG@!Xc7vR2Ls$wq04Mb',
+  secret: HASH_SECRET,
   rabbitmq: {
     url: process.env.RABBITMQ_URL || 'amqp://localhost:5672',
     exchange: process.env.RABBITMQ_EXCHANGE || 'exchange',
