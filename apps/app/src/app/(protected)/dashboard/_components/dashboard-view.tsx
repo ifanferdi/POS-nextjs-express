@@ -27,8 +27,6 @@ const SSE_WIDGETS: Record<string, string[]> = {
 interface DashboardViewProps {
   initialSummary: DashboardSummary | null;
   initialRange: { from: string; to: string };
-  // RBAC dashboard: role User (kasir) hanya melihat Total Products,
-  // Orders by Status, dan Top Products.
   isKasir?: boolean;
 }
 

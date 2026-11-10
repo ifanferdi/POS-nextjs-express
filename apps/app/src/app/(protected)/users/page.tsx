@@ -49,9 +49,6 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
     orderBy: ['name:asc'],
   });
 
-  // Backend kini menolak roleId=1 (Developer) — sembunyikan opsi dari form
-  // untuk non-developer agar tidak selalu 403. Filter/list tetap memakai
-  // roles lengkap (nama role di baris tabel diambil dari user.role.name).
   const isDeveloper = session?.user?.role?.name === 'Developer';
   const roleOptions = isDeveloper ? roles : roles.filter((role) => role.name !== 'Developer');
 

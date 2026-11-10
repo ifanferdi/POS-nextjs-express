@@ -123,7 +123,7 @@ export function PosPaymentModule({
               isPaymentStatusLoading={isPaymentStatusLoading}
               setIsPaymentStatusLoading={setIsPaymentStatusLoading}
             />
-            {!config.midtrans.isProduction && config.app.env !== 'production' && (
+            {!config.midtrans.isProduction && (
               <MockMidtransPaymentButton
                 orderNumber={orderNumber}
                 onPaid={onPaid}

@@ -26,7 +26,6 @@ interface DashboardFilterProps {
   granularity: DashboardGranularity;
   onRangeChange: (range: { from: string; to: string }) => void;
   onGranularityChange: (granularity: DashboardGranularity) => void;
-  // Kasir tidak boleh export order (backend #6 → 403).
   isKasir?: boolean;
 }
 

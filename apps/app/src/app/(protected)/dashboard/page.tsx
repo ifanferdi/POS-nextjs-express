@@ -12,8 +12,6 @@ export default async function DashboardPage() {
   const range = getDefaultDateRange(tz, dashboardConfig.defaultRangeDays);
 
   const session = await auth();
-  // RBAC dashboard (backend #6): kasir hanya lihat top products, order by status,
-  // dan jumlah produk — widget finansial disembunyikan di render.
   const isKasir = session?.user?.role?.name === 'User';
 
   let initialSummary: DashboardSummary | null;

@@ -67,7 +67,6 @@ function DeltaChip({ value }: { value: number | null | undefined }) {
 interface DashboardSummaryCardsProps {
   range: { from: string; to: string };
   initialData?: DashboardSummary | null;
-  // Kasir hanya melihat Total Products (backend #6).
   isKasir?: boolean;
 }
 

@@ -23,8 +23,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={font.variable} suppressHydrationWarning>
       <body className={`${font.className} antialiased`}>
         <ThemeProvider>{children}</ThemeProvider>
-        {/* Satu Toaster global — sebelumnya hanya di (protected)/(pos), sehingga
-            toast login di halaman (auth) tidak pernah muncul di produksi. */}
         <Toaster richColors position="top-right" />
       </body>
     </html>

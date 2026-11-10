@@ -44,7 +44,6 @@ const BaseUserSchema = z.object({
 });
 
 export const CreateUserSchema = BaseUserSchema.extend({
-  // Sinkron dengan backend (min 8): jangan override jadi min 1.
   password: passwordSchema,
 }).refine((data) => data.password === data.confirmPassword, {
   message: 'Password and Confirm Password do not match.',
