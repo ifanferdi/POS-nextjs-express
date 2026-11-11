@@ -1,5 +1,6 @@
 import { Repositories } from '@/domain/repositories/repositories.interface';
 import { getRedisKeyMe } from '@/helpers/common.helper';
+import { ErrorForbidden } from '@/helpers/error.helper';
 import ResetCachePermission from '@/use-cases/permission/reset-cache-permission';
 import {
   AddPermissionsNameDto,
@@ -10,10 +11,15 @@ import {
 } from '@/validations/role-validation';
 import _ from 'lodash';
 
+// Permission yang bisa dipakai untuk eskalasi (melihat/mengelola permission lain).
+const SENSITIVE_PERMISSIONS = ['Show Permission', 'Manage Permission'];
+
 export default class RoleAssignPermission {
   constructor(private repositories: Repositories) {}
 
   async execute(payload: RoleAssignPermissionDto) {
+    await this.guardSensitivePermissions(payload);
+
     let result: any;
 
     if (payload.permissions)
@@ -37,6 +43,35 @@ export default class RoleAssignPermission {
     const keys = userIds.map((id) => getRedisKeyMe(id));
 
     await this.repositories.redisRepository.bulkDestroy(keys);
+  }
+
+  // Cegah eskalasi: hanya Developer (roleId 1) yang boleh menambah Show/Manage
+  // Permission ke role mana pun — termasuk role sendiri (admin menjadi
+  // superadmin, lihat temuan audit #7).
+  private async guardSensitivePermissions(payload: RoleAssignPermissionDto) {
+    if (payload.actorRoleId === 1) return;
+
+    const requestedNames = [...(payload.permissions ?? []), ...(payload.addPermissions ?? [])];
+    const hasSensitiveByName = requestedNames.some((name) =>
+      SENSITIVE_PERMISSIONS.includes(name),
+    );
+
+    let hasSensitiveById = false;
+    if (payload.permissionIds?.length) {
+      const permissions = await this.repositories.permissionRepository.findAll({
+        ids: payload.permissionIds,
+        columns: ['id', 'name'],
+        limit: -1,
+      });
+      hasSensitiveById = permissions.some((permission) =>
+        SENSITIVE_PERMISSIONS.includes(permission.name),
+      );
+    }
+
+    if (hasSensitiveByName || hasSensitiveById)
+      throw new ErrorForbidden(
+        'Hanya Developer yang dapat mengelola permission Show/Manage Permission.',
+      );
   }
 
   async syncByPermissionIds({ roleId, permissionIds }: SyncByPermissionIdsDto) {

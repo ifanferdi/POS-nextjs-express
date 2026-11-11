@@ -5,6 +5,12 @@ import midtransConfig from './midtrans.config';
 import storageConfig from './storage.config';
 
 const APP_PORT = process.env.APP_PORT || 3000;
+
+const HASH_SECRET = process.env.HASH_SECRET;
+if (!HASH_SECRET) {
+  throw new Error('HASH_SECRET wajib diisi di environment. Generate dengan: openssl rand -hex 64');
+}
+
 const config = {
   app: {
     name: process.env.APP_NAME || 'ExpressJS Typescript',
@@ -35,7 +41,7 @@ const config = {
       // add other service
     },
   },
-  secret: process.env.HASH_SECRET || 'zN6p9JfG@!Xc7vR2Ls$wq04Mb',
+  secret: HASH_SECRET,
   rabbitmq: {
     url: process.env.RABBITMQ_URL || 'amqp://localhost:5672',
     exchange: process.env.RABBITMQ_EXCHANGE || 'exchange',
@@ -47,7 +53,7 @@ const config = {
   },
   redis: {
     url: process.env.REDIS_URL || 'redis://localhost:6379',
-    meCacheTtl: process.env.ME_CACHE_TTL || 24 * 60 * 60,
+    meCacheTtl: process.env.ME_CACHE_TTL || 60 * 60,
     dashboardCacheTtl: Number(process.env.DASHBOARD_CACHE_TTL) || 30, // detik
     orderCounterRedisTimeout: Number(process.env.ORDER_COUNTR_REDIS_TIMEOUT) || 60 * 60 * 24 * 2, // hari
     idempotencyKeyTtl: Number(process.env.IDEMPOTENCY_KEY_TTL) || 24 * 60 * 60, // 24 jam

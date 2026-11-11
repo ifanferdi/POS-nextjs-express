@@ -38,6 +38,7 @@ export const UpdateRoleSchema = CreateRoleSchema.extend({ id: z.number() });
 export const RoleAssignPermissionSchema = z
   .object({
     roleId: z.number(),
+    actorRoleId: z.number().optional(),
     permissionIds: z.array(z.number()).optional(),
     permissions: z.array(StringSchema).optional(),
     addPermissions: z.array(StringSchema).optional(),

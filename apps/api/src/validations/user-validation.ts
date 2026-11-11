@@ -1,5 +1,5 @@
 import { Gender, UserRelation } from '@/domain/entities/enums/user.enum';
-import { USER_FIELD } from '@/domain/entities/models/user';
+import { USER_FIELD, USER_SELECT_FIELD } from '@/domain/entities/models/user';
 import { JwtData } from '@/domain/entities/types/auth.types';
 import { SoftDeleteFields } from '@/domain/entities/types/database.types';
 import { calculateAge } from '@/helpers/common.helper';
@@ -16,7 +16,7 @@ import { z } from 'zod';
 
 // User Validation
 const Relations = z.array(z.nativeEnum(UserRelation).optional()).optional();
-const userColumns = z.array(z.nativeEnum(USER_FIELD)).optional();
+const userColumns = z.array(z.nativeEnum(USER_SELECT_FIELD)).optional();
 export const FindByIdUserSchema = BaseFindById.extend({ with: Relations, columns: userColumns });
 export const FindOneUserSchema = z
   .object({
@@ -30,7 +30,7 @@ export const FindOneUserSchema = z
     message: 'Must use one one of id or username.',
     path: ['id'],
   });
-export const FindAllUserSchema = BasePagination(USER_FIELD)
+export const FindAllUserSchema = BasePagination(USER_SELECT_FIELD)
   .extend({
     isActive: z.boolean().optional(),
     roleId: z.union([NumberSchema, z.array(NumberSchema)]).optional(),
@@ -126,6 +126,9 @@ export interface CreateUserDto extends z.infer<typeof CreateUserSchema> {}
 export interface UpdateUserDto extends z.infer<typeof UpdateUserSchema> {}
 export interface FindAllProfileDto extends z.infer<typeof FindAllProfileSchema> {}
 export interface FindOneUserDto extends z.infer<typeof FindOneUserSchema> {}
+export interface FindOneUserInternalDto extends Omit<FindOneUserDto, 'columns'> {
+  columns?: (typeof USER_FIELD)[keyof typeof USER_FIELD][];
+}
 export interface CreateProfileDto extends z.infer<typeof CreateProfileSchema> {}
 export interface UpdateProfileDto extends z.infer<typeof UpdateProfileSchema> {}
 export interface CreateUserProfileDto extends z.infer<typeof CreateUserProfileSchema> {}

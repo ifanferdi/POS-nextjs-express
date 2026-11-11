@@ -99,6 +99,7 @@ export default class UserController extends BaseController {
       id,
       { isActive: req.body.isActive, roleId: req.body.roleId },
       res,
+      req.user?.roleId,
     );
   });
 
@@ -112,6 +113,7 @@ export default class UserController extends BaseController {
       id,
       { isActive: current.isActive, roleId: current.roleId! },
       res,
+      req.user?.roleId,
     );
   });
 
@@ -120,6 +122,7 @@ export default class UserController extends BaseController {
     id: number,
     access: { isActive: boolean; roleId: number },
     res: e.Response,
+    actorRoleId?: number,
   ) {
     let payload: UpdateUserProfileDto = {
       id,
@@ -148,7 +151,7 @@ export default class UserController extends BaseController {
     ChangePasswordSchema.parse(payloadPassword);
 
     // Update to database
-    const user = await this.user.updateUser.execute(payload, payloadPassword);
+    const user = await this.user.updateUser.execute(payload, payloadPassword, actorRoleId);
 
     res.send({ message: 'Success.', user });
   }
@@ -185,7 +188,7 @@ export default class UserController extends BaseController {
     /** Request Validation **/
     BaseFindById.parse(params);
 
-    this.user.restoreUser.execute(params as BaseFindById);
+    await this.user.restoreUser.execute(params as BaseFindById);
 
     res.send({ message: 'Success.' });
   });

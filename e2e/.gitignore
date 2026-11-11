@@ -1,0 +1,6 @@
+node_modules/
+test-results/
+playwright-report/
+REPORT.md
+security-audit.md
+PLAN-PERBAIKAN.md
