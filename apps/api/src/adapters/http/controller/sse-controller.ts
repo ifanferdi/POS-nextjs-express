@@ -1,3 +1,4 @@
+import { HttpStatusCode } from '@/constants/http-status.constant';
 import { sseManager } from '@/infrastructure/event-stream/sse-manager';
 import { randomUUID } from 'crypto';
 import { Request, Response } from 'express';
@@ -7,6 +8,10 @@ export default class SseController {
     const userId = req.user!.id; // asumsi udah lewat auth middleware
     const clientId = randomUUID();
 
+    if (!sseManager.addClient({ id: clientId, userId, res })) {
+      return res.sendStatus(HttpStatusCode.SERVICE_UNAVAILABLE);
+    }
+
     res.writeHead(200, {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
@@ -15,7 +20,6 @@ export default class SseController {
     });
 
     res.write('\n');
-    sseManager.addClient({ id: clientId, userId, res });
 
     // Heartbeat biar koneksi gak di-timeout proxy/LB
     const heartbeat = setInterval(() => res.write(': heartbeat\n\n'), 30_000);
