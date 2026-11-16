@@ -17,6 +17,8 @@ import {
 import e from 'express';
 import asyncHandler from 'express-async-handler';
 
+type RequestWithUser = e.Request & { user?: { roleId?: number } };
+
 export default class RoleController {
   constructor(private useCases: UseCases) {}
 
@@ -62,11 +64,12 @@ export default class RoleController {
     return await this.useCases.roleUseCase.findByIdRole.execute(params);
   }
 
-  create = asyncHandler(async (req: e.Request, res: e.Response) => {
+  create = asyncHandler(async (req: RequestWithUser, res: e.Response) => {
     const params: CreateRoleDto = {
       name: req.body.name,
       permissionIds: req.body.permissionIds,
       permissions: req.body.permissions,
+      actorRoleId: Number(req.user?.roleId ?? 0),
     };
 
     /** Request Validation **/
@@ -108,7 +111,7 @@ export default class RoleController {
     res.send({ message: 'Success.' });
   });
 
-  assignPermissions = asyncHandler(async (req: e.Request & Record<string, any>, res: e.Response) => {
+  assignPermissions = asyncHandler(async (req: RequestWithUser, res: e.Response) => {
     const roleId = req.body.roleId;
     const params: RoleAssignPermissionDto = {
       roleId: req.body.roleId,

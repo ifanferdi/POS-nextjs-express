@@ -33,6 +33,7 @@ export const CreateRoleSchema = z.object({
   name: StringSchema.min(1, 'Name cannot be empty.').max(255),
   permissionIds: z.array(z.number()).optional(),
   permissions: z.array(StringSchema).optional(),
+  actorRoleId: z.number().optional(),
 });
 export const UpdateRoleSchema = CreateRoleSchema.extend({ id: z.number() });
 export const RoleAssignPermissionSchema = z
