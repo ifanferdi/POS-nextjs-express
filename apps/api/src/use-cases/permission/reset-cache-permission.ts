@@ -30,6 +30,7 @@ export default class ResetCachePermission extends BaseUseCase {
     else {
       const roles = await this.repositories.roleRepository.findAll({
         permissionId: params.permissionId,
+        limit: -1,
       });
       const roleIds = roles?.map((role) => role.id) ?? [];
 
