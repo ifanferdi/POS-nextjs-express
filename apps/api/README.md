@@ -98,9 +98,12 @@ All routes are prefixed `/api/v1` and protected by JWT middleware unless noted. 
 ### Docker (from repo root)
 
 ```bash
+export HASH_SECRET="$(openssl rand -hex 64)"
 docker compose up -d --build
 docker compose --profile setup run --rm api-init   # push Prisma schema + seed
 ```
+
+Keep the generated value in an untracked `.env` file or a deployment secret store for later Compose commands.
 
 ### Manual
 
@@ -123,18 +126,18 @@ Swagger UI: http://localhost:8000/docs
 
 Defaults live in `src/config/` (grouped below); override via `.env` or the `x-api-env` anchor in the root `docker-compose.yml`.
 
-| Group    | Key variables                                                                                                     | Notes                                       |
-| -------- | ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
-| App      | `APP_NAME`, `APP_ENV`, `APP_PORT`, `APP_URL`, `APP_VERSION`                                                       |                                             |
-| Database | `DB_USER`, `DB_PASS`, `DB_NAME`, `DB_HOST`, `DB_PORT`, `DB_USE_SSL`                                               |                                             |
-| Auth     | `AUTH_MODE`, `AUTH_USE_2FA`, `AUTH_TOKEN_TIMEOUT`, `AUTH_REFRESH_TOKEN_TIMEOUT`, `AUTH_OTP_*`, `HASH_SECRET`      | `HASH_SECRET` must be changed in production |
-| Redis    | `REDIS_URL`, `ME_CACHE_TTL`, `ORDER_COUNTR_REDIS_TIMEOUT`                                                         |                                             |
-| RabbitMQ | `RABBITMQ_URL`, `RABBITMQ_EXCHANGE`                                                                               |                                             |
-| Storage  | `FILESYSTEM` (`s3`\|`local`), `STORAGE_SECRET`, `S3_REGION`, `S3_ACCESS`, `S3_SECRET`, `S3_ENDPOINT`, `S3_BUCKET` |                                             |
-| Midtrans | `MIDTRANS_SERVER_KEY`, `MIDTRANS_CLIENT_KEY`, `MIDTRANS_IS_PRODUCTION`, `MIDTRANS_EXPIRY_MINUTES`                 |                                             |
-| SMTP     | `SMTP_USER`, `SMTP_PASS`                                                                                          | Used for 2FA OTP                            |
-| Sentry   | `SENTRY_DSN`                                                                                                      |                                             |
-| SSE      | `SSE_CHANNEL`                                                                                                     |                                             |
+| Group    | Key variables                                                                                                     | Notes                                                                                            |
+| -------- | ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| App      | `APP_NAME`, `APP_ENV`, `APP_PORT`, `APP_URL`, `APP_VERSION`                                                       |                                                                                                  |
+| Database | `DB_USER`, `DB_PASS`, `DB_NAME`, `DB_HOST`, `DB_PORT`, `DB_USE_SSL`                                               |                                                                                                  |
+| Auth     | `AUTH_MODE`, `AUTH_USE_2FA`, `AUTH_TOKEN_TIMEOUT`, `AUTH_REFRESH_TOKEN_TIMEOUT`, `AUTH_OTP_*`, `HASH_SECRET`      | Required; provide a unique value from the environment or a secret store (`openssl rand -hex 64`) |
+| Redis    | `REDIS_URL`, `ME_CACHE_TTL`, `ORDER_COUNTR_REDIS_TIMEOUT`                                                         |                                                                                                  |
+| RabbitMQ | `RABBITMQ_URL`, `RABBITMQ_EXCHANGE`                                                                               |                                                                                                  |
+| Storage  | `FILESYSTEM` (`s3`\|`local`), `STORAGE_SECRET`, `S3_REGION`, `S3_ACCESS`, `S3_SECRET`, `S3_ENDPOINT`, `S3_BUCKET` |                                                                                                  |
+| Midtrans | `MIDTRANS_SERVER_KEY`, `MIDTRANS_CLIENT_KEY`, `MIDTRANS_IS_PRODUCTION`, `MIDTRANS_EXPIRY_MINUTES`                 |                                                                                                  |
+| SMTP     | `SMTP_USER`, `SMTP_PASS`                                                                                          | Used for 2FA OTP                                                                                 |
+| Sentry   | `SENTRY_DSN`                                                                                                      |                                                                                                  |
+| SSE      | `SSE_CHANNEL`                                                                                                     |                                                                                                  |
 
 Some entries in `config.ts` (Elasticsearch host/key, `GRPC_PORT`, `SCHEDULE_SERVICE_URL`, `AXIOS_TIMEOUT`) are scaffolding not used by the current stack.
 
