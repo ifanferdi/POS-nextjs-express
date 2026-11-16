@@ -168,6 +168,11 @@ export default class CreateOrder extends BaseUseCase {
     const totalRounding = isOnlinePayment ? total : calculateRounding(total).total;
     const amount = isOnlinePayment ? total : (payload.amount ?? 0);
 
+    if (!isOnlinePayment && amount < totalRounding) {
+      await this.restoreClaims(claims);
+      throw new ErrorBadRequest('Jumlah pembayaran tunai tidak mencukupi.');
+    }
+
     const storeInput: StoreOrderDto = {
       userId: payload.userId,
       subtotal,
@@ -190,9 +195,7 @@ export default class CreateOrder extends BaseUseCase {
       order = await this.repositories.orderRepository.store(storeInput);
     } catch (error) {
       // Transaksi DB rollback → kembalikan claim Redis agar kuota tidak ikut terbakar.
-      await Promise.allSettled(
-        claims.map((claim) => this.repositories.redisRepository.incrBy(claim.key, claim.take)),
-      );
+      await this.restoreClaims(claims);
       throw error;
     }
 
@@ -213,6 +216,12 @@ export default class CreateOrder extends BaseUseCase {
     });
 
     return { order };
+  }
+
+  private async restoreClaims(claims: Array<{ key: string; take: number }>) {
+    await Promise.allSettled(
+      claims.map((claim) => this.repositories.redisRepository.incrBy(claim.key, claim.take)),
+    );
   }
 
   private async claimUnits(discount: ProductDiscountCycle, quantity: number) {
