@@ -53,7 +53,8 @@ export default class LocalStorageRepository {
   ) {
     const expires = Math.floor(Date.now() / 1000) + expiresInSeconds;
     const signature = createS3SignatureKey(path, expires);
+    const encodedPath = path.split('/').map(encodeURIComponent).join('/');
 
-    return `${APP_URL}/public/files/${path}?expires=${expires}&sig=${signature}`;
+    return `${APP_URL}/public/files/${encodedPath}?expires=${expires}&sig=${signature}`;
   }
 }

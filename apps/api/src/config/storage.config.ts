@@ -1,5 +1,14 @@
+const storageSecret = process.env.STORAGE_SECRET;
+const filesystem = (process.env.FILESYSTEM || 'local').toLowerCase();
+
+if (filesystem === 'local' && (!storageSecret || Buffer.byteLength(storageSecret) < 32)) {
+  throw new Error(
+    'STORAGE_SECRET wajib diisi minimal 32 byte untuk penyimpanan lokal. Generate dengan: openssl rand -hex 32',
+  );
+}
+
 export default {
-  storageSecret: process.env.STORAGE_SECRET || 'secret',
+  storageSecret: storageSecret || '',
   expiredTime: 60 * 60, // 24
   defaultMaxSize: 15 * 1024 * 1024, // 10MB
   image: {

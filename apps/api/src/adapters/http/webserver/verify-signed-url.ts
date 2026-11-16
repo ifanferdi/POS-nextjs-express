@@ -1,6 +1,7 @@
 import { HttpStatusCode } from '@/constants/http-status.constant';
 import { createS3SignatureKey } from '@/helpers/common.helper';
 import e from 'express';
+import { timingSafeEqual } from 'node:crypto';
 
 export function verifySignedUrl(
   req: e.Request & Record<string, any>,
@@ -10,17 +11,24 @@ export function verifySignedUrl(
   const { expires, sig } = req.query;
   const filePath = req.params[0]; // wildcard path
 
-  if (!expires || !sig) {
+  if (
+    typeof expires !== 'string' ||
+    !/^\d+$/.test(expires) ||
+    !Number.isSafeInteger(Number(expires)) ||
+    typeof sig !== 'string' ||
+    !/^[a-f\d]{64}$/.test(sig)
+  ) {
     return res.status(HttpStatusCode.FORBIDDEN).send('Invalid signature');
   }
 
-  if (Date.now() / 1000 > Number(expires)) {
+  const expiry = Number(expires);
+  if (expiry <= Date.now() / 1000) {
     return res.status(HttpStatusCode.GONE).send('URL expired');
   }
 
-  const expectedSig = createS3SignatureKey(filePath, Number(expires));
+  const expectedSig = createS3SignatureKey(filePath, expiry);
 
-  if (sig !== expectedSig) {
+  if (!timingSafeEqual(Buffer.from(sig, 'hex'), Buffer.from(expectedSig, 'hex'))) {
     return res.status(HttpStatusCode.FORBIDDEN).send('Invalid signature');
   }
 

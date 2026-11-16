@@ -9,12 +9,24 @@ import { Controllers } from '@/domain/adapters/controller.interface';
 import { UseCases } from '@/domain/use-cases/use-case.interface';
 import cors from 'cors';
 import { default as express, Express } from 'express';
+import asyncHandler from 'express-async-handler';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import { readFileSync } from 'node:fs';
+import { realpath } from 'node:fs/promises';
 import path from 'node:path';
 import swaggerUi from 'swagger-ui-express';
 import { parse } from 'yaml';
+
+const isPathInside = (root: string, candidate: string) => {
+  const relativePath = path.relative(root, candidate);
+  return (
+    relativePath !== '' &&
+    relativePath !== '..' &&
+    !relativePath.startsWith(`..${path.sep}`) &&
+    !path.isAbsolute(relativePath)
+  );
+};
 
 export default function routes(app: Express, controllers: Controllers, useCases: UseCases) {
   app.set('trust proxy', 1);
@@ -48,15 +60,37 @@ export default function routes(app: Express, controllers: Controllers, useCases:
 
   // PUBLIC ROUTE STORAGE
   if (config.filesystem.toLowerCase() === 'local') {
-    app.get('/public/files/*', verifySignedUrl, (req, res) => {
-      const filePath = req.params[0];
+    const storageRoot = path.resolve(process.cwd(), config.storage.localDir);
 
-      const fullPath = path.join(process.cwd(), 'storage/public', filePath);
+    app.get(
+      '/public/files/*',
+      verifySignedUrl,
+      asyncHandler(async (req, res) => {
+        const fullPath = path.resolve(storageRoot, req.params[0]);
+        if (!isPathInside(storageRoot, fullPath)) {
+          res.status(HttpStatusCode.NOT_FOUND).end();
+          return;
+        }
 
-      res.sendFile(fullPath, (err) => {
-        if (err) res.status(HttpStatusCode.NOT_FOUND).end();
-      });
-    });
+        try {
+          const [realStorageRoot, realFilePath] = await Promise.all([
+            realpath(storageRoot),
+            realpath(fullPath),
+          ]);
+
+          if (!isPathInside(realStorageRoot, realFilePath)) {
+            res.status(HttpStatusCode.NOT_FOUND).end();
+            return;
+          }
+
+          res.sendFile(realFilePath, (err) => {
+            if (err) res.status(HttpStatusCode.NOT_FOUND).end();
+          });
+        } catch {
+          res.status(HttpStatusCode.NOT_FOUND).end();
+        }
+      }),
+    );
   }
 
   Routes(app, controllers, useCases.authUseCase.authorization);
