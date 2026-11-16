@@ -1,7 +1,7 @@
 import config from '@/config/config';
 import { createClient, RedisClientType } from 'redis';
 
-const REDIS_CONNECTION_ERROR_CODES = new Set([
+const REDIS_SAFE_ERROR_CODES = new Set([
   'ECONNREFUSED',
   'ECONNRESET',
   'ETIMEDOUT',
@@ -10,7 +10,10 @@ const REDIS_CONNECTION_ERROR_CODES = new Set([
   'EHOSTUNREACH',
   'ENETUNREACH',
   'EPIPE',
+  'WRONGPASS',
+  'NOAUTH',
 ]);
+const REDIS_AUTH_ERROR_PREFIXES = ['WRONGPASS', 'NOAUTH'];
 const REDIS_URL = config.redis.url;
 
 let sharedClient: RedisClientType | undefined;
@@ -24,12 +27,14 @@ export default async function RedisConnection(): Promise<RedisClientType> {
     const client = createClient({ url: REDIS_URL }) as RedisClientType;
 
     client.on('error', (error: Error) => {
-      const code =
-        'code' in error &&
-        typeof error.code === 'string' &&
-        REDIS_CONNECTION_ERROR_CODES.has(error.code)
+      const errorCode =
+        'code' in error && typeof error.code === 'string' && REDIS_SAFE_ERROR_CODES.has(error.code)
           ? error.code
-          : 'UNKNOWN';
+          : undefined;
+      const authErrorPrefix = REDIS_AUTH_ERROR_PREFIXES.find(
+        (prefix) => error.message === prefix || error.message.startsWith(`${prefix} `),
+      );
+      const code = errorCode ?? authErrorPrefix ?? 'UNKNOWN';
 
       console.error(`Redis connection error (${code}).`);
     });
