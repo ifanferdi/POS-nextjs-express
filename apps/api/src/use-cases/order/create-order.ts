@@ -21,7 +21,7 @@ import {
   redisRemainingKey,
   selectItemDiscount,
 } from '@/helpers/discount.helper';
-import { ErrorBadRequest, ErrorConflict } from '@/helpers/error.helper';
+import { ErrorBadRequest, ErrorConflict, ErrorInternalServer } from '@/helpers/error.helper';
 import { Product, ProductDiscountCycle } from '@/infrastructure/database/prisma/generated/client';
 import { publishSSEEvent } from '@/infrastructure/event-stream/sse-redis-bridge';
 import BaseUseCase from '@/use-cases/_base-use-case';
@@ -219,9 +219,15 @@ export default class CreateOrder extends BaseUseCase {
   }
 
   private async restoreClaims(claims: Array<{ key: string; take: number }>) {
-    await Promise.allSettled(
+    const results = await Promise.allSettled(
       claims.map((claim) => this.repositories.redisRepository.incrBy(claim.key, claim.take)),
     );
+    const failedCount = results.filter((result) => result.status === 'rejected').length;
+
+    if (failedCount > 0) {
+      console.error(`Failed to restore ${failedCount} discount quota claim(s).`);
+      throw new ErrorInternalServer();
+    }
   }
 
   private async claimUnits(discount: ProductDiscountCycle, quantity: number) {
