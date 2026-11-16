@@ -11,8 +11,9 @@ import ProductDiscountCycleController from '@/adapters/http/controller/product-d
 import RoleController from '@/adapters/http/controller/role-controller';
 import UserController from '@/adapters/http/controller/user-controller';
 import express from '@/adapters/http/webserver/express';
+import config from '@/config/config';
 import { Controllers } from '@/domain/adapters/controller.interface';
-import { Repositories } from '@/domain/repositories/repositories.interface';
+import { Repositories, StorageRepository } from '@/domain/repositories/repositories.interface';
 import { UseCases } from '@/domain/use-cases/use-case.interface';
 import { prisma } from '@/infrastructure/database/prisma/prisma';
 import RedisConnection from '@/infrastructure/redis/redis-connection';
@@ -25,6 +26,7 @@ import ProductDiscountCycleRepository from '@/repositories/database/product-disc
 import ProductRepository from '@/repositories/database/product-repository';
 import RoleRepository from '@/repositories/database/role-repository';
 import UserRepository from '@/repositories/database/user-repository';
+import LocalStorageRepository from '@/repositories/filesystem/local-storage-repository';
 import S3StorageRepository from '@/repositories/filesystem/s3-storage-repository';
 import RedisRepository from '@/repositories/redis/redis-repository';
 import SendOtp from '@/use-cases/auth/2FA/send-otp';
@@ -136,9 +138,15 @@ async function setupRepositories(): Promise<Repositories> {
     paymentRepository: new PaymentRepository(prisma),
     dashboardRepository: new DashboardRepository(prisma),
     redisRepository: new RedisRepository(redisClient),
-    storageRepository: new S3StorageRepository(),
+    storageRepository: createStorageRepository(),
     midtransRepository: new MidtransRepository(),
   };
+}
+
+export function createStorageRepository(): StorageRepository {
+  return config.filesystem.toLowerCase() === 'local'
+    ? new LocalStorageRepository()
+    : new S3StorageRepository();
 }
 
 function setupUseCases(repositories: Repositories): UseCases {

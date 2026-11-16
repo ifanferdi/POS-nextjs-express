@@ -2,8 +2,8 @@ import { UserRelation } from '@/domain/entities/enums/user.enum';
 import { IProduct, ProductCategories } from '@/domain/entities/models/product';
 import { PartialRoleHasPermission } from '@/domain/entities/models/role';
 import { IUserProfile, UserRelationData } from '@/domain/entities/models/user';
+import { StorageRepository } from '@/domain/repositories/repositories.interface';
 import { ProductDiscountCycle } from '@/infrastructure/database/prisma/generated/client';
-import S3StorageRepository from '@/repositories/filesystem/s3-storage-repository';
 import { FindAllUserDto, FindByIdUserDto } from '@/validations/user-validation';
 import { isLink } from './common.helper';
 import { effectiveUnitDiscount, remainingQuota } from './discount.helper';
@@ -49,7 +49,7 @@ export function extractCategories(product: ProductCategories) {
 }
 
 export async function handleProductImageUrl(
-  storageRepository: S3StorageRepository,
+  storageRepository: StorageRepository,
   product: IProduct,
 ) {
   if (product.imagePath)
@@ -83,7 +83,7 @@ export function applyActiveDiscount(products: IProduct[], discounts: ProductDisc
 }
 
 export async function handleProfileImageUrl(
-  storageRepository: S3StorageRepository,
+  storageRepository: StorageRepository,
   user: Partial<IUserProfile>,
 ) {
   if (user.profile?.imagePath)

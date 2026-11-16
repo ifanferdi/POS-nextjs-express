@@ -7,11 +7,14 @@ import ProductDiscountCycleRepository from '@/repositories/database/product-disc
 import ProductRepository from '@/repositories/database/product-repository';
 import RoleRepository from '@/repositories/database/role-repository';
 import UserRepository from '@/repositories/database/user-repository';
+import LocalStorageRepository from '@/repositories/filesystem/local-storage-repository';
 import S3Filesystem from '@/repositories/filesystem/s3-storage-repository';
 import MidtransRepository from '@/repositories/midtrans/midtrans-repository';
 import { NodemailerRepository } from '@/repositories/nodemailer/nodemailer-repository';
 import RabbitmqRepository from '@/repositories/rabbitmq/rabbitmq-repository';
 import RedisRepository from '@/repositories/redis/redis-repository';
+
+export type StorageRepository = LocalStorageRepository | S3Filesystem;
 
 export interface Repositories extends ToolsRepository {
   userRepository: UserRepository;
@@ -28,7 +31,7 @@ export interface Repositories extends ToolsRepository {
 interface ToolsRepository {
   rabbitmqRepository?: RabbitmqRepository;
   redisRepository: RedisRepository;
-  storageRepository: S3Filesystem;
+  storageRepository: StorageRepository;
   nodemailerRepository?: NodemailerRepository;
   midtransRepository: MidtransRepository;
 }
