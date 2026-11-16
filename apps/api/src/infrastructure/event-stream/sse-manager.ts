@@ -12,6 +12,11 @@ class SseManager {
   addClient = (client: SSEClient) => this.clients.set(client.id, client);
   removeClient = (clientId: string) => this.clients.delete(clientId);
 
+  closeAll() {
+    for (const client of this.clients.values()) client.res.end();
+    this.clients.clear();
+  }
+
   // Kirim ke satu user spesifik (bisa ada multiple tab/device -> multiple clientId)
   sendToUser({ userId, event, data }: { userId: string; event: string; data: unknown }) {
     for (const client of this.clients.values()) {
