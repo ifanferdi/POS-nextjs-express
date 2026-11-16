@@ -12,12 +12,10 @@ export default async function RedisConnection(): Promise<RedisClientType> {
   connecting = (async () => {
     const client = createClient({ url: REDIS_URL }) as RedisClientType;
 
-    client.on('error', (error: Error) =>
-      console.error(`Redis has been disconnected cause: ${error.message}\n`, error.stack),
-    );
+    client.on('error', () => console.error('Redis connection error.'));
 
     await client.connect();
-    console.log(`✅  Redis connected to: ${REDIS_URL}`);
+    console.log('✅  Redis connected.');
 
     sharedClient = client;
     return client;
