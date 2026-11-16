@@ -26,10 +26,14 @@ export default class DeleteProduct extends BaseUseCase {
     } as any);
     if (!product) return;
 
+    const imagePath = (product as any).imagePath;
+    const storageRepository = this.repositories.storageRepository;
+    if (imagePath && 'validatePath' in storageRepository)
+      await storageRepository.validatePath(imagePath);
+
     const result = await this.repositories.productRepository.deletePermanently(id);
 
-    if ((product as any).imagePath)
-      await this.repositories.storageRepository?.delete((product as any).imagePath);
+    if (imagePath) await storageRepository.delete(imagePath);
 
     return result;
   }

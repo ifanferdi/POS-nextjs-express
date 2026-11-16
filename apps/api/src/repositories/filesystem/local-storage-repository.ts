@@ -78,6 +78,14 @@ export default class LocalStorageRepository {
     return realPath;
   }
 
+  async validatePath(key: string) {
+    try {
+      await this.resolveExistingPath(key);
+    } catch (error) {
+      if (!this.hasErrorCode(error, 'ENOENT')) throw error;
+    }
+  }
+
   async put(file: Buffer, key: string) {
     const { root, filePath } = await this.resolvePath(key, true);
     let targetPath = filePath;

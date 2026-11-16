@@ -25,10 +25,14 @@ export default class DeleteUser extends BaseUseCase {
     });
     if (!user) return;
 
+    const imagePath = user.profile.imagePath;
+    const storageRepository = this.repositories.storageRepository;
+    if (imagePath && 'validatePath' in storageRepository)
+      await storageRepository.validatePath(imagePath);
+
     const deletePermanently = await this.repositories.userRepository.deletePermanently(id);
 
-    if (user.profile.imagePath)
-      await this.repositories.storageRepository?.delete(user.profile.imagePath);
+    if (imagePath) await storageRepository.delete(imagePath);
 
     return deletePermanently;
   }
