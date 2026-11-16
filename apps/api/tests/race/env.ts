@@ -9,7 +9,8 @@ process.env.REDIS_URL = 'redis://localhost:6379/2';
 process.env.AUTH_MODE = 'stateful';
 process.env.FILESYSTEM = 'local';
 process.env.HASH_SECRET = process.env.HASH_SECRET || 'race-test-hash-secret';
-process.env.STORAGE_SECRET = process.env.STORAGE_SECRET || 'race-test-storage-secret';
+process.env.STORAGE_SECRET =
+  process.env.STORAGE_SECRET || 'race-test-storage-secret-0123456789abcdef';
 // MIDTRANS_SERVER_KEY / MIDTRANS_CLIENT_KEY are intentionally NOT set here: pass-through from the
 // machine env (or .env) so sandbox charges work without hardcoding credentials in the repo.
 
