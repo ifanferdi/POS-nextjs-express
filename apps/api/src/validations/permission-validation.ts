@@ -47,11 +47,12 @@ export const CheckValidPermissionSchema = z.object({
 export const ResetCachePermissionSchema = z
   .object({
     userId: NumberSchema.optional(),
-    roleId: NumberSchema.optional(),
+    userIds: z.array(NumberSchema).optional(),
+    roleId: z.union([NumberSchema, z.array(NumberSchema)]).optional(),
     permissionId: NumberSchema.optional(),
   })
   .superRefine((data, ctx) => {
-    if (!(data.userId || data.roleId || data.permissionId))
+    if (!(data.userId || data.userIds || data.roleId || data.permissionId))
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: `Must use one of ${Object.keys(data)} `,
