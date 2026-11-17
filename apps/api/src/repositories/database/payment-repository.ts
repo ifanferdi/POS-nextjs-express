@@ -113,7 +113,7 @@ export default class PaymentRepository extends DatabaseBaseRepository {
           },
         },
         include: { midtransDetail: true },
-      }) as Promise<T>;
+      }) as unknown as T;
     });
   }
 

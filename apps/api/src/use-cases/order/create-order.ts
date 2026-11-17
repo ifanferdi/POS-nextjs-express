@@ -153,7 +153,7 @@ export default class CreateOrder extends BaseUseCase {
     if (!order?.payment) throw new ErrorConflict('Pesanan menunggu rekonsiliasi Midtrans.');
 
     if (order.status === OrderStatus.COMPLETED) return this.cacheRecoveredOrder(key, order);
-    if ([OrderStatus.CANCELLED, OrderStatus.EXPIRED].includes(order.status)) {
+    if ([OrderStatus.CANCELLED, OrderStatus.EXPIRED].some((status) => status === order.status)) {
       await this.repositories.redisRepository.store({
         key,
         value: IDEMPOTENCY_CHARGE_FAILED,
@@ -391,7 +391,7 @@ export default class CreateOrder extends BaseUseCase {
       if (status?.transaction_status === 'pending') {
         chargeResult = status;
       } else if (
-        !status ||
+        status &&
         ['deny', 'cancel', 'expire', 'failure'].includes(status.transaction_status)
       ) {
         await this.releaseFailedOnlineOrder(order);
