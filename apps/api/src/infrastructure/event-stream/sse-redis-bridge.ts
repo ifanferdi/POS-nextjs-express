@@ -12,10 +12,9 @@ subscriber.connect();
 type SSEScope = (typeof config.sse.scope)[number];
 type SSEMessage = {
   scope?: SSEScope;
-  userId?: string;
   action: string;
   entity: string;
-  data: Record<string, any>[];
+  data: unknown[];
 };
 
 export async function initSSERedisBridge() {
@@ -24,17 +23,45 @@ export async function initSSERedisBridge() {
       try {
         const payload: SSEMessage = JSON.parse(message);
         const event = `${payload.entity}.${payload.action}`;
-        const data = {
-          entity: payload.entity,
-          action: payload.action,
-          event,
-          data: payload.data,
-        };
 
-        if (payload.userId) {
-          sseManager.sendToUser({ userId: payload.userId, event, data });
-        } else {
-          sseManager.broadcast({ event, data });
+        if (payload.scope === 'order' && payload.entity === 'order') {
+          const updates = payload.data.flatMap((record) => {
+            if (typeof record !== 'object' || record === null) return [];
+            const order = record as Record<string, unknown>;
+
+            if (
+              typeof order.id !== 'number' ||
+              typeof order.userId !== 'number' ||
+              typeof order.orderNumber !== 'string' ||
+              typeof order.status !== 'string'
+            )
+              return [];
+
+            return [
+              {
+                ownerUserId: String(order.userId),
+                data: {
+                  id: order.id,
+                  orderNumber: order.orderNumber,
+                  status: order.status,
+                },
+              },
+            ];
+          });
+
+          sseManager.sendOrderUpdates({
+            event,
+            entity: payload.entity,
+            action: payload.action,
+            updates,
+          });
+        } else if (payload.scope === 'product' && payload.entity === 'product') {
+          sseManager.sendProductUpdate({
+            event,
+            entity: payload.entity,
+            action: payload.action,
+            data: payload.data,
+          });
         }
 
         // Data order/payment/product berubah → cache dashboard langsung di-invalidasi

@@ -3,7 +3,19 @@ import { Response } from 'express';
 type SSEClient = {
   id: string;
   userId: string;
+  canReadOrders: boolean;
+  canReadProducts: boolean;
+  canReadAllOrders: boolean;
   res: Response;
+};
+
+type SSEOrderUpdate = {
+  ownerUserId: string;
+  data: {
+    id: number;
+    orderNumber: string;
+    status: string;
+  };
 };
 
 class SseManager {
@@ -12,17 +24,41 @@ class SseManager {
   addClient = (client: SSEClient) => this.clients.set(client.id, client);
   removeClient = (clientId: string) => this.clients.delete(clientId);
 
-  // Kirim ke satu user spesifik (bisa ada multiple tab/device -> multiple clientId)
-  sendToUser({ userId, event, data }: { userId: string; event: string; data: unknown }) {
+  sendOrderUpdates({
+    event,
+    entity,
+    action,
+    updates,
+  }: {
+    event: string;
+    entity: string;
+    action: string;
+    updates: SSEOrderUpdate[];
+  }) {
     for (const client of this.clients.values()) {
-      if (client.userId === userId) this.write(client.res, event, data);
+      if (!client.canReadOrders) continue;
+
+      const data = updates
+        .filter((update) => client.canReadAllOrders || update.ownerUserId === client.userId)
+        .map((update) => update.data);
+
+      if (data.length) this.write(client.res, event, { entity, action, event, data });
     }
   }
 
-  // Broadcast ke semua client yang terhubung di instance ini
-  broadcast({ event, data }: { event: string; data: unknown }) {
+  sendProductUpdate({
+    event,
+    entity,
+    action,
+    data,
+  }: {
+    event: string;
+    entity: string;
+    action: string;
+    data: unknown;
+  }) {
     for (const client of this.clients.values()) {
-      this.write(client.res, event, data);
+      if (client.canReadProducts) this.write(client.res, event, { entity, action, event, data });
     }
   }
 

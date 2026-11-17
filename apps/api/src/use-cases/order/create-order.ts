@@ -203,7 +203,14 @@ export default class CreateOrder extends BaseUseCase {
       scope: 'order',
       entity: 'order',
       action: 'create',
-      data: [order],
+      data: [
+        {
+          id: order.id,
+          userId: order.userId,
+          orderNumber: order.orderNumber,
+          status: order.status,
+        },
+      ],
     });
     await publishSSEEvent({
       scope: 'product',

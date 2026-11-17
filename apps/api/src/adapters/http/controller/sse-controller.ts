@@ -4,7 +4,7 @@ import { Request, Response } from 'express';
 
 export default class SseController {
   sseHandler = async (req: Request & Record<string, any>, res: Response) => {
-    const userId = req.user!.id; // asumsi udah lewat auth middleware
+    const userId = String(req.user!.id);
     const clientId = randomUUID();
 
     res.writeHead(200, {
@@ -15,7 +15,12 @@ export default class SseController {
     });
 
     res.write('\n');
-    sseManager.addClient({ id: clientId, userId, res });
+    sseManager.addClient({
+      id: clientId,
+      userId,
+      ...res.locals.sseAccess,
+      res,
+    });
 
     // Heartbeat biar koneksi gak di-timeout proxy/LB
     const heartbeat = setInterval(() => res.write(': heartbeat\n\n'), 30_000);

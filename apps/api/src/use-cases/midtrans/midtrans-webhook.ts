@@ -63,7 +63,16 @@ export default class MidtransWebhook extends BaseUseCase {
       scope: 'order',
       entity: 'order',
       action: 'status',
-      data: updatedOrder ? [updatedOrder] : [],
+      data: updatedOrder
+        ? [
+            {
+              id: updatedOrder.id,
+              userId: updatedOrder.userId,
+              orderNumber: updatedOrder.orderNumber,
+              status: updatedOrder.status,
+            },
+          ]
+        : [],
     });
 
     return updatedOrder;
