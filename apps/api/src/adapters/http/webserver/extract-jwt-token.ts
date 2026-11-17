@@ -5,6 +5,7 @@ import asyncHandler from 'express-async-handler';
 
 const EXACT_WHITE_LIST = [
   '/api/v1/auth/sign-in',
+  '/api/v1/auth/verify-otp',
   '/api/v1/auth/refresh-token',
   '/api/v1/webhooks/midtrans',
 ];
@@ -29,7 +30,9 @@ export default (useCases: UseCases) =>
         if (token === '' || token === 'Bearer')
           return next(new ErrorUnauthorized('Bearer token is required.'));
 
-        const tokenData = await useCases.authUseCase.checkToken.execute({ token });
+        const tokenData = await useCases.authUseCase.checkToken.execute({
+          token,
+        });
 
         req.headers.userId = String(tokenData.id);
         req.user = tokenData;

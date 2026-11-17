@@ -1,5 +1,4 @@
-import e from 'express';
-import asyncHandler from 'express-async-handler';
+import BaseController from '@/adapters/http/controller/_base-controller';
 import { IUser } from '@/domain/entities/models/user';
 import { extractUserId } from '@/helpers/common.helper';
 import {
@@ -12,7 +11,8 @@ import {
   VerifyOtpSchema,
 } from '@/validations/auth-validation';
 import { BaseFindById } from '@/validations/base-validation';
-import BaseController from '@/adapters/http/controller/_base-controller';
+import e from 'express';
+import asyncHandler from 'express-async-handler';
 
 export default class AuthController extends BaseController {
   signIn = asyncHandler(async (req: e.Request, res: e.Response) => {
@@ -31,7 +31,9 @@ export default class AuthController extends BaseController {
   });
 
   signOut = asyncHandler(async (req: e.Request & Record<string, any>, res: e.Response) => {
-    await this.useCases.authUseCase.signOut.execute({ sessionId: req.user?.sessionId });
+    await this.useCases.authUseCase.signOut.execute({
+      sessionId: req.user?.sessionId,
+    });
 
     res.json({ message: 'Success' });
   });
@@ -66,11 +68,14 @@ export default class AuthController extends BaseController {
   });
 
   verifyOTP = asyncHandler(async (req: e.Request, res: e.Response) => {
-    const params = { otp: req.body.otp, userId: extractUserId(req) };
-    VerifyOtpSchema.parse(params);
+    const params: VerifyOtpDto = VerifyOtpSchema.parse({
+      otp: req.body.otp,
+      userId: req.body.userId,
+      challengeId: req.body.challengeId,
+    });
 
-    const _verifyOTP = await this.useCases.authUseCase.verifyOtp.execute(params as VerifyOtpDto);
+    const verified = await this.useCases.authUseCase.verifyOtp.execute(params);
 
-    res.json({ message: 'Success', ..._verifyOTP });
+    res.json({ message: 'Success', ...verified });
   });
 }

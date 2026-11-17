@@ -8,6 +8,7 @@ import * as jwt from '@/helpers/jwt.helper';
 import * as password from '@/helpers/password.helper';
 import * as refreshTokenHelper from '@/helpers/refresh-token.helper';
 import BaseUseCase from '@/use-cases/_base-use-case';
+import SendOtp from '@/use-cases/auth/2FA/send-otp';
 import { SignInAuthDto } from '@/validations/auth-validation';
 import _ from 'lodash';
 
@@ -20,8 +21,7 @@ const LOGIN_RATE_LIMIT_NUM = Number(config.auth.loginRateLimitNum);
 const LOGIN_RATE_LIMIT_TIME = config.auth.loginRateLimitTime;
 
 export default class SignIn extends BaseUseCase {
-  getToken = (user: IUser & {  sessionId?: string }) =>
-    jwt.hash(user, TOKEN_TIMEOUT);
+  getToken = (user: IUser & { sessionId?: string }) => jwt.hash(user, TOKEN_TIMEOUT);
 
   // Anti brute-force: hitung kegagalan per IP+username, bukan per permintaan,
   // agar login sukses tidak ikut terhitung.
@@ -29,7 +29,8 @@ export default class SignIn extends BaseUseCase {
 
   private async countFailure(key: string) {
     const count = Number(await this.repositories.redisRepository.incr(key));
-    if (count === 1) await this.repositories.redisRepository.expire(key, ttl(LOGIN_RATE_LIMIT_TIME));
+    if (count === 1)
+      await this.repositories.redisRepository.expire(key, ttl(LOGIN_RATE_LIMIT_TIME));
   }
 
   async execute(params: SignInAuthDto & { ipAddress?: string }) {
@@ -60,16 +61,26 @@ export default class SignIn extends BaseUseCase {
 
     const userWithoutPassword = _.omit(user, 'password') as IUser;
 
-    if (AUTH_MODE === 'stateful') return await this.handleStatefulMode(userWithoutPassword);
+    if (IS_USE_2FA) {
+      const challengeId = await new SendOtp(this.repositories).execute(userWithoutPassword);
 
-    const token = this.getToken(userWithoutPassword);
+      return { requiresOtp: true, userId: userWithoutPassword.id, challengeId };
+    }
 
-    return { token, user: userWithoutPassword };
+    return await this.createAuthResponse(userWithoutPassword);
+  }
+
+  async createAuthResponse(user: IUser) {
+    if (AUTH_MODE === 'stateful') return await this.handleStatefulMode(user);
+
+    const token = this.getToken(user);
+
+    return { token, user };
   }
 
   async handleStatefulMode(user: IUser, sessionId?: string) {
     const session = refreshTokenHelper.generate(sessionId);
-    const token = this.getToken({ ...user,  sessionId: session.sessionId });
+    const token = this.getToken({ ...user, sessionId: session.sessionId });
     const { exp } = jwt.verify(token);
 
     const redisDataAuth: RedisDataAuth = {

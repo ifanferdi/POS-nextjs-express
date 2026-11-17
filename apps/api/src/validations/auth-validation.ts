@@ -5,11 +5,14 @@ export const SignInAuthSchema = z.object({
   username: Username.min(1, 'Username cannot be empty.'),
   password: Password,
 });
-export const TokenSchema = z.object({ token: StringSchema.min(1, 'Token cannot be empty.') });
+export const TokenSchema = z.object({
+  token: StringSchema.min(1, 'Token cannot be empty.'),
+});
 export const ResendOtpSchema = z.object({ userId: NumberSchema });
 export const VerifyOtpSchema = z.object({
   otp: StringSchema.min(1, 'Otp cannot be empty.'),
   userId: NumberSchema,
+  challengeId: z.string().uuid(),
 });
 
 export interface SignInAuthDto extends z.infer<typeof SignInAuthSchema> {
