@@ -90,6 +90,46 @@ describe('order cancellation API and database outcomes', () => {
     expect(await getStock(productId)).toBe(initialStock);
   });
 
+  it('cancels a pending online order and restores stock once under a race', async () => {
+    const order = await seedPendingOnlineOrder({
+      userId,
+      items: [{ productId, quantity: 1, unitPrice: 10000 }],
+    });
+    const initialStock = await getStock(productId);
+    const responses = await Promise.all([
+      postJson(`/api/v1/orders/${order.id}/cancel`, token, {}),
+      postJson(`/api/v1/orders/${order.id}/cancel`, token, {}),
+    ]);
+
+    const updated = await getOrderByNumber(order.orderNumber);
+    expect(responses.map(({ status }) => status)).toEqual([200, 200]);
+    expect(updated?.status).toBe('cancelled');
+    expect(updated?.payment?.status).toBe('cancelled');
+    expect(await getStock(productId)).toBe((initialStock ?? 0) + 1);
+  });
+
+  it('keeps expired orders terminal and rolls back a losing payment claim', async () => {
+    const order = await seedPendingOnlineOrder({
+      userId,
+      items: [{ productId, quantity: 1, unitPrice: 10000 }],
+    });
+    await db.order.update({ where: { id: order.id }, data: { status: 'expired' } });
+    const initialStock = await getStock(productId);
+    const response = await fetch(`${baseUrl()}/api/v1/orders/${order.id}/status`, {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'completed' }),
+    });
+
+    expect(response.status).toBe(400);
+    expect((await postJson(`/api/v1/orders/${order.id}/cancel`, token, {})).status).toBe(200);
+
+    const updated = await getOrderByNumber(order.orderNumber);
+    expect(updated?.status).toBe('expired');
+    expect(updated?.payment?.status).toBe('pending');
+    expect(await getStock(productId)).toBe(initialStock);
+  });
+
   it('rejects a paid online cancellation without changing order, payment, or stock', async () => {
     const order = await seedPendingOnlineOrder({
       userId,

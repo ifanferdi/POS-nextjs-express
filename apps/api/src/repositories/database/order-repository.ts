@@ -15,6 +15,8 @@ import {
   UpdateOrderStatusDto,
 } from '@/validations/order-validation';
 
+const ORDER_ALREADY_TERMINAL = Symbol('order-already-terminal');
+
 export default class OrderRepository
   extends DatabaseBaseRepository
   implements
@@ -150,54 +152,66 @@ export default class OrderRepository
     const { id, ...updateData } = data;
     return this.prisma.$transaction(async (tx) => {
       const result = await tx.order.updateMany({
-        where: { id, status: { not: OrderStatus.CANCELLED } },
+        where: { id, status: { notIn: [OrderStatus.CANCELLED, OrderStatus.EXPIRED] } },
         data: updateData,
       });
       if (result.count === 0)
-        throw new ErrorBadRequest('Status pesanan yang dibatalkan tidak dapat diubah.');
+        throw new ErrorBadRequest('Status pesanan terminal tidak dapat diubah.');
 
       return (await tx.order.findUniqueOrThrow({ where: { id } })) as T;
     });
   }
 
   cancelOrder(id: number) {
-    return this.prisma.$transaction(async (tx) => {
-      const payment = await tx.payment.findUnique({ where: { orderId: id } });
+    return this.prisma
+      .$transaction(async (tx) => {
+        const payment = await tx.payment.findUnique({ where: { orderId: id } });
+        let paymentClaimed = false;
 
-      if (payment && payment.method !== PaymentMethod.CASH) {
-        const paymentClaim = await tx.payment.updateMany({
-          where: { orderId: id, status: PaymentStatus.PENDING },
-          data: { status: PaymentStatus.CANCELLED },
-        });
+        if (payment && payment.method !== PaymentMethod.CASH) {
+          const paymentClaim = await tx.payment.updateMany({
+            where: { orderId: id, status: PaymentStatus.PENDING },
+            data: { status: PaymentStatus.CANCELLED },
+          });
+          paymentClaimed = paymentClaim.count > 0;
 
-        if (paymentClaim.count === 0) {
-          const currentPayment = await tx.payment.findUnique({ where: { orderId: id } });
-          if (currentPayment?.status === PaymentStatus.SUCCESS)
-            throw new ErrorBadRequest('Pesanan online yang sudah dibayar tidak dapat dibatalkan.');
+          if (paymentClaim.count === 0) {
+            const currentPayment = await tx.payment.findUnique({ where: { orderId: id } });
+            if (currentPayment?.status === PaymentStatus.SUCCESS)
+              throw new ErrorBadRequest(
+                'Pesanan online yang sudah dibayar tidak dapat dibatalkan.',
+              );
+          }
         }
-      }
 
-      const orderClaim = await tx.order.updateMany({
-        where: { id, status: { notIn: [OrderStatus.CANCELLED, OrderStatus.EXPIRED] } },
-        data: { status: OrderStatus.CANCELLED },
-      });
-      if (orderClaim.count === 0) return;
-
-      const order = await tx.order.findUniqueOrThrow({
-        where: { id },
-        include: { orderItems: true },
-      });
-
-      for (const item of order.orderItems) {
-        if (!item.productId) continue;
-        await tx.product.update({
-          where: { id: item.productId },
-          data: { stock: { increment: item.quantity } },
+        const orderClaim = await tx.order.updateMany({
+          where: { id, status: { notIn: [OrderStatus.CANCELLED, OrderStatus.EXPIRED] } },
+          data: { status: OrderStatus.CANCELLED },
         });
-      }
+        if (orderClaim.count === 0) {
+          if (paymentClaimed) throw ORDER_ALREADY_TERMINAL;
+          return;
+        }
 
-      return orderClaim;
-    });
+        const order = await tx.order.findUniqueOrThrow({
+          where: { id },
+          include: { orderItems: true },
+        });
+
+        for (const item of order.orderItems) {
+          if (!item.productId) continue;
+          await tx.product.update({
+            where: { id: item.productId },
+            data: { stock: { increment: item.quantity } },
+          });
+        }
+
+        return orderClaim;
+      })
+      .catch((error: unknown) => {
+        if (error === ORDER_ALREADY_TERMINAL) return;
+        throw error;
+      });
   }
 
   /**
