@@ -20,9 +20,21 @@ type SSEOrderUpdate = {
 
 class SseManager {
   private clients: Map<string, SSEClient> = new Map();
+  private isClosing = false;
 
-  addClient = (client: SSEClient) => this.clients.set(client.id, client);
+  addClient = (client: SSEClient): boolean => {
+    if (this.isClosing) return false;
+
+    this.clients.set(client.id, client);
+    return true;
+  };
   removeClient = (clientId: string) => this.clients.delete(clientId);
+
+  closeAll() {
+    this.isClosing = true;
+    for (const client of this.clients.values()) client.res.end();
+    this.clients.clear();
+  }
 
   sendOrderUpdates({
     event,
