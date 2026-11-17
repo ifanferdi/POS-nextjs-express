@@ -50,6 +50,7 @@ export interface StoreOrderDtoItems {
 }
 
 export interface StoreOrderDto {
+  idempotencyKey?: string;
   customerId?: number;
   userId?: number;
   subtotal: number;

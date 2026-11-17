@@ -5,7 +5,7 @@ import { StoreOrderDto, StoreOrderResponse } from '@/domain/entities/models/orde
 import { Repository } from '@/domain/repositories/database.interface';
 import { ErrorBadRequest } from '@/helpers/error.helper';
 import { generateOrderNumber } from '@/helpers/generate-string';
-import { Order, Prisma } from '@/infrastructure/database/prisma/generated/client';
+import { Order, OrderItem, Prisma } from '@/infrastructure/database/prisma/generated/client';
 import DatabaseBaseRepository from '@/repositories/database/_database-base-repository';
 import QueryOrderRepository from '@/repositories/database/queries/query-order-repository';
 import {
@@ -16,6 +16,23 @@ import {
 } from '@/validations/order-validation';
 
 const ORDER_ALREADY_TERMINAL = Symbol('order-already-terminal');
+
+function discountClaimsFromItems(items: OrderItem[]) {
+  const used = new Map<number, number>();
+  const quota = new Map<number, number>();
+  for (const item of items) {
+    if (!item.meta || Array.isArray(item.meta) || typeof item.meta !== 'object') continue;
+    const discount = item.meta.discount;
+    const discountQty = item.meta.discountQty;
+    if (!discount || Array.isArray(discount) || typeof discount !== 'object') continue;
+    const discountId = discount.id;
+    if (typeof discountId !== 'number' || typeof discountQty !== 'number') continue;
+    used.set(discountId, (used.get(discountId) ?? 0) + discountQty);
+    if (typeof discount.quota === 'number')
+      quota.set(discountId, (quota.get(discountId) ?? 0) + discountQty);
+  }
+  return { used, quota: [...quota] as Array<[number, number]> };
+}
 
 export default class OrderRepository
   extends DatabaseBaseRepository
@@ -60,6 +77,13 @@ export default class OrderRepository
         ...this.queryOrderRepository.handleInclude(params?.with),
       },
     }) as Promise<T | null>;
+  }
+
+  async findByIdempotencyKey(userId: number, idempotencyKey: string) {
+    return this.prisma.order.findFirst({
+      where: { userId, idempotencyKey },
+      select: { id: true, orderNumber: true },
+    });
   }
 
   async store<T = StoreOrderResponse>(data: StoreOrderDto) {
@@ -237,37 +261,34 @@ export default class OrderRepository
           where: { id },
           include: { orderItems: true },
         });
-        const discountClaims = new Map<number, number>();
-        const quotaClaims = new Map<number, number>();
         for (const item of order.orderItems) {
           if (item.productId)
             await tx.product.update({
               where: { id: item.productId },
               data: { stock: { increment: item.quantity } },
             });
-          if (!item.meta || Array.isArray(item.meta) || typeof item.meta !== 'object') continue;
-          const discount = item.meta.discount;
-          const discountQty = item.meta.discountQty;
-          if (!discount || Array.isArray(discount) || typeof discount !== 'object') continue;
-          const discountId = discount.id;
-          if (typeof discountId !== 'number' || typeof discountQty !== 'number') continue;
-
-          discountClaims.set(discountId, (discountClaims.get(discountId) ?? 0) + discountQty);
-          if (typeof discount.quota === 'number')
-            quotaClaims.set(discountId, (quotaClaims.get(discountId) ?? 0) + discountQty);
         }
-        for (const [discountId, quantity] of discountClaims)
-          await tx.productDiscountCycle.update({
+        const discountClaims = discountClaimsFromItems(order.orderItems);
+        for (const [discountId, quantity] of discountClaims.used)
+          await tx.productDiscountCycle.updateMany({
             where: { id: discountId },
             data: { usedQty: { decrement: quantity } },
           });
 
-        return { discountClaims: [...quotaClaims], order };
+        return { discountClaims: discountClaims.quota, order };
       })
       .catch((error: unknown) => {
         if (error === ORDER_ALREADY_TERMINAL) return null;
         throw error;
       });
+  }
+
+  async failedOnlineChargeQuotaClaims(id: number) {
+    const order = await this.prisma.order.findFirst({
+      where: { id, status: OrderStatus.CANCELLED, payment: { status: PaymentStatus.FAILED } },
+      include: { orderItems: true },
+    });
+    return order ? discountClaimsFromItems(order.orderItems).quota : null;
   }
 
   /**

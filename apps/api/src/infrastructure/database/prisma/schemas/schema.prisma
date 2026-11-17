@@ -180,24 +180,26 @@ model ProductHasCategory {
 }
 
 model Order {
-  id            Int         @id @default(autoincrement())
-  customerId    Int?
-  userId        Int?
-  orderNumber   String      @unique @db.VarChar(50)
-  subtotal      Int         @default(0)
-  totalDiscount Int         @default(0)
-  total         Int         @default(0)
-  status        OrderStatus @default(pending)
-  notes         String?     @db.Text
-  meta          Json?
-  createdAt     DateTime    @default(now()) @db.Timestamptz
-  updatedAt     DateTime    @updatedAt @db.Timestamptz
+  id             Int         @id @default(autoincrement())
+  customerId     Int?
+  userId         Int?
+  orderNumber    String      @unique @db.VarChar(50)
+  idempotencyKey String?     @db.Uuid
+  subtotal       Int         @default(0)
+  totalDiscount  Int         @default(0)
+  total          Int         @default(0)
+  status         OrderStatus @default(pending)
+  notes          String?     @db.Text
+  meta           Json?
+  createdAt      DateTime    @default(now()) @db.Timestamptz
+  updatedAt      DateTime    @updatedAt @db.Timestamptz
 
   customer   User?       @relation("OrderCustomer", fields: [customerId], references: [id], onDelete: SetNull)
   user       User?       @relation("OrderCashier", fields: [userId], references: [id], onDelete: SetNull)
   orderItems OrderItem[]
   payment    Payment?
 
+  @@unique([userId, idempotencyKey])
   @@index([orderNumber], name: "orders_order_number_index")
   @@map("orders")
 }

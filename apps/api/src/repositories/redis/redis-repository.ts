@@ -1,6 +1,7 @@
 import { RedisStore } from '@/domain/entities/types/redis.types';
 import { RedisClientType } from '@/domain/infrastructures/redis.interfaces';
 import { isJsonValue } from '@/helpers/common.helper';
+import { redisRemainingKey } from '@/helpers/discount.helper';
 import _ from 'lodash';
 
 /**
@@ -16,6 +17,21 @@ remaining = tonumber(remaining)
 local take = math.min(tonumber(ARGV[1]), remaining)
 if take > 0 then redis.call('DECRBY', KEYS[1], take) end
 return take
+`;
+
+const RESTORE_QUOTA_ONCE_SCRIPT = `
+if redis.call('EXISTS', KEYS[1]) == 1 then return 0 end
+for i = 2, #KEYS do
+  local value = redis.call('GET', KEYS[i])
+  if value and not tonumber(value) then return redis.error_reply('invalid quota counter') end
+end
+for i = 2, #KEYS do
+  if redis.call('EXISTS', KEYS[i]) == 1 then
+    redis.call('INCRBY', KEYS[i], ARGV[i - 1])
+  end
+end
+redis.call('SET', KEYS[1], '1')
+return 1
 `;
 
 export default class RedisRepository {
@@ -78,6 +94,18 @@ export default class RedisRepository {
 
   async incrBy(key: string, delta: number) {
     return await this.redis.incrBy(key, delta);
+  }
+
+  async restoreQuotaOnce(orderId: number, claims: Array<[number, number]>) {
+    return Number(
+      await this.redis.eval(RESTORE_QUOTA_ONCE_SCRIPT, {
+        keys: [
+          `order:quota-compensated:${orderId}`,
+          ...claims.map(([discountId]) => redisRemainingKey(discountId)),
+        ],
+        arguments: claims.map(([, quantity]) => String(quantity)),
+      }),
+    );
   }
 
   /** Raw GET counter; null kalau key belum ada (perlu rebuild dari tabel). */

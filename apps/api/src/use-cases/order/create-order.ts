@@ -1,6 +1,6 @@
 import config from '@/config/config';
 import { OrderRelation, OrderStatus } from '@/domain/entities/enums/order.enum';
-import { PaymentMethod } from '@/domain/entities/enums/payment.enum';
+import { PaymentMethod, PaymentStatus } from '@/domain/entities/enums/payment.enum';
 import { UserRelation } from '@/domain/entities/enums/user.enum';
 import {
   MetaOrder,
@@ -58,6 +58,12 @@ class ChargeOutcomeUncertainError extends ErrorInternalServer {
   }
 }
 
+class PreChargeFailureError extends ErrorInternalServer {
+  constructor() {
+    super('Pesanan gagal sebelum pembayaran dikirim. Stok dan kuota promo sudah dipulihkan.');
+  }
+}
+
 type UncertainIdempotencyRecord = {
   state: 'uncertain';
   orderId: number;
@@ -74,6 +80,17 @@ export default class CreateOrder extends BaseUseCase {
 
   async execute(payload: CreateOrderDto) {
     const key = this.idempotencyKey(payload.userId, payload.idempotencyKey);
+
+    const existing = await this.repositories.orderRepository.findByIdempotencyKey(
+      payload.userId,
+      payload.idempotencyKey,
+    );
+    if (existing)
+      return this.reconcileUncertainOrder(key, {
+        state: 'uncertain',
+        orderId: existing.id,
+        orderNumber: existing.orderNumber,
+      });
 
     const cached = await this.repositories.redisRepository.findOne(key);
     if (cached === IDEMPOTENCY_CHARGE_FAILED) throw new ChargeFailureError();
@@ -103,7 +120,7 @@ export default class CreateOrder extends BaseUseCase {
       });
       return { isIdempoten: false, data };
     } catch (error) {
-      if (error instanceof ChargeFailureError) {
+      if (error instanceof ChargeFailureError || error instanceof PreChargeFailureError) {
         await this.repositories.redisRepository.store({
           key,
           value: IDEMPOTENCY_CHARGE_FAILED,
@@ -154,6 +171,7 @@ export default class CreateOrder extends BaseUseCase {
 
     if (order.status === OrderStatus.COMPLETED) return this.cacheRecoveredOrder(key, order);
     if ([OrderStatus.CANCELLED, OrderStatus.EXPIRED].some((status) => status === order.status)) {
+      if (order.payment.status === PaymentStatus.FAILED) await this.restoreFailedQuota(order.id);
       await this.repositories.redisRepository.store({
         key,
         value: IDEMPOTENCY_CHARGE_FAILED,
@@ -174,6 +192,8 @@ export default class CreateOrder extends BaseUseCase {
       await this.updateMidtransPayment(order, status);
       return this.cacheRecoveredOrder(key, order);
     }
+    if (this.isSuccessfulMidtransStatus(status))
+      return this.completeRecoveredOrder(key, order, status);
     if (['deny', 'cancel', 'expire', 'failure'].includes(status.transaction_status)) {
       try {
         await this.releaseFailedOnlineOrder(order);
@@ -200,6 +220,49 @@ export default class CreateOrder extends BaseUseCase {
       logging: false,
     });
     return { isIdempoten: true, data };
+  }
+
+  private isSuccessfulMidtransStatus(status: MidtransChargeResponse) {
+    return (
+      ['capture', 'settlement'].includes(status.transaction_status) &&
+      (!status.fraud_status || status.fraud_status === 'accept')
+    );
+  }
+
+  private async completeRecoveredOrder(
+    key: string,
+    order: StoreOrderResponse,
+    status: MidtransChargeResponse,
+  ) {
+    await this.repositories.orderRepository.midtransPaymentSuccess(
+      { id: order.id, status: OrderStatus.COMPLETED },
+      {
+        id: order.payment.id,
+        status: PaymentStatus.SUCCESS,
+        paidAt: status.settlement_time ? new Date(status.settlement_time) : new Date(),
+        midtransDetail: {
+          midtransOrderId: order.orderNumber,
+          transactionId: status.transaction_id,
+          paymentType: status.payment_type,
+          transactionStatus: status.transaction_status,
+          fraudStatus: status.fraud_status,
+          signatureVerified: true,
+          rawNotification: status as unknown as Record<string, any>,
+        },
+      },
+    );
+    const updated = await this.repositories.orderRepository.findOne<StoreOrderResponse>({
+      id: order.id,
+      with: [
+        OrderRelation.ORDER_ITEMS_PRODUCT,
+        OrderRelation.PAYMENT,
+        OrderRelation.PAYMENT_MIDTRANS,
+        OrderRelation.USER_PROFILE,
+      ],
+    });
+    if (!updated || updated.status !== OrderStatus.COMPLETED)
+      throw new ErrorConflict('Pesanan menunggu rekonsiliasi Midtrans.');
+    return this.cacheRecoveredOrder(key, updated);
   }
 
   private async waitForIdempotency(
@@ -294,6 +357,7 @@ export default class CreateOrder extends BaseUseCase {
     const amount = isOnlinePayment ? total : (payload.amount ?? 0);
 
     const storeInput: StoreOrderDto = {
+      idempotencyKey: payload.idempotencyKey,
       userId: payload.userId,
       subtotal,
       totalDiscount,
@@ -333,7 +397,13 @@ export default class CreateOrder extends BaseUseCase {
           logging: false,
         });
       } catch {
-        throw new ChargeOutcomeUncertainError(order.id, order.orderNumber);
+        try {
+          await this.releaseFailedOnlineOrder(order);
+        } catch (error) {
+          if (error instanceof ChargeFailureError) throw new PreChargeFailureError();
+          throw error;
+        }
+        throw new PreChargeFailureError();
       }
       return await this.handleOnlinePayment(order, total, computedItems, payload);
     }
@@ -388,7 +458,10 @@ export default class CreateOrder extends BaseUseCase {
         throw new ChargeOutcomeUncertainError(order.id, order.orderNumber);
       }
 
-      if (status?.transaction_status === 'pending') {
+      if (
+        status &&
+        (status.transaction_status === 'pending' || this.isSuccessfulMidtransStatus(status))
+      ) {
         chargeResult = status;
       } else if (
         status &&
@@ -403,9 +476,20 @@ export default class CreateOrder extends BaseUseCase {
     if (!chargeResult) throw new ChargeOutcomeUncertainError(order.id, order.orderNumber);
     if (['deny', 'cancel', 'expire', 'failure'].includes(chargeResult.transaction_status))
       await this.releaseFailedOnlineOrder(order);
+    if (this.isSuccessfulMidtransStatus(chargeResult)) {
+      const recovered = await this.completeRecoveredOrder(
+        this.idempotencyKey(payload.userId, payload.idempotencyKey),
+        order,
+        chargeResult,
+      );
+      return { order: recovered.data.order };
+    }
+
+    if (chargeResult.transaction_status !== 'pending')
+      throw new ChargeOutcomeUncertainError(order.id, order.orderNumber);
 
     const vaNumber = chargeResult.va_numbers?.[0]?.va_number || chargeResult.bill_key;
-    const qrCodeUrl = chargeResult.actions?.find((a) => a.name === 'generate-qr-code')?.url;
+    const qrCodeUrl = this.qrCodeUrl(order, chargeResult);
 
     await this.updateMidtransPayment(order, chargeResult);
 
@@ -427,11 +511,7 @@ export default class CreateOrder extends BaseUseCase {
     if (!failedOrder) throw new ChargeOutcomeUncertainError(order.id, order.orderNumber);
 
     try {
-      await Promise.all(
-        failedOrder.discountClaims.map(([discountId, quantity]) =>
-          this.repositories.redisRepository.incrBy(redisRemainingKey(discountId), quantity),
-        ),
-      );
+      await this.restoreFailedQuota(order.id);
     } catch {
       throw new ChargeOutcomeUncertainError(order.id, order.orderNumber);
     }
@@ -454,9 +534,25 @@ export default class CreateOrder extends BaseUseCase {
     throw new ChargeFailureError();
   }
 
+  private async restoreFailedQuota(orderId: number) {
+    const claims = await this.repositories.orderRepository.failedOnlineChargeQuotaClaims(orderId);
+    if (!claims) throw new ErrorConflict('Pesanan menunggu rekonsiliasi Midtrans.');
+    await this.repositories.redisRepository.restoreQuotaOnce(orderId, claims);
+  }
+
+  private qrCodeUrl(order: StoreOrderResponse, status: MidtransChargeResponse) {
+    return (
+      status.actions?.find((action) => action.name === 'generate-qr-code')?.url ??
+      order.payment.midtransDetail?.qrCodeUrl ??
+      (status.payment_type === 'qris'
+        ? `${config.midtrans.baseUrl}/v2/qris/${encodeURIComponent(status.transaction_id)}/qr-code`
+        : undefined)
+    );
+  }
+
   private async updateMidtransPayment(order: StoreOrderResponse, status: MidtransChargeResponse) {
     const vaNumber = status.va_numbers?.[0]?.va_number || status.bill_key;
-    const qrCodeUrl = status.actions?.find((action) => action.name === 'generate-qr-code')?.url;
+    const qrCodeUrl = this.qrCodeUrl(order, status);
     try {
       const payment =
         await this.repositories.paymentRepository.updateMidtransDetails<PaymentMidtransDetail>({

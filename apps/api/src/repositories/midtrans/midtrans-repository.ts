@@ -11,6 +11,7 @@ import axios from 'axios';
 const baseURL = config.midtrans.baseUrl;
 const api = axios.create({
   baseURL,
+  timeout: config.api.timeout,
   auth: { username: config.midtrans.serverKey, password: '' },
 });
 
@@ -35,7 +36,7 @@ export default class MidtransRepository {
         axios.isAxiosError(error) ? (error.response?.data ?? error.message) : error,
       );
       const definiteRejection =
-        status !== undefined && [400, 401, 402, 403, 405, 413, 429].includes(status);
+        status !== undefined && [400, 401, 402, 403, 405, 410, 413, 429].includes(status);
       throw new MidtransChargeError('Midtrans payment error.', definiteRejection);
     }
   }
