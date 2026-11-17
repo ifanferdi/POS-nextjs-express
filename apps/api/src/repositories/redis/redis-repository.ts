@@ -44,7 +44,11 @@ export default class RedisRepository {
 
     value = _.isString(value) ? value : JSON.stringify(value);
 
-    const store = (await this.redis.set(key, value, { EX: expired })) as string;
+    const store = (await this.redis.set(
+      key,
+      value,
+      expired ? { EX: expired } : undefined,
+    )) as string;
 
     if (store?.toLowerCase() === 'ok' && logging)
       console.info(`Success save data to redis key: ${key} & value: ${JSON.stringify(value)}`);

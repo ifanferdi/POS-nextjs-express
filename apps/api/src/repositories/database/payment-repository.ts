@@ -1,4 +1,5 @@
 import { PaymentStatus } from '@/domain/entities/enums/payment.enum';
+import { PaymentMidtransDetail } from '@/domain/entities/models/payment';
 import { Payment, Prisma } from '@/infrastructure/database/prisma/generated/client';
 import { BatchPayload } from '@/infrastructure/database/prisma/generated/internal/prismaNamespace';
 import {
@@ -78,6 +79,42 @@ export default class PaymentRepository extends DatabaseBaseRepository {
     return this.prisma.payment
       .update({ where: { orderId }, data: updateData, include })
       .finally() as Promise<T>;
+  }
+
+  updateMidtransDetails<T = PaymentMidtransDetail>(data: {
+    orderId: number;
+    expiredAt?: Date;
+    midtransDetail: {
+      midtransOrderId: string;
+      transactionId: string;
+      paymentType: string;
+      vaNumber?: string;
+      qrCodeUrl?: string;
+    };
+  }) {
+    const { orderId, expiredAt, midtransDetail } = data;
+    const { midtransOrderId, ...detail } = midtransDetail;
+
+    return this.prisma.$transaction(async (tx) => {
+      const claim = await tx.payment.updateMany({
+        where: { orderId, status: PaymentStatus.PENDING },
+        data: { expiredAt },
+      });
+      if (claim.count === 0) return null;
+
+      return tx.payment.update({
+        where: { orderId },
+        data: {
+          midtransDetail: {
+            upsert: {
+              create: { midtransOrderId, ...detail },
+              update: detail,
+            },
+          },
+        },
+        include: { midtransDetail: true },
+      }) as Promise<T>;
+    });
   }
 
   destroy<T = BatchPayload | Payment>(id: number | number[]) {

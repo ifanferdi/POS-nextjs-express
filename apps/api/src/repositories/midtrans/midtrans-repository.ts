@@ -9,24 +9,47 @@ import AppError from '@/helpers/error.helper';
 import axios from 'axios';
 
 const baseURL = config.midtrans.baseUrl;
-const api = axios.create({ baseURL, auth: { username: config.midtrans.serverKey, password: '' } });
+const api = axios.create({
+  baseURL,
+  auth: { username: config.midtrans.serverKey, password: '' },
+});
+
+export class MidtransChargeError extends AppError {
+  constructor(
+    message: string,
+    readonly definiteRejection: boolean,
+  ) {
+    super(message, 500);
+  }
+}
 
 export default class MidtransRepository {
   async charge(payload: MidtransChargePayload) {
     try {
       const { data } = await api.post<MidtransChargeResponse>('/v2/charge', payload);
       return data;
-    } catch (e: any) {
-      console.error('Midtrans charge failed:', e.response?.data ?? e.message);
-      throw new AppError('Midtrans payment error.', 500);
+    } catch (error: unknown) {
+      const status = axios.isAxiosError(error) ? error.response?.status : undefined;
+      console.error(
+        'Midtrans charge failed:',
+        axios.isAxiosError(error) ? (error.response?.data ?? error.message) : error,
+      );
+      const definiteRejection =
+        status !== undefined && [400, 401, 402, 403, 405, 413, 429].includes(status);
+      throw new MidtransChargeError('Midtrans payment error.', definiteRejection);
     }
   }
 
   async getStatus(orderId: string) {
-    const { data } = await api.get<MidtransChargeResponse>(
-      `/v2/${encodeURIComponent(orderId)}/status`,
-    );
-    return data;
+    try {
+      const { data } = await api.get<MidtransChargeResponse>(
+        `/v2/${encodeURIComponent(orderId)}/status`,
+      );
+      return data;
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 404) return null;
+      throw error;
+    }
   }
 
   async cancel(orderId: string) {

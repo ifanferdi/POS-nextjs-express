@@ -214,6 +214,62 @@ export default class OrderRepository
       });
   }
 
+  failOnlineCharge(id: number) {
+    return this.prisma
+      .$transaction(async (tx) => {
+        const paymentClaim = await tx.payment.updateMany({
+          where: {
+            orderId: id,
+            status: PaymentStatus.PENDING,
+            method: { not: PaymentMethod.CASH },
+          },
+          data: { status: PaymentStatus.FAILED },
+        });
+        if (paymentClaim.count === 0) return null;
+
+        const orderClaim = await tx.order.updateMany({
+          where: { id, status: OrderStatus.PENDING },
+          data: { status: OrderStatus.CANCELLED },
+        });
+        if (orderClaim.count === 0) throw ORDER_ALREADY_TERMINAL;
+
+        const order = await tx.order.findUniqueOrThrow({
+          where: { id },
+          include: { orderItems: true },
+        });
+        const discountClaims = new Map<number, number>();
+        const quotaClaims = new Map<number, number>();
+        for (const item of order.orderItems) {
+          if (item.productId)
+            await tx.product.update({
+              where: { id: item.productId },
+              data: { stock: { increment: item.quantity } },
+            });
+          if (!item.meta || Array.isArray(item.meta) || typeof item.meta !== 'object') continue;
+          const discount = item.meta.discount;
+          const discountQty = item.meta.discountQty;
+          if (!discount || Array.isArray(discount) || typeof discount !== 'object') continue;
+          const discountId = discount.id;
+          if (typeof discountId !== 'number' || typeof discountQty !== 'number') continue;
+
+          discountClaims.set(discountId, (discountClaims.get(discountId) ?? 0) + discountQty);
+          if (typeof discount.quota === 'number')
+            quotaClaims.set(discountId, (quotaClaims.get(discountId) ?? 0) + discountQty);
+        }
+        for (const [discountId, quantity] of discountClaims)
+          await tx.productDiscountCycle.update({
+            where: { id: discountId },
+            data: { usedQty: { decrement: quantity } },
+          });
+
+        return { discountClaims: [...quotaClaims], order };
+      })
+      .catch((error: unknown) => {
+        if (error === ORDER_ALREADY_TERMINAL) return null;
+        throw error;
+      });
+  }
+
   /**
    * Guard + side effects in ONE transaction: the conditional `updateMany` (status must still be
    * `pending`) is the first statement, so only the notification that wins the claim updates the
