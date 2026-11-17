@@ -9,6 +9,8 @@ export default class UpdateOrderStatus extends BaseUseCase {
     if (!order) throw new ErrorNotFound('Pesanan tidak ditemukan');
     if (payload.status === OrderStatus.CANCELLED)
       throw new ErrorBadRequest('Gunakan endpoint pembatalan untuk membatalkan pesanan.');
+    if (payload.status === OrderStatus.EXPIRED)
+      throw new ErrorBadRequest('Status kedaluwarsa ditetapkan melalui notifikasi pembayaran.');
     if (order.status === OrderStatus.CANCELLED || order.status === OrderStatus.EXPIRED)
       throw new ErrorBadRequest('Status pesanan terminal tidak dapat diubah.');
 

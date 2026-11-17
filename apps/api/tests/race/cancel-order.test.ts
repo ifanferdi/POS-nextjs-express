@@ -108,6 +108,25 @@ describe('order cancellation API and database outcomes', () => {
     expect(await getStock(productId)).toBe((initialStock ?? 0) + 1);
   });
 
+  it('rejects setting expired through the general status endpoint', async () => {
+    const order = await seedPendingOnlineOrder({
+      userId,
+      items: [{ productId, quantity: 1, unitPrice: 10000 }],
+    });
+    const initialStock = await getStock(productId);
+    const response = await fetch(`${baseUrl()}/api/v1/orders/${order.id}/status`, {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'expired' }),
+    });
+
+    expect(response.status).toBe(400);
+    const updated = await getOrderByNumber(order.orderNumber);
+    expect(updated?.status).toBe('pending');
+    expect(updated?.payment?.status).toBe('pending');
+    expect(await getStock(productId)).toBe(initialStock);
+  });
+
   it('keeps expired orders terminal and rolls back a losing payment claim', async () => {
     const order = await seedPendingOnlineOrder({
       userId,
