@@ -65,8 +65,13 @@ export default class VerifyOtp extends BaseUseCase {
       throw new ErrorBadRequest('Invalid Otp.');
     }
 
-    // DELETE REDIS IF OTP HAS BEEN VERIFIED
-    await this.repositories.redisRepository.destroy(key);
+    const consumedChallenge = await this.repositories.redisRepository.consumeOtpChallenge(
+      key,
+      params.challengeId,
+      challenge.hashedOtp,
+    );
+    if (!consumedChallenge) throw new ErrorUnauthorized('Invalid verify OTP request.');
+
     await this.repositories.redisRepository.destroy(sendRateLimiterKey);
     await this.repositories.redisRepository.destroy(verifyRateLimiterKey);
 

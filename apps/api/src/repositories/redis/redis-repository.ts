@@ -18,6 +18,15 @@ if take > 0 then redis.call('DECRBY', KEYS[1], take) end
 return take
 `;
 
+const CONSUME_OTP_CHALLENGE_SCRIPT = `
+local challenge = redis.call('GET', KEYS[1])
+if not challenge then return 0 end
+local ok, data = pcall(cjson.decode, challenge)
+if not ok or type(data) ~= 'table' then return 0 end
+if data.challengeId ~= ARGV[1] or data.hashedOtp ~= ARGV[2] then return 0 end
+return redis.call('DEL', KEYS[1])
+`;
+
 export default class RedisRepository {
   constructor(protected redis: RedisClientType) {}
 
@@ -57,6 +66,15 @@ export default class RedisRepository {
 
   async destroy(key: string) {
     if (await this.redis.del(key)) console.info(`Success delete data from redis key: ${key}`);
+  }
+
+  async consumeOtpChallenge(key: string, challengeId: string, hashedOtp: string) {
+    const result = await this.redis.eval(CONSUME_OTP_CHALLENGE_SCRIPT, {
+      keys: [key],
+      arguments: [challengeId, hashedOtp],
+    });
+
+    return Number(result) === 1;
   }
 
   async bulkDestroy(keys: string[]) {
