@@ -7,7 +7,6 @@ import { TokenDto } from '@/validations/auth-validation';
 
 const AUTH_MODE = config.auth.mode;
 
-
 export default class CheckToken extends BaseUseCase {
   async execute({ token }: TokenDto) {
     const tokenData: JwtData = jwt.verify(token);
@@ -15,9 +14,7 @@ export default class CheckToken extends BaseUseCase {
     // Pencabutan sesi (mode stateful): token yang session-nya sudah
     // logout/dihapus dari Redis tidak lagi berlaku.
     if (AUTH_MODE === 'stateful' && tokenData.sessionId) {
-      const session = await this.repositories.redisRepository.findOne(
-        jwt.key(tokenData.sessionId),
-      );
+      const session = await this.repositories.redisRepository.findOne(jwt.key(tokenData.sessionId));
       if (!session) throw new ErrorUnauthorized('Session tidak valid. Silakan login kembali.');
     }
 
@@ -26,9 +23,11 @@ export default class CheckToken extends BaseUseCase {
     const activeUser = await this.repositories.userRepository.findOne({
       id: tokenData.id,
       isActive: true,
-      columns: ['id'],
+      columns: ['id', 'roleId'],
     });
     if (!activeUser) throw new ErrorUnauthorized('Pengguna tidak aktif.');
+
+    tokenData.roleId = activeUser.roleId;
 
     if (tokenData.iat) tokenData.iatDate = new Date(tokenData.iat * 1000);
     if (tokenData.exp) tokenData.expDate = new Date(tokenData.exp * 1000);
