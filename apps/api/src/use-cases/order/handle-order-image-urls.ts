@@ -8,8 +8,20 @@ type OrderUserWithOptionalProfile = Omit<Partial<IUserProfile>, 'profile'> & {
   profile?: IProfile | null;
 };
 
-export type OrderWithImageRelations = Order & {
-  orderItems?: Array<OrderItem & { product?: IProduct | null }>;
+type OrderImageMetadata = {
+  products?: IProduct[];
+  user?: OrderUserWithOptionalProfile | null;
+  customer?: OrderUserWithOptionalProfile | null;
+};
+
+type OrderItemWithImageRelations = Omit<OrderItem, 'meta'> & {
+  product?: IProduct | null;
+  meta?: { product?: IProduct | null } | null;
+};
+
+export type OrderWithImageRelations = Omit<Order, 'meta'> & {
+  meta?: OrderImageMetadata | null;
+  orderItems?: OrderItemWithImageRelations[];
   user?: OrderUserWithOptionalProfile | null;
   customer?: OrderUserWithOptionalProfile | null;
 };
@@ -18,15 +30,23 @@ export default async function handleOrderImageUrls(
   storageRepository: S3StorageRepository,
   order: OrderWithImageRelations,
 ) {
-  const imageUrlPromises =
-    order.orderItems?.map(({ product }) =>
-      product ? handleProductImageUrl(storageRepository, product) : undefined,
-    ) ?? [];
+  const imageUrlPromises: Promise<void>[] = [];
 
-  if (order.user?.profile)
-    imageUrlPromises.push(handleProfileImageUrl(storageRepository, { profile: order.user.profile }));
-  if (order.customer?.profile)
-    imageUrlPromises.push(handleProfileImageUrl(storageRepository, { profile: order.customer.profile }));
+  for (const item of order.orderItems ?? []) {
+    if (item.product)
+      imageUrlPromises.push(handleProductImageUrl(storageRepository, item.product));
+    if (item.meta?.product)
+      imageUrlPromises.push(handleProductImageUrl(storageRepository, item.meta.product));
+  }
+
+  for (const product of order.meta?.products ?? [])
+    imageUrlPromises.push(handleProductImageUrl(storageRepository, product));
+
+  for (const user of [order.user, order.customer, order.meta?.user, order.meta?.customer])
+    if (user?.profile)
+      imageUrlPromises.push(
+        handleProfileImageUrl(storageRepository, { profile: user.profile }),
+      );
 
   await Promise.all(imageUrlPromises);
 }

@@ -30,6 +30,8 @@ import _ from 'lodash';
 import FindAllProduct from '../product/find-all-product';
 import FindByIdUser from '../user/find-by-id-user';
 
+import handleOrderImageUrls, { OrderWithImageRelations } from './handle-order-image-urls';
+
 const EXPIRY_IN_MINUTES = config.midtrans.expiryMinutes;
 
 const IDEMPOTENCY_TTL = config.redis.idempotencyKeyTtl;
@@ -51,30 +53,47 @@ export default class CreateOrder extends BaseUseCase {
     const key = this.idempotencyKey(payload.userId, payload.idempotencyKey);
 
     const cached = await this.repositories.redisRepository.findOne(key);
-    if (cached && cached !== IDEMPOTENCY_IN_PROGRESS)
-      return { isIdempoten: true, data: cached as OrderResponse };
+    if (cached && cached !== IDEMPOTENCY_IN_PROGRESS) {
+      const data = cached as OrderResponse;
+      await this.handleOrderResponseImages(data);
+      return { isIdempoten: true, data };
+    }
 
     const claimed = await this.repositories.redisRepository.storeNX(
       key,
       IDEMPOTENCY_IN_PROGRESS,
       IDEMPOTENCY_TTL,
     );
-    if (!claimed) return { isIdempoten: true, data: await this.waitForIdempotency(key) };
+    if (!claimed) {
+      const data = await this.waitForIdempotency(key);
+      await this.handleOrderResponseImages(data);
+      return { isIdempoten: true, data };
+    }
 
+    let data: OrderResponse;
     try {
       const result = await this.createOrderInternal(payload);
-      const data: OrderResponse = { message: 'Success.', order: result.order };
+      data = { message: 'Success.', order: result.order };
       await this.repositories.redisRepository.store({
         key,
         value: data,
         expired: IDEMPOTENCY_TTL,
         logging: false,
       });
-      return { isIdempoten: false, data };
     } catch (error) {
       await this.repositories.redisRepository.destroy(key);
       throw error;
     }
+
+    await this.handleOrderResponseImages(data);
+    return { isIdempoten: false, data };
+  }
+
+  private async handleOrderResponseImages(data: OrderResponse) {
+    await handleOrderImageUrls(
+      this.repositories.storageRepository,
+      data.order as unknown as OrderWithImageRelations,
+    );
   }
 
   private idempotencyKey(userId: number, key: string) {
@@ -98,6 +117,7 @@ export default class CreateOrder extends BaseUseCase {
       limit: -1,
       isActive: true,
     });
+    products.forEach((product) => delete product.imageUrl);
 
     const productMap: Map<number, Product> = new Map(products.map((p: any) => [p.id, p]));
 
@@ -199,17 +219,23 @@ export default class CreateOrder extends BaseUseCase {
     if (isOnlinePayment)
       return await this.handleOnlinePayment(order, total, computedItems, payload);
 
+    const eventOrder = _.cloneDeep(order);
+    await handleOrderImageUrls(
+      this.repositories.storageRepository,
+      eventOrder as unknown as OrderWithImageRelations,
+    );
+
     await publishSSEEvent({
       scope: 'order',
       entity: 'order',
       action: 'create',
-      data: [order],
+      data: [eventOrder],
     });
     await publishSSEEvent({
       scope: 'product',
       entity: 'product',
       action: 'update',
-      data: order.orderItems.map((orderItem) => orderItem.product),
+      data: eventOrder.orderItems.map((orderItem) => orderItem.product),
     });
 
     return { order };
@@ -334,6 +360,8 @@ export default class CreateOrder extends BaseUseCase {
         id: payload.userId,
         with: [UserRelation.PROFILE],
       })) as IUserProfile;
+
+    if (user?.profile) delete user.profile.imageUrl;
 
     const meta: MetaOrder = {};
     if (user) meta.user = user;
