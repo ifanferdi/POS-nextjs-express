@@ -6,12 +6,16 @@ import { CreateProductDto } from '@/validations/product-validation';
 
 export default class CreateProduct extends BaseUseCase {
   async execute(payload: CreateProductDto) {
-    if (payload.imagePath !== undefined) assertProductImagePath(payload.imagePath);
+    const { imagePath: submittedImagePath, ...productData } = payload;
+    const imagePath = submittedImagePath === '' ? undefined : submittedImagePath;
+    if (imagePath !== undefined) assertProductImagePath(imagePath);
 
     if (payload.sku) await this.checkUniqueSku(payload.sku);
     if (payload.barcode) await this.checkUniqueBarcode(payload.barcode);
 
-    const product = await this.repositories.productRepository.store(payload);
+    const product = await this.repositories.productRepository.store(
+      imagePath === undefined ? productData : { ...productData, imagePath },
+    );
 
     await publishSSEEvent({
       scope: 'product',

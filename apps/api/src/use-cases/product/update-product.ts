@@ -6,12 +6,16 @@ import { UpdateProductDto } from '@/validations/product-validation';
 
 export default class UpdateProduct extends BaseUseCase {
   async execute(payload: UpdateProductDto) {
-    if (payload.imagePath !== undefined) assertProductImagePath(payload.imagePath);
+    const { imagePath: submittedImagePath, ...productData } = payload;
+    const imagePath = submittedImagePath === '' ? null : submittedImagePath;
+    if (imagePath !== undefined && imagePath !== null) assertProductImagePath(imagePath);
 
     if (payload.sku) await this.checkUniqueSku(payload.sku, payload.id);
     if (payload.barcode) await this.checkUniqueBarcode(payload.barcode, payload.id);
 
-    const product = await this.repositories.productRepository.update(payload);
+    const product = await this.repositories.productRepository.update(
+      imagePath === undefined ? productData : { ...productData, imagePath },
+    );
 
     await publishSSEEvent({
       scope: 'product',

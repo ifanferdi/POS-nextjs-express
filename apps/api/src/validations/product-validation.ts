@@ -30,7 +30,7 @@ export const FindAllProductSchema = BasePagination(PRODUCT_FIELD)
       });
   });
 const ImagePathSchema = StringSchema.optional().refine((path) => {
-  if (path === undefined) return true;
+  if (path === undefined || path === '') return true;
 
   try {
     assertProductImagePath(path);
@@ -53,6 +53,7 @@ export const CreateProductSchema = z.object({
 });
 export const UpdateProductSchema = CreateProductSchema.extend({
   id: NumberSchema,
+  imagePath: ImagePathSchema.nullable(),
 }).partial({ name: true, price: true });
 
 export interface FindAllProductDto extends z.input<typeof FindAllProductSchema>, SoftDeleteFields {}

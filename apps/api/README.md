@@ -94,6 +94,8 @@ Upload multipart produk melalui `POST /api/v1/products/upload` mengembalikan `me
 - Respons baca produk dan pengguna menampilkan `imagePath` dan `imageUrl`. Untuk file terkelola, `imagePath` adalah object key yang stabil dan `imageUrl` adalah signed GET URL sementara. Tampilkan `imageUrl`; setelah expiry, ambil ulang resource produk atau pengguna terkait agar API memberikan URL baru. Jangan membuat signature di client atau menyimpan signed URL sebagai referensi permanen.
 - URL gambar produk pihak ketiga tetap didukung. URL local API dan URL absolut endpoint S3 tidak diteruskan sebagai URL gambar tanpa signing.
 
+Client yang memakai Next.js Image perlu mengizinkan host pada `S3_PUBLIC_ENDPOINT`. Cart atau cache yang menyimpan `imageUrl` harus mengambil ulang produk ketika URL kedaluwarsa; menyimpan object key saja tidak memperbarui URL secara otomatis. Perubahan client ini belum diterapkan di repository API.
+
 Saat beralih dari penyimpanan local, tidak ada migrasi otomatis untuk file atau referensi lama. Rencanakan pemindahan file terkelola ke S3 dan penggantian referensinya dengan object key sebelum memakai API tanpa endpoint local. Jangan pindahkan URL gambar pihak ketiga ke S3 sebagai bagian dari perubahan ini.
 
 Bucket S3 harus privat. Akses anonim tidak didukung. Masa berlaku signed URL saat diperiksa adalah `config.storage.expiredTime`, sebesar 3600 detik; respons upload menyertakan `expiresIn`. Tidak ada environment variable khusus expiry yang tercatat.
