@@ -8,7 +8,7 @@ const videoConfig = config.storage.video;
 
 const BaseUploadSchema = {
   filename: StringSchema.min(1, 'Filename cannot be empty.'),
-  folder: z.nativeEnum(UploadEntity).optional(),
+  folder: z.nativeEnum(UploadEntity),
 };
 
 const ImageUploadSchema = z.object({

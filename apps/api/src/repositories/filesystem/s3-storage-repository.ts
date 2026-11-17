@@ -1,4 +1,5 @@
 import config from '@/config/config';
+import { assertManagedFileKey } from '@/helpers/managed-file-key';
 import { ErrorBadRequest } from '@/helpers/error.helper';
 import {
   CopyObjectCommand,
@@ -18,6 +19,16 @@ const BUCKET_NAME = config.storage.s3.bucket;
 const { region, accessKeyId, secretAccessKey, endpoint, publicEndpoint, forcePathStyle } =
   config.storage.s3;
 
+function isObjectNotFound(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+
+  const metadata = (error as Error & { $metadata?: { httpStatusCode?: number } }).$metadata;
+  return (
+    metadata?.httpStatusCode === 404 &&
+    (error.name === 'NotFound' || error.name === 'NoSuchKey')
+  );
+}
+
 export default class S3StorageRepository {
   private s3Client?: S3Client;
   private s3PublicClient?: S3Client;
@@ -27,7 +38,9 @@ export default class S3StorageRepository {
       this.s3Client = new S3Client({
         forcePathStyle,
         region,
-        credentials: { accessKeyId, secretAccessKey },
+        ...(accessKeyId && secretAccessKey
+          ? { credentials: { accessKeyId, secretAccessKey } }
+          : {}),
         endpoint,
         requestChecksumCalculation: 'WHEN_REQUIRED',
       });
@@ -41,11 +54,10 @@ export default class S3StorageRepository {
       this.s3PublicClient = new S3Client({
         forcePathStyle,
         region,
-        credentials: {
-          accessKeyId: accessKeyId || 'minioadmin',
-          secretAccessKey: secretAccessKey || 'minioadmin',
-        },
-        endpoint: publicEndpoint || endpoint,
+        ...(accessKeyId && secretAccessKey
+          ? { credentials: { accessKeyId, secretAccessKey } }
+          : {}),
+        endpoint: publicEndpoint,
         requestChecksumCalculation: 'WHEN_REQUIRED',
       });
     }
@@ -54,6 +66,8 @@ export default class S3StorageRepository {
   }
 
   async put(file: Buffer, key: string) {
+    assertManagedFileKey(key);
+
     return await this.getClient().send(
       new PutObjectCommand({
         Bucket: BUCKET_NAME,
@@ -65,6 +79,9 @@ export default class S3StorageRepository {
   }
 
   async move(oldPath: string, newPath: string) {
+    assertManagedFileKey(oldPath);
+    assertManagedFileKey(newPath);
+
     try {
       await this.getClient().send(
         new CopyObjectCommand({
@@ -75,33 +92,39 @@ export default class S3StorageRepository {
       );
 
       await this.delete(oldPath);
-    } catch (err: any) {
-      if (err.Code === 'NoSuchKey') {
+    } catch (error) {
+      if (
+        typeof error === 'object' &&
+        error !== null &&
+        'Code' in error &&
+        error.Code === 'NoSuchKey'
+      ) {
         throw new ErrorBadRequest('File tidak valid.');
-      } else {
-        throw err;
       }
+      throw error;
     }
   }
 
   async delete(path: string) {
-    try {
-      await this.getClient().send(new DeleteObjectCommand({ Bucket: BUCKET_NAME, Key: path }));
-    } catch (err) {
-      console.error('Error deleting file directory', err);
-    }
+    assertManagedFileKey(path);
+    await this.getClient().send(new DeleteObjectCommand({ Bucket: BUCKET_NAME, Key: path }));
   }
 
   async isExist(path: string) {
+    assertManagedFileKey(path);
+
     try {
       await this.getClient().send(new HeadObjectCommand({ Bucket: BUCKET_NAME, Key: path }));
       return true;
     } catch (error) {
-      return false;
+      if (isObjectNotFound(error)) return false;
+      throw error;
     }
   }
 
   async getUrl(path: string, expiresIn = config.storage.expiredTime) {
+    assertManagedFileKey(path);
+
     const options: GetObjectCommandInput = { Bucket: BUCKET_NAME, Key: path };
     // if (path.includes('.pdf')) {
     //   options.ResponseContentDisposition = 'inline'; // override
@@ -114,6 +137,8 @@ export default class S3StorageRepository {
   }
 
   async getPresignUrl(key: string, size: number, expiresIn = config.storage.expiredTime) {
+    assertManagedFileKey(key);
+
     const command: PutObjectCommandInput = {
       Bucket: BUCKET_NAME,
       Key: key,

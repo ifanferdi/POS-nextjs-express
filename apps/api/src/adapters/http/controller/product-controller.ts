@@ -134,9 +134,7 @@ export default class ProductController extends BaseController {
   upload = uploadFile(config.storage.defaultMaxSize, [FileType.IMAGE]).single('image');
 
   uploadImage = asyncHandler(async (req: e.Request, res: e.Response) => {
-    const imagePath = await this.useCases.productUseCase.productImage.execute(
-      req.file as Express.Multer.File,
-    );
+    const imagePath = await this.useCases.productUseCase.productImage.execute(req.file);
 
     res.send({ message: 'Success.', imagePath });
   });

@@ -1,10 +1,13 @@
 import { ErrorBadRequest } from '@/helpers/error.helper';
+import { assertProductImagePath } from '@/helpers/product-image-path';
 import { publishSSEEvent } from '@/infrastructure/event-stream/sse-redis-bridge';
 import BaseUseCase from '@/use-cases/_base-use-case';
 import { CreateProductDto } from '@/validations/product-validation';
 
 export default class CreateProduct extends BaseUseCase {
   async execute(payload: CreateProductDto) {
+    if (payload.imagePath !== undefined) assertProductImagePath(payload.imagePath);
+
     if (payload.sku) await this.checkUniqueSku(payload.sku);
     if (payload.barcode) await this.checkUniqueBarcode(payload.barcode);
 
