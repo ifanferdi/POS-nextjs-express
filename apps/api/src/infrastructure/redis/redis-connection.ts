@@ -30,4 +30,13 @@ export default async function RedisConnection(): Promise<RedisClientType> {
   }
 }
 
+export async function closeRedisConnection(): Promise<void> {
+  if (!sharedClient) return;
+
+  const client = sharedClient;
+  sharedClient = undefined;
+
+  if (client.isOpen) await client.quit();
+}
+
 export const CreateRedisConnection = () => createClient({ url: REDIS_URL }) as RedisClientType;
