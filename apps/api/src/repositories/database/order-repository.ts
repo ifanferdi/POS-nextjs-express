@@ -15,6 +15,8 @@ import {
   UpdateOrderStatusDto,
 } from '@/validations/order-validation';
 
+const ORDER_ALREADY_TERMINAL = Symbol('order-already-terminal');
+
 export default class OrderRepository
   extends DatabaseBaseRepository
   implements
@@ -148,39 +150,68 @@ export default class OrderRepository
 
   update<T = Order>(data: UpdateOrderStatusDto) {
     const { id, ...updateData } = data;
-    return this.prisma.order.update({ where: { id }, data: updateData }).finally() as Promise<T>;
+    return this.prisma.$transaction(async (tx) => {
+      const result = await tx.order.updateMany({
+        where: { id, status: { notIn: [OrderStatus.CANCELLED, OrderStatus.EXPIRED] } },
+        data: updateData,
+      });
+      if (result.count === 0)
+        throw new ErrorBadRequest('Pesanan yang sudah masuk tidak dapat diubah.');
+
+      return (await tx.order.findUniqueOrThrow({ where: { id } })) as T;
+    });
   }
 
   cancelOrder(id: number) {
-    // kuota diskon hangus — tidak dikembalikan saat cancel/refund
-    return this.prisma.$transaction(async (tx) => {
-      const order = await tx.order.findFirst({
-        where: { id, status: { not: OrderStatus.CANCELLED } },
-        include: { orderItems: true, payment: true },
-      });
+    return this.prisma
+      .$transaction(async (tx) => {
+        const payment = await tx.payment.findUnique({ where: { orderId: id } });
+        let paymentClaimed = false;
 
-      if (!order) return;
+        if (payment && payment.method !== PaymentMethod.CASH) {
+          const paymentClaim = await tx.payment.updateMany({
+            where: { orderId: id, status: PaymentStatus.PENDING },
+            data: { status: PaymentStatus.CANCELLED },
+          });
+          paymentClaimed = paymentClaim.count > 0;
 
-      for (const item of order.orderItems) {
-        if (!item.productId) continue;
-        await tx.product.update({
-          where: { id: item.productId },
-          data: { stock: { increment: item.quantity } },
+          if (paymentClaim.count === 0) {
+            const currentPayment = await tx.payment.findUnique({ where: { orderId: id } });
+            if (currentPayment?.status === PaymentStatus.SUCCESS)
+              throw new ErrorBadRequest(
+                'Pesanan online yang sudah dibayar tidak dapat dibatalkan.',
+              );
+          }
+        }
+
+        const orderClaim = await tx.order.updateMany({
+          where: { id, status: { notIn: [OrderStatus.CANCELLED, OrderStatus.EXPIRED] } },
+          data: { status: OrderStatus.CANCELLED },
         });
-      }
+        if (orderClaim.count === 0) {
+          if (paymentClaimed) throw ORDER_ALREADY_TERMINAL;
+          return;
+        }
 
-      if (order.payment) {
-        await tx.payment.update({
-          where: { orderId: order.id },
-          data: { status: PaymentStatus.REFUNDED },
+        const order = await tx.order.findUniqueOrThrow({
+          where: { id },
+          include: { orderItems: true },
         });
-      }
 
-      return tx.order.updateMany({
-        where: { id },
-        data: { status: OrderStatus.CANCELLED },
+        for (const item of order.orderItems) {
+          if (!item.productId) continue;
+          await tx.product.update({
+            where: { id: item.productId },
+            data: { stock: { increment: item.quantity } },
+          });
+        }
+
+        return orderClaim;
+      })
+      .catch((error: unknown) => {
+        if (error === ORDER_ALREADY_TERMINAL) return;
+        throw error;
       });
-    });
   }
 
   /**
