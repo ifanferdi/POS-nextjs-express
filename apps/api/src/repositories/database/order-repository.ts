@@ -156,7 +156,7 @@ export default class OrderRepository
         data: updateData,
       });
       if (result.count === 0)
-        throw new ErrorBadRequest('Status pesanan terminal tidak dapat diubah.');
+        throw new ErrorBadRequest('Pesanan yang sudah masuk tidak dapat diubah.');
 
       return (await tx.order.findUniqueOrThrow({ where: { id } })) as T;
     });
