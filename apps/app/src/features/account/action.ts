@@ -9,6 +9,7 @@ import {
   ChangePasswordInput,
   ChangePasswordSchema,
 } from '@/features/account/schema';
+import { getMe } from '@/features/auth/api';
 import { revalidatePath } from 'next/cache';
 import { unstable_rethrow } from 'next/navigation';
 
@@ -37,6 +38,13 @@ export async function updateMyAccountAction(
       error: error instanceof Error ? error.message : 'Failed to update account.',
     };
   }
+}
+export async function refreshMyProfileImageUrlAction(): Promise<string | null> {
+  const session = await auth();
+  if (!session?.accessToken) return null;
+
+  const me = await getMe(session.accessToken);
+  return me.profile?.imagePath?.startsWith('profiles/') ? (me.profile.imageUrl ?? null) : null;
 }
 
 export async function changeMyPasswordAction(

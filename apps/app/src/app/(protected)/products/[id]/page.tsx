@@ -1,5 +1,6 @@
 import { ProductActions } from '@/app/(protected)/products/_components/product-actions';
 import { BarcodeDisplay } from '@/app/(protected)/products/_components/product-barcode';
+import { ProductDetailImage } from '@/app/(protected)/products/_components/product-detail-image';
 import { auth } from '@/auth';
 import { DiscountBadge } from '@/components/shared/discount';
 import { Button } from '@/components/ui/button';
@@ -15,12 +16,10 @@ import {
   BadgePercentIcon,
   BarcodeIcon,
   BoxIcon,
-  ImageIcon,
   LayersIcon,
   PackageIcon,
   TagIcon,
 } from 'lucide-react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { forbidden, notFound } from 'next/navigation';
 
@@ -58,18 +57,12 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="flex items-start gap-4">
               <div className="flex size-20 items-center justify-center overflow-hidden rounded-xl bg-muted">
-                {product.imageUrl ? (
-                  <Image
-                    src={product.imageUrl}
-                    alt={product.name}
-                    className="size-full object-cover"
-                    width={200}
-                    height={200}
-                    loading="eager"
-                  />
-                ) : (
-                  <ImageIcon className="size-8 text-muted-foreground" />
-                )}
+                <ProductDetailImage
+                  productId={product.id}
+                  imagePath={product.imagePath}
+                  imageUrl={product.imageUrl}
+                  name={product.name}
+                />
               </div>
               <div className="space-y-2">
                 <h2 className="text-xl font-semibold tracking-tight">{product.name}</h2>

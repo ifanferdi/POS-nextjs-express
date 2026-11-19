@@ -1,8 +1,8 @@
 import { AccountPasswordDialog } from '@/app/(protected)/account/_components/account-password-dialog';
+import { AccountProfileAvatar } from '@/app/(protected)/account/_components/account-profile-avatar';
 import { AccountProfileDialog } from '@/app/(protected)/account/_components/account-profile-dialog';
 import { auth, getMeCached } from '@/auth';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { formatDate, getInitials } from '@/lib/helper';
+import { formatDate } from '@/lib/helper';
 import _ from 'lodash';
 import { KeyRoundIcon, ShieldCheckIcon } from 'lucide-react';
 import { redirect } from 'next/navigation';
@@ -45,12 +45,14 @@ export default async function AccountPage() {
         <div className="flex flex-col gap-6 p-6 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-5">
             <div className="rounded-full bg-linear-to-br from-primary via-info to-primary p-0.75 shadow-lg shadow-primary/20">
-              <Avatar size="lg" className="size-20 ring-4 ring-white/60 dark:ring-white/10">
-                {profile?.imageUrl && <AvatarImage src={profile.imageUrl} alt={me.username} />}
-                <AvatarFallback className="bg-background/80 text-xl text-primary backdrop-blur">
-                  {getInitials(profile?.fullName ?? me.username)}
-                </AvatarFallback>
-              </Avatar>
+              <AccountProfileAvatar
+                imageUrl={profile?.imageUrl}
+                imagePath={profile?.imagePath}
+                username={me.username}
+                fullName={profile?.fullName}
+                className="size-20 ring-4 ring-white/60 dark:ring-white/10"
+                fallbackClassName="bg-background/80 text-xl text-primary backdrop-blur"
+              />
             </div>
             <div>
               <h2 className="text-2xl font-semibold tracking-tight">
