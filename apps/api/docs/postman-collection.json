@@ -301,6 +301,16 @@
           "name": "Generate Presign URL",
           "request": {
             "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"filename\":\"product.jpg\",\"folder\":\"products\",\"fileType\":\"image\",\"contentType\":\"image/jpeg\",\"fileSize\":1234}"
+            },
             "url": {
               "raw": "{{baseUrl}}/api/v1/uploads/generate-presign-url",
               "host": [
@@ -312,7 +322,8 @@
                 "uploads",
                 "generate-presign-url"
               ]
-            }
+            },
+            "description": "PUT the file to presignUrl, then save key as imagePath. Fetch the product or user again for a fresh signed imageUrl after expiry."
           }
         }
       ]

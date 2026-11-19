@@ -17,8 +17,8 @@ export default class FindAllProduct extends BaseUseCase {
     const total = await this.repositories.productRepository.count(params);
 
     await Promise.all(
-      data.map((product) => {
-        handleProductImageUrl(this.repositories.storageRepository, product);
+      data.map(async (product) => {
+        await handleProductImageUrl(this.repositories.storageRepository, product);
         if (params.with?.includes(ProductRelation.CATEGORIES))
           extractCategories(product as ProductCategories);
       }),

@@ -28,6 +28,7 @@ export default class MyAccount extends BaseUseCase {
       with: [UserRelation.PROFILE, UserRelation.ROLE, UserRelation.PERMISSIONS],
     });
 
+    const imageUrl = user.profile.imageUrl;
     user.profile.imageUrl = undefined;
 
     await this.repositories.redisRepository.store({
@@ -36,6 +37,8 @@ export default class MyAccount extends BaseUseCase {
       expired: Number(ME_CACHE_TTL),
       logging: false,
     });
+
+    user.profile.imageUrl = imageUrl;
 
     return user;
   }

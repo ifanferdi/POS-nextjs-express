@@ -34,6 +34,56 @@ tags:
     description: Payment management for orders
 
 paths:
+  /uploads/generate-presign-url:
+    post:
+      tags: [Products, Users]
+      summary: Generate a private S3 upload URL
+      description: |
+        Store the returned key as imagePath after uploading with PUT to presignUrl.
+        Product uploads require Manage Product permission. Read the product or user
+        again to obtain a new signed imageUrl after expiry.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [filename, folder, fileType, contentType, fileSize]
+              properties:
+                filename:
+                  type: string
+                folder:
+                  type: string
+                  enum: [products, profiles]
+                fileType:
+                  type: string
+                  enum: [image, video]
+                contentType:
+                  type: string
+                  enum: [image/png, image/jpeg, image/jpg, video/mp4]
+                fileSize:
+                  type: number
+      responses:
+        '200':
+          description: Key and temporary PUT URL
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  key:
+                    type: string
+                  presignUrl:
+                    type: string
+                  expiresIn:
+                    type: integer
+        '400':
+          description: Invalid upload request
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
   # ═══════════════════════════════════════════════════════════
   # AUTH
   # ═══════════════════════════════════════════════════════════
@@ -461,39 +511,6 @@ paths:
                         items:
                           $ref: '#/components/schemas/User'
                   - $ref: '#/components/schemas/PaginatedMeta'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-
-  /users/profile/upload:
-    post:
-      tags: [Users]
-      summary: Upload profile image
-      requestBody:
-        required: true
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              required: [image]
-              properties:
-                image:
-                  type: string
-                  format: binary
-      responses:
-        '200':
-          description: Image uploaded
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: Success.
-                  imagePath:
-                    type: string
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -1450,6 +1467,7 @@ paths:
                     example: Success.
                   imagePath:
                     type: string
+                    description: Product object key to store as imagePath, not a URL.
         '401':
           $ref: '#/components/responses/Unauthorized'
 
@@ -2180,6 +2198,7 @@ components:
         imagePath:
           type: string
           nullable: true
+          description: Profile object key under profiles/.
         phone:
           type: string
           nullable: true
@@ -2188,6 +2207,7 @@ components:
           nullable: true
         imageUrl:
           type: string
+          description: Temporary signed GET URL. Refetch the user after expiry.
         createdAt:
           type: string
           format: date-time
@@ -2318,8 +2338,10 @@ components:
         imagePath:
           type: string
           nullable: true
+          description: Product object key under products/, or a third-party image URL.
         imageUrl:
           type: string
+          description: Temporary signed GET URL for managed files, or the third-party URL.
         isActive:
           type: boolean
         stock:

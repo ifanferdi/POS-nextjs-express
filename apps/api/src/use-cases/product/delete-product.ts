@@ -1,13 +1,35 @@
 import { ProductRelation } from '@/domain/entities/enums/product.enum';
+import { IProduct } from '@/domain/entities/models/product';
+import { assertProductImagePath } from '@/helpers/product-image-path';
 import { publishSSEEvent } from '@/infrastructure/event-stream/sse-redis-bridge';
 import BaseUseCase from '@/use-cases/_base-use-case';
 import { BaseFindById } from '@/validations/base-validation';
 
 export default class DeleteProduct extends BaseUseCase {
   async execute({ id }: BaseFindById, options?: { isPermanently: boolean }) {
+    const product = await this.repositories.productRepository.findOne<IProduct>({
+      id,
+      with: options?.isPermanently ? [ProductRelation.SOFT_DELETE] : undefined,
+    });
+    const imagePath = product?.imagePath;
+    const imagePathKind =
+      imagePath === undefined || imagePath === null
+        ? undefined
+        : assertProductImagePath(imagePath);
+
     const destroy = options?.isPermanently
-      ? await this.handleDeletePermanently(id)
+      ? product
+        ? await this.repositories.productRepository.deletePermanently(id)
+        : undefined
       : await this.repositories.productRepository.destroy(id);
+
+    if (
+      options?.isPermanently &&
+      imagePathKind === 'managed' &&
+      imagePath !== undefined &&
+      imagePath !== null
+    )
+      await this.repositories.storageRepository.delete(imagePath);
 
     await publishSSEEvent({
       scope: 'product',
@@ -17,20 +39,5 @@ export default class DeleteProduct extends BaseUseCase {
     });
 
     return destroy;
-  }
-
-  private async handleDeletePermanently(id: number) {
-    const product = await this.repositories.productRepository.findOne({
-      id,
-      with: [ProductRelation.SOFT_DELETE],
-    } as any);
-    if (!product) return;
-
-    const result = await this.repositories.productRepository.deletePermanently(id);
-
-    if ((product as any).imagePath)
-      await this.repositories.storageRepository?.delete((product as any).imagePath);
-
-    return result;
   }
 }

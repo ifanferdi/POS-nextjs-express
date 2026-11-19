@@ -12,6 +12,7 @@ import {
   StringSchema,
   Username,
 } from '@/validations/base-validation';
+import { assertManagedFileKey } from '@/helpers/managed-file-key';
 import { z } from 'zod';
 
 // User Validation
@@ -79,13 +80,23 @@ export const FindAllProfileSchema = BasePagination(USER_FIELD)
   .extend({
     userIds: z.array(z.number()).optional(),
   });
+const ProfileImagePathSchema = StringSchema.optional().refine((imagePath) => {
+  if (imagePath === undefined) return true;
+
+  try {
+    assertManagedFileKey(imagePath, 'profiles');
+    return true;
+  } catch {
+    return false;
+  }
+}, 'Profile image must be a profiles/ file key.');
 const BaseProfileSchema = z.object({
   userId: z.number().optional(),
   fullName: StringSchema.min(1, 'FullName cannot be empty.').max(255),
   placeOfBirth: StringSchema.min(1, 'PlaceOfBirth cannot be empty.').max(255),
   dateOfBirth: DateSchema,
   gender: z.nativeEnum(Gender),
-  imagePath: StringSchema.optional(),
+  imagePath: ProfileImagePathSchema,
 });
 export const CreateProfileSchema = BaseProfileSchema.transform((data) => ({
   ...data,

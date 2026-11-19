@@ -5,7 +5,8 @@ import { IUserProfile, UserRelationData } from '@/domain/entities/models/user';
 import { ProductDiscountCycle } from '@/infrastructure/database/prisma/generated/client';
 import S3StorageRepository from '@/repositories/filesystem/s3-storage-repository';
 import { FindAllUserDto, FindByIdUserDto } from '@/validations/user-validation';
-import { isLink } from './common.helper';
+import { assertManagedFileKey } from '@/helpers/managed-file-key';
+import { assertProductImagePath } from '@/helpers/product-image-path';
 import { effectiveUnitDiscount, remainingQuota } from './discount.helper';
 
 export function extractRelationDataUser(
@@ -52,11 +53,16 @@ export async function handleProductImageUrl(
   storageRepository: S3StorageRepository,
   product: IProduct,
 ) {
-  if (product.imagePath)
-    product.imageUrl = isLink(product.imagePath)
-      ? product.imagePath
-      : await storageRepository.getUrl(product.imagePath);
+  delete product.imageUrl;
+  const imagePath = product.imagePath;
+  if (imagePath === undefined || imagePath === null) return;
+
+  product.imageUrl =
+    assertProductImagePath(imagePath) === 'external'
+      ? imagePath
+      : await storageRepository.getUrl(imagePath);
 }
+
 
 export function applyActiveDiscount(products: IProduct[], discounts: ProductDiscountCycle[]) {
   // findActive() mengurutkan startDate desc → ambil yang pertama (latest) per product.
@@ -86,6 +92,12 @@ export async function handleProfileImageUrl(
   storageRepository: S3StorageRepository,
   user: Partial<IUserProfile>,
 ) {
-  if (user.profile?.imagePath)
-    user.profile.imageUrl = await storageRepository?.getUrl(user.profile?.imagePath);
+  if (!user.profile) return;
+
+  delete user.profile.imageUrl;
+  const imagePath = user.profile.imagePath;
+  if (imagePath === undefined || imagePath === null) return;
+
+  assertManagedFileKey(imagePath, 'profiles');
+  user.profile.imageUrl = await storageRepository.getUrl(imagePath);
 }

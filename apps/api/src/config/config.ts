@@ -59,7 +59,6 @@ const config = {
     idempotencyKeyTtl: Number(process.env.IDEMPOTENCY_KEY_TTL) || 24 * 60 * 60, // 24 jam
   },
   midtrans: midtransConfig,
-  filesystem: (process.env.FILESYSTEM || 'local') as 's3' | 'local',
   smtp: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
