@@ -27,13 +27,13 @@ import {
   PaymentMidtrans,
   PosLastOrder,
 } from '@/domain';
-import { createOrderAction } from '@/features/orders/action';
-import { PosCheckoutForm, PosCheckoutFormSchema } from '@/features/orders/schema';
+import { createOrderAction, type CreateOrderActionResult } from '@/features/orders/action';
+import { CreateOrderInput, PosCheckoutForm, PosCheckoutFormSchema } from '@/features/orders/schema';
 import { checkProductDiscountQuotaAction } from '@/features/product-discount-cycles/action';
 import { calculateRounding, formatCurrency } from '@/lib/helper';
 import { cn } from '@/lib/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useState, useTransition } from 'react';
+import { useRef, useState, useTransition } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { toast } from 'sonner';
 import {
@@ -91,6 +91,13 @@ interface PosCheckoutDialogProps {
   setCheckoutOpen: (open: boolean) => void;
   onCheckoutSuccess: (result: PosLastOrder) => void;
 }
+type CheckoutAttempt = {
+  key: string;
+  input: CreateOrderInput;
+  snapshot: CartItem[];
+};
+
+type UnknownOrderResult = { error: string; status?: number };
 export function PosCheckoutDialog({
   open,
   setCheckoutOpen,
@@ -103,21 +110,23 @@ export function PosCheckoutDialog({
     PaymentMidtrans & { snapshot: CartItem[] }
   >();
   const [createdOrder, setCreatedOrder] = useState<OrderApiResponse['order']>();
-  const [idempotencyKey, setIdempotencyKey] = useState('');
+  const [attempt, setAttempt] = useState<CheckoutAttempt | null>(null);
+  const [unknownResult, setUnknownResult] = useState<UnknownOrderResult | null>(null);
+  const requestInFlight = useRef(false);
   const [wasOpen, setWasOpen] = useState(open);
   if (open !== wasOpen) {
     setWasOpen(open);
     if (open) {
-      setIdempotencyKey(crypto.randomUUID());
       setShortages([]);
     }
   }
 
   const cartItems = useCartStore((state) => state.items);
-  const subtotal = cartSubtotal(cartItems);
-  const discount = cartDiscount(cartItems);
-  const net = cartTotal(cartItems);
-  const promoUnits = cartPromoUnits(cartItems);
+  const checkoutItems = unknownResult && attempt ? attempt.snapshot : cartItems;
+  const subtotal = cartSubtotal(checkoutItems);
+  const discount = cartDiscount(checkoutItems);
+  const net = cartTotal(checkoutItems);
+  const promoUnits = cartPromoUnits(checkoutItems);
   const { rounding, total } = calculateRounding(net);
 
   const form = useForm<PosCheckoutForm>({
@@ -132,70 +141,108 @@ export function PosCheckoutDialog({
   });
 
   function onSubmit(data: PosCheckoutForm) {
+    if (requestInFlight.current || unknownResult) return;
+    requestInFlight.current = true;
+
     startTransition(async () => {
-      const snapshot: CartItem[] = useCartStore.getState().items;
-      if (snapshot.length === 0) {
-        toast.error('Cart is empty.');
-        setCheckoutOpen(false);
-        return;
-      }
-
-      const isCash = data.paymentMethod === PaymentMethod.CASH;
-      const amountTendered = data.amountTendered ?? 0;
-
-      if (isCash && amountTendered < total) {
-        form.setError('amountTendered', {
-          message: 'Amount tendered cannot be less than the total.',
-        });
-        return;
-      }
-
-      setShortages([]);
-
-      const promoUnits = cartPromoUnits(snapshot);
-      if (promoUnits.length > 0) {
-        setIsCheckingQuota(true);
-        const check = await checkProductDiscountQuotaAction(promoUnits);
-        setIsCheckingQuota(false);
-
-        if (!check.valid) {
-          if (check.shortages.length > 0) {
-            setShortages(check.shortages);
-            return;
-          }
-
-          // Check bersifat advisory: error izin/jaringan tidak boleh memblokir penjualan.
-          if (check.error) toast.error(check.error);
+      try {
+        const snapshot = useCartStore.getState().items.map((item) => ({ ...item }));
+        if (snapshot.length === 0) {
+          toast.error('Cart is empty.');
+          setCheckoutOpen(false);
+          return;
         }
-      }
 
-      const key = idempotencyKey || crypto.randomUUID();
-      if (!idempotencyKey) setIdempotencyKey(key);
+        const isCash = data.paymentMethod === PaymentMethod.CASH;
+        const amountTendered = data.amountTendered ?? 0;
 
-      const result = await createOrderAction(
-        {
-          notes: data.notes || undefined,
-          items: cartOrderItems(snapshot),
-          paymentMethod: data.paymentMethod,
-          ...(isCash && { amount: amountTendered }),
-        },
-        key,
-      );
+        if (isCash && amountTendered < total) {
+          form.setError('amountTendered', {
+            message: 'Amount tendered cannot be less than the total.',
+          });
+          return;
+        }
 
-      if (!result.success || !result.data) {
-        toast.error(result.success ? 'Failed to create order.' : result.error);
-        return;
-      }
-      setCreatedOrder(result.data);
+        setShortages([]);
 
-      if (isCash) {
-        toast.success(`Order ${result.data.orderNumber} created successfully.`);
-        useCartStore.getState().clear();
-        onCheckoutSuccess(result.data);
-        form.reset();
-        setCheckoutOpen(false);
-      } else {
-        setPendingPayment({ ...result.data.payment, snapshot });
+        const promoUnits = cartPromoUnits(snapshot);
+        if (promoUnits.length > 0) {
+          setIsCheckingQuota(true);
+          try {
+            const check = await checkProductDiscountQuotaAction(promoUnits);
+            if (!check.valid) {
+              if (check.shortages.length > 0) {
+                setShortages(check.shortages);
+                return;
+              }
+
+              // Check bersifat advisory: error izin/jaringan tidak boleh memblokir penjualan.
+              if (check.error) toast.error(check.error);
+            }
+          } catch (error) {
+            toast.error(error instanceof Error ? error.message : 'Failed to check discount quota.');
+          } finally {
+            setIsCheckingQuota(false);
+          }
+        }
+
+        const attempt: CheckoutAttempt = {
+          key: crypto.randomUUID(),
+          input: {
+            notes: data.notes || undefined,
+            items: cartOrderItems(snapshot),
+            paymentMethod: data.paymentMethod,
+            ...(isCash && { amount: amountTendered }),
+          },
+          snapshot,
+        };
+        setAttempt(attempt);
+
+        let result: CreateOrderActionResult;
+        try {
+          result = await createOrderAction(attempt.input, attempt.key);
+        } catch (error) {
+          setUnknownResult({
+            error:
+              error instanceof Error ? error.message : 'The checkout action returned no result.',
+          });
+          toast.error('Order status is unknown. Check Order History before continuing.');
+          return;
+        }
+
+        if (!result.success) {
+          if (result.ambiguous) {
+            setUnknownResult({ error: result.error, status: result.status });
+            toast.error('Order status is unknown. Check Order History before continuing.');
+          } else {
+            setAttempt(null);
+            toast.error(result.error);
+          }
+          return;
+        }
+
+        setAttempt(null);
+        setUnknownResult(null);
+        setCreatedOrder(result.data);
+
+        if (isCash) {
+          toast.success(
+            result.status === 200
+              ? `Order ${result.data.orderNumber} already exists. Showing its receipt.`
+              : `Order ${result.data.orderNumber} created successfully.`,
+          );
+          useCartStore.getState().clear();
+          onCheckoutSuccess(result.data);
+          form.reset();
+          setCheckoutOpen(false);
+        } else {
+          if (result.status === 200) {
+            toast.success(`Order ${result.data.orderNumber} already exists. Continuing payment.`);
+          }
+          setPendingPayment({ ...result.data.payment, snapshot });
+        }
+      } finally {
+        requestInFlight.current = false;
       }
     });
   }
@@ -206,6 +253,7 @@ export function PosCheckoutDialog({
   const isPaymentMode = !!pendingPayment;
   const isCash = paymentMethod === PaymentMethod.CASH;
   const isBusy = isPending || isCheckingQuota;
+  const hasUnknownOutcome = unknownResult !== null;
 
   const paymentMethodOptions = [
     { value: PaymentMethod.CASH, label: 'Cash' },
@@ -220,6 +268,7 @@ export function PosCheckoutDialog({
     <Dialog
       open={open}
       onOpenChange={(isOpen) => {
+        if (!isOpen && (isBusy || requestInFlight.current)) return;
         if (!isOpen && pendingPayment) {
           setPendingPayment(undefined);
           useCartStore.getState().clear();
@@ -231,17 +280,20 @@ export function PosCheckoutDialog({
       <DialogContent className={cn('border-2 font-mono max-w-sm', isPaymentMode && 'md:max-w-4xl')}>
         <div className={cn('grid gap-0', isPaymentMode && 'md:grid-cols-2')}>
           <div className={cn(isPaymentMode && 'border-r-2 pr-6')}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
+            <form
+              onSubmit={(event) => void form.handleSubmit(onSubmit)(event)}
+              className="space-y-3"
+            >
               <DialogHeader>
                 <DialogTitle className="font-mono text-sm uppercase tracking-wider">
                   {isPaymentMode ? 'Order Receipt' : 'Checkout'}
                 </DialogTitle>
                 <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                  {cartItems.length} Items
+                  {checkoutItems.length} Items
                 </p>
               </DialogHeader>
 
-              <OrderItems items={cartItems} />
+              <OrderItems items={checkoutItems} />
 
               <FieldGroup className="gap-3">
                 <Controller
@@ -255,7 +307,7 @@ export function PosCheckoutDialog({
                       <Textarea
                         id="notes"
                         placeholder="(optional)"
-                        disabled={isBusy || isPaymentMode}
+                        disabled={isBusy || isPaymentMode || hasUnknownOutcome}
                         className="font-mono text-sm resize-none"
                         rows={2}
                         value={field.value ?? ''}
@@ -276,7 +328,7 @@ export function PosCheckoutDialog({
                       <Select
                         value={field.value}
                         onValueChange={field.onChange}
-                        disabled={isBusy || isPaymentMode}
+                        disabled={isBusy || isPaymentMode || hasUnknownOutcome}
                       >
                         <SelectTrigger className="font-mono text-sm uppercase">
                           <SelectValue />
@@ -313,7 +365,7 @@ export function PosCheckoutDialog({
                           inputMode="numeric"
                           pattern="[0-9.]*"
                           placeholder="0"
-                          disabled={isBusy || isPaymentMode}
+                          disabled={isBusy || isPaymentMode || hasUnknownOutcome}
                           aria-invalid={fieldState.invalid}
                           className="font-mono text-lg tabular-nums"
                           value={!field.value ? '' : field.value.toLocaleString('id-ID')}
@@ -379,6 +431,26 @@ export function PosCheckoutDialog({
                 </div>
               </FieldGroup>
 
+              {unknownResult && attempt && (
+                <div
+                  role="alert"
+                  className="space-y-3 rounded-md border border-warning/40 bg-warning/5 p-3 text-xs"
+                >
+                  <p className="font-semibold">Order status is unknown.</p>
+                  <p>
+                    The server did not confirm whether this order was saved. Do not submit it again.
+                    Close checkout and check Order History across all statuses for a matching order
+                    before starting another sale. If you cannot rule out a match, leave this
+                    checkout unresolved.
+                  </p>
+                  <p>
+                    {unknownResult.status !== undefined
+                      ? `Server response: HTTP ${unknownResult.status}. ${unknownResult.error}`
+                      : `No HTTP status was available. ${unknownResult.error}`}
+                  </p>
+                </div>
+              )}
+
               {shortages.length > 0 && (
                 <div
                   role="alert"
@@ -414,23 +486,27 @@ export function PosCheckoutDialog({
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={() => setCheckoutOpen(false)}
+                    onClick={() => {
+                      if (!requestInFlight.current) setCheckoutOpen(false);
+                    }}
                     disabled={isBusy}
                     className="font-mono uppercase text-xs tracking-wider"
                   >
-                    Cancel
+                    {hasUnknownOutcome ? 'Close checkout' : 'Cancel'}
                   </Button>
-                  <Button
-                    type="submit"
-                    disabled={isBusy}
-                    className="font-mono uppercase text-xs tracking-wider"
-                  >
-                    {isCheckingQuota
-                      ? 'Checking quota...'
-                      : isPending
-                        ? 'Processing...'
-                        : 'Complete Payment'}
-                  </Button>
+                  {!hasUnknownOutcome && (
+                    <Button
+                      type="submit"
+                      disabled={isBusy}
+                      className="font-mono uppercase text-xs tracking-wider"
+                    >
+                      {isCheckingQuota
+                        ? 'Checking quota...'
+                        : isPending
+                          ? 'Processing...'
+                          : 'Complete Payment'}
+                    </Button>
+                  )}
                 </DialogFooter>
               )}
             </form>
@@ -444,8 +520,17 @@ export function PosCheckoutDialog({
                 orderNumber={createdOrder.orderNumber}
                 paymentMethod={paymentMethod}
                 payment={pendingPayment}
-                onCheckoutSuccess={onCheckoutSuccess}
-                onPaid={() => {
+                onPaid={(paidPayment) => {
+                  if (createdOrder) {
+                    onCheckoutSuccess({
+                      ...createdOrder,
+                      payment: {
+                        ...createdOrder.payment,
+                        ...paidPayment,
+                        midtransDetail: createdOrder.payment.midtransDetail,
+                      },
+                    });
+                  }
                   useCartStore.getState().clear();
                   toast.success('Payment received!');
                   form.reset();

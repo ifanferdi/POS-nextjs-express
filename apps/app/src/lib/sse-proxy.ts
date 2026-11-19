@@ -7,14 +7,22 @@ export async function proxySSE(path?: string) {
 
   let url = `${api.baseUrl}/v1/sse`;
   if (path) url = `${url}/${path}`;
-  const backendRes = await fetch(url, {
-    headers: {
-      Authorization: `Bearer ${session.accessToken}`,
-      Accept: 'text/event-stream',
-    },
-  });
+  let backendRes: Response;
+  try {
+    backendRes = await fetch(url, {
+      headers: {
+        Authorization: `Bearer ${session.accessToken}`,
+        Accept: 'text/event-stream',
+      },
+    });
+  } catch {
+    return new Response('Stream temporarily unavailable', { status: 503 });
+  }
 
-  if (!backendRes.ok || !backendRes.body) {
+  if (!backendRes.ok) {
+    return new Response('No stream', { status: backendRes.status });
+  }
+  if (!backendRes.body) {
     return new Response('No stream', { status: 502 });
   }
 
