@@ -183,7 +183,7 @@ export function PosCheckoutDialog({
       );
 
       if (!result.success || !result.data) {
-        toast.error(result.error ?? 'Failed to create order.');
+        toast.error(result.success ? 'Failed to create order.' : result.error);
         return;
       }
       setCreatedOrder(result.data);

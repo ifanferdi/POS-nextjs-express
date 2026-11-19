@@ -25,7 +25,7 @@ export async function createOrder(input: CreateOrderInput, idempotencyKey: strin
     headers: { 'Idempotency-Key': idempotencyKey },
   });
 
-  return response.data;
+  return { data: response.data, status: response.status };
 }
 
 export async function retryPayment(orderId: number) {
