@@ -120,6 +120,13 @@ See `config/config.ts` and the root `docker-compose.yml` (`x-app-env`) for the f
 - `API_BASE_URL` — the Express backend URL (default `http://localhost:8000/api`)
 - `NEXT_PUBLIC_MIDTRANS_CLIENT_KEY` / `NEXT_PUBLIC_MIDTRANS_IS_PRODUCTION` — Midtrans Snap
 
+## API compatibility notes
+
+- OTP sign-in challenges are not supported by this frontend. Keep `AUTH_USE_2FA` disabled until an OTP verification flow is implemented.
+- Payment and order SSE messages are notifications, not proof of payment. The backend branch must restrict SSE recipients and payloads before it is used with sensitive data.
+- The current backend does not expose payment recovery and can lose an idempotency key after an order has been persisted. An uncertain checkout requires operator reconciliation before starting another transaction.
+- Order cancellation is not exposed in the frontend. Paid online orders are rejected by the backend cancellation route; no refund is implied.
+
 ## Adding a new feature
 
 Follow the existing pattern (e.g. `features/products/`):
