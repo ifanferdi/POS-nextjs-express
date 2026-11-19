@@ -2,7 +2,7 @@ import { getMe, loginRequest, refreshTokenRequest } from '@/features/auth/api';
 import { RefreshTokenResponseDto } from '@/features/auth/dto';
 import { LoginSchema } from '@/features/auth/schema';
 import axios from 'axios';
-import NextAuth from 'next-auth';
+import NextAuth, { CredentialsSignin } from 'next-auth';
 import Credentials, { CredentialsConfig } from 'next-auth/providers/credentials';
 import { redirect } from 'next/navigation';
 import { cache } from 'react';
@@ -19,6 +19,10 @@ export const getMeCached = cache((accessToken: string) => getMe(accessToken));
  */
 async function refreshAccessToken(refreshToken: string): Promise<RefreshTokenResponseDto> {
   return await refreshTokenRequest(refreshToken);
+}
+
+class UnsupportedTwoFactorError extends CredentialsSignin {
+  code = 'two_factor_unsupported';
 }
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
@@ -72,6 +76,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           // console.log({ status: error.response?.status, ...error.response?.data });
         }
 
+        if (
+          !axios.isAxiosError(error) ||
+          (error.response?.status !== 401 && error.response?.status !== 404)
+        ) {
+          return { ...token, error: 'ServiceUnavailable' };
+        }
+
         // Refresh gagal (refresh token expired/invalid) → tandai token error
         // Bisa dicek di Server Component untuk force redirect ke /login
         return { ...token, error: 'RefreshTokenError' };
@@ -90,6 +101,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       session.user.username = token.user?.username ?? '';
       session.user.name = token.user?.profile?.fullName ?? token.user?.username ?? '';
 
+      if (token.error) return session;
       try {
         const me = await getMeCached(token.accessToken);
         session.user.role = me.role;
@@ -102,7 +114,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           // sehingga session jadi null + cookie dibersihkan; layout tetap redirect /login.
           if (status === 401 || status === 404) redirect('/login');
         }
-        throw error; // 500 / network error → biarkan error boundary tangani
+        session.error = 'ServiceUnavailable';
       }
 
       return session;
@@ -126,9 +138,13 @@ function handleSignIn(): CredentialsConfig {
 
         // Objek ini yang akan masuk ke parameter `user` di callback jwt()
         const login = await loginRequest(username, password);
-
+        if ('requiresOtp' in login) throw new UnsupportedTwoFactorError();
+        if (!login || typeof login.token !== 'string' || !login.token.trim() || !login.user) {
+          return null;
+        }
         return login;
       } catch (error) {
+        if (error instanceof UnsupportedTwoFactorError) throw error;
         if (axios.isAxiosError(error))
           console.log({ status: error.response?.status, ...error.response?.data });
         // authorize() return null → NextAuth tampilkan error di halaman login

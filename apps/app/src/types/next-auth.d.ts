@@ -18,7 +18,7 @@ declare module 'next-auth' {
   interface Session {
     accessToken: string;
     tokenExpiry: number; // unix seconds — expiry accessToken backend
-    error?: 'RefreshTokenError';
+    error?: 'RefreshTokenError' | 'ServiceUnavailable';
     user: {
       id: string;
       name: string; // eksplisit, jangan andalkan DefaultSession saja
@@ -53,7 +53,7 @@ declare module 'next-auth/jwt' {
     user: User;
     role: string; //todo
     permissions: string[];
-    error?: 'RefreshTokenError';
+    error?: 'RefreshTokenError' | 'ServiceUnavailable';
   }
 }
 

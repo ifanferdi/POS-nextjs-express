@@ -14,8 +14,6 @@ import { useTransition } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
-const isProduction = config.env.toLowerCase() === 'production';
-
 export function LoginForm({ sessionExpired }: { sessionExpired?: boolean }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -23,8 +21,8 @@ export function LoginForm({ sessionExpired }: { sessionExpired?: boolean }) {
   const form = useForm<LoginInput>({
     resolver: zodResolver(LoginSchema),
     defaultValues: {
-      username: isProduction ? 'admin' : '',
-      password: isProduction ? 'password' : '',
+      username: '',
+      password: '',
     },
     mode: 'onSubmit',
     reValidateMode: 'onSubmit',
