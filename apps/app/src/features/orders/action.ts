@@ -11,32 +11,68 @@ import {
   UpdateOrderInput,
   UpdateOrderSchema,
 } from '@/features/orders/schema';
+import { ApiArrayError, ApiRequestError } from '@/lib/api-server';
 import { guard } from '@/lib/helper';
 import { PERMISSION, requirePermission } from '@/lib/permission';
 import { revalidatePath } from 'next/cache';
 import { unstable_rethrow } from 'next/navigation';
 
+export type CreateOrderActionResult =
+  | { success: true; data: OrderApiResponse['order']; status: number }
+  | { success: false; error: string; status?: number; ambiguous: boolean };
+
 export async function createOrderAction(
   input: CreateOrderInput,
   idempotencyKey: string,
-): Promise<ActionResult<OrderApiResponse['order']>> {
+): Promise<CreateOrderActionResult> {
   const validate = CreateOrderSchema.safeParse(input);
-  if (!validate.success) return { success: false, error: 'Invalid input.' };
+  if (!validate.success) return { success: false, error: 'Invalid input.', ambiguous: false };
+
+  let requestStarted = false;
 
   try {
     const session = await auth();
     requirePermission(session?.user.permissions, [PERMISSION.MANAGE_ORDER]);
 
+    requestStarted = true;
     const response = await api.createOrder(validate.data, idempotencyKey);
+    if (!response.data?.order) {
+      return {
+        success: false,
+        error: 'The server returned an incomplete order response.',
+        status: response.status,
+        ambiguous: true,
+      };
+    }
 
     revalidatePath('/orders');
 
-    return { success: true, data: response.order };
+    return { success: true, data: response.data.order, status: response.status };
   } catch (error) {
     unstable_rethrow(error);
+
+    const status =
+      error instanceof ApiRequestError
+        ? error.status
+        : error instanceof ApiArrayError
+          ? 400
+          : undefined;
+    const ambiguous =
+      requestStarted &&
+      (error instanceof ApiRequestError
+        ? error.isNetworkError ||
+          error.status === undefined ||
+          error.status === 408 ||
+          error.status === 409 ||
+          error.status === 429 ||
+          error.status >= 500
+        : !(error instanceof ApiArrayError));
+
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to create order.',
+      ...(status !== undefined && { status }),
+      ambiguous,
     };
   }
 }
