@@ -8,13 +8,6 @@ export interface LoginResponseDto {
   user: UserProfile;
 }
 
-export interface OtpChallengeResponseDto {
-  requiresOtp: true;
-  userId: number;
-  challengeId: string;
-}
-
-export type LoginResultDto = LoginResponseDto | OtpChallengeResponseDto;
 export type RefreshTokenResponseDto = LoginResponseDto;
 
 export interface MeResponseDto {

@@ -26,13 +26,7 @@ export async function loginAction(value: unknown): Promise<LoginActionResult> {
     if (error instanceof AuthError)
       switch (error.type) {
         case 'CredentialsSignin':
-          return {
-            success: false,
-            error:
-              'code' in error && error.code === 'two_factor_unsupported'
-                ? 'Two-factor authentication is not supported for this account. Contact your administrator.'
-                : 'Username or password invalid.',
-          };
+          return { success: false, error: 'Username or password invalid.' };
         default:
           return { success: false, error: 'Something went wrong. Try again.' };
       }

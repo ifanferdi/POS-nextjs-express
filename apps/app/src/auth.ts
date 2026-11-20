@@ -2,7 +2,7 @@ import { getMe, loginRequest, refreshTokenRequest } from '@/features/auth/api';
 import { RefreshTokenResponseDto } from '@/features/auth/dto';
 import { LoginSchema } from '@/features/auth/schema';
 import axios from 'axios';
-import NextAuth, { CredentialsSignin } from 'next-auth';
+import NextAuth from 'next-auth';
 import Credentials, { CredentialsConfig } from 'next-auth/providers/credentials';
 import { redirect } from 'next/navigation';
 import { cache } from 'react';
@@ -19,10 +19,6 @@ export const getMeCached = cache((accessToken: string) => getMe(accessToken));
  */
 async function refreshAccessToken(refreshToken: string): Promise<RefreshTokenResponseDto> {
   return await refreshTokenRequest(refreshToken);
-}
-
-class UnsupportedTwoFactorError extends CredentialsSignin {
-  code = 'two_factor_unsupported';
 }
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
@@ -138,13 +134,9 @@ function handleSignIn(): CredentialsConfig {
 
         // Objek ini yang akan masuk ke parameter `user` di callback jwt()
         const login = await loginRequest(username, password);
-        if ('requiresOtp' in login) throw new UnsupportedTwoFactorError();
-        if (!login || typeof login.token !== 'string' || !login.token.trim() || !login.user) {
-          return null;
-        }
+
         return login;
       } catch (error) {
-        if (error instanceof UnsupportedTwoFactorError) throw error;
         if (axios.isAxiosError(error))
           console.log({ status: error.response?.status, ...error.response?.data });
         // authorize() return null → NextAuth tampilkan error di halaman login
