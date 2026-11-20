@@ -2,7 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import * as config from '@/config/config';
-import { Payment, PaymentStatus, PosLastOrder } from '@/domain';
+import { Payment, PaymentStatus } from '@/domain';
 import { getPaymentMethod, PaymentMethod, PaymentMidtrans } from '@/domain/payment.types';
 import { getPaymentByOrderId, mockMidtransPaymentAction } from '@/features/payments/action';
 import { useSSE } from '@/hooks/use-sse';
@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils';
 import { Loader2Icon } from 'lucide-react';
 import moment from 'moment';
 import Image from 'next/image';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 interface PosPaymentModuleProps {
@@ -19,9 +19,8 @@ interface PosPaymentModuleProps {
   orderNumber: string;
   paymentMethod: PaymentMethod;
   payment: PaymentMidtrans;
-  onPaid: () => void;
+  onPaid: (payment: Payment) => void;
   onExpired: () => void;
-  onCheckoutSuccess?: (result: PosLastOrder) => void;
 }
 
 export function PosPaymentModule({
@@ -31,18 +30,88 @@ export function PosPaymentModule({
   payment,
   onPaid,
   onExpired,
-  onCheckoutSuccess,
 }: PosPaymentModuleProps) {
   const [isPaymentStatusLoading, setIsPaymentStatusLoading] = useState(false);
+  const [terminalStatus, setTerminalStatus] = useState<PaymentStatus | null>(null);
+  const isCheckingPaymentStatus = useRef(false);
+  const shouldRecheckPaymentStatus = useRef(false);
+  const shouldNotifyPaymentStatusError = useRef(false);
+  const isPaymentResolved = useRef(false);
+  const lastReportedStatus = useRef<PaymentStatus | null>(null);
 
-  useSSE<PosLastOrder>({
+  async function checkPaymentStatus(showLoading = false) {
+    if (isPaymentResolved.current) return;
+
+    if (showLoading) {
+      setIsPaymentStatusLoading(true);
+      shouldNotifyPaymentStatusError.current = true;
+    }
+
+    if (isCheckingPaymentStatus.current) {
+      shouldRecheckPaymentStatus.current = true;
+      return;
+    }
+
+    isCheckingPaymentStatus.current = true;
+    try {
+      do {
+        shouldRecheckPaymentStatus.current = false;
+        const shouldNotifyError = shouldNotifyPaymentStatusError.current;
+        shouldNotifyPaymentStatusError.current = false;
+        const response = await getPaymentByOrderId<Payment>({ orderId });
+
+        if (!response.success || !response.result) {
+          if (shouldNotifyError) {
+            toast.error(response.error ?? 'Failed to check payment status.');
+          }
+          continue;
+        }
+
+        const confirmedPayment = response.result;
+        if (confirmedPayment.status === PaymentStatus.SUCCESS) {
+          isPaymentResolved.current = true;
+          onPaid(confirmedPayment);
+        } else if (confirmedPayment.status === PaymentStatus.EXPIRED) {
+          isPaymentResolved.current = true;
+          onExpired();
+        } else if (
+          confirmedPayment.status === PaymentStatus.CANCELLED ||
+          confirmedPayment.status === PaymentStatus.FAILED
+        ) {
+          setTerminalStatus(confirmedPayment.status);
+          if (lastReportedStatus.current !== confirmedPayment.status) {
+            toast.error(
+              confirmedPayment.status === PaymentStatus.CANCELLED
+                ? 'Payment was cancelled.'
+                : 'Payment failed.',
+            );
+          }
+        }
+
+        lastReportedStatus.current = confirmedPayment.status;
+      } while (shouldRecheckPaymentStatus.current && !isPaymentResolved.current);
+    } finally {
+      isCheckingPaymentStatus.current = false;
+      setIsPaymentStatusLoading(false);
+    }
+  }
+
+  useSSE<{ id?: number; orderId?: number; orderNumber?: string }>({
     events: ['order.status'],
+    onOpen: () => {
+      void checkPaymentStatus();
+    },
     onEvent: ({ data }) => {
-      const paidOrder = data[0];
-      if (paidOrder?.orderNumber !== orderNumber) return;
-      if (onCheckoutSuccess) onCheckoutSuccess(paidOrder);
+      const hasOrderIdentity = data.some(
+        (order) => order?.id != null || order?.orderId != null || order?.orderNumber != null,
+      );
+      const isCurrentOrder = data.some(
+        (order) =>
+          order?.id === orderId || order?.orderId === orderId || order?.orderNumber === orderNumber,
+      );
 
-      onPaid();
+      if (hasOrderIdentity && !isCurrentOrder) return;
+      void checkPaymentStatus();
     },
   });
 
@@ -53,9 +122,34 @@ export function PosPaymentModule({
     }
   }
 
+  if (terminalStatus === PaymentStatus.CANCELLED || terminalStatus === PaymentStatus.FAILED) {
+    return (
+      <div role="alert" className="space-y-3 rounded-lg border p-4">
+        <p>
+          {terminalStatus === PaymentStatus.CANCELLED
+            ? 'Payment was cancelled.'
+            : 'Payment failed.'}
+        </p>
+        <Button
+          type="button"
+          variant="outline"
+          disabled={isPaymentStatusLoading}
+          onClick={() => void checkPaymentStatus(true)}
+        >
+          Check payment status
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-6">
-      <PaymentCountdown expiryTime={payment.expiredAt} onExpired={onExpired} />
+      <PaymentCountdown
+        expiryTime={payment.expiredAt}
+        onExpiryReached={() => {
+          void checkPaymentStatus();
+        }}
+      />
 
       <div className="flex flex-1 items-center justify-center rounded-lg border-2 bg-muted/20 p-8">
         {payment.midtransDetail.paymentType === 'qris' && payment.midtransDetail.qrCodeUrl ? (
@@ -81,7 +175,7 @@ export function PosPaymentModule({
             {!config.midtrans.isProduction && (
               <MockMidtransPaymentButton
                 orderNumber={orderNumber}
-                onPaid={onPaid}
+                onPaymentStatusCheck={() => checkPaymentStatus(true)}
                 paymentMethod={paymentMethod}
                 grossAmount={payment.amount}
               />
@@ -118,15 +212,13 @@ export function PosPaymentModule({
               Use mobile banking or ATM to transfer to this account number
             </p>
             <CheckPaymentStatusButton
-              orderId={orderId}
-              onPaid={onPaid}
+              onPaymentStatusCheck={() => checkPaymentStatus(true)}
               isPaymentStatusLoading={isPaymentStatusLoading}
-              setIsPaymentStatusLoading={setIsPaymentStatusLoading}
             />
             {!config.midtrans.isProduction && (
               <MockMidtransPaymentButton
                 orderNumber={orderNumber}
-                onPaid={onPaid}
+                onPaymentStatusCheck={() => checkPaymentStatus(true)}
                 paymentMethod={paymentMethod}
                 grossAmount={payment.amount}
               />
@@ -142,26 +234,29 @@ function MockMidtransPaymentButton({
   orderNumber,
   paymentMethod,
   grossAmount,
-  onPaid,
+  onPaymentStatusCheck,
 }: {
   orderNumber: string;
   paymentMethod: PaymentMethod;
   grossAmount: number;
-  onPaid: () => void;
+  onPaymentStatusCheck: () => Promise<void>;
 }) {
   const [isLoading, setIsLoading] = useState(false);
 
   const onClick = async () => {
     setIsLoading(true);
-    const result = await mockMidtransPaymentAction({ orderNumber, paymentMethod, grossAmount });
-    setIsLoading(false);
+    try {
+      const result = await mockMidtransPaymentAction({ orderNumber, paymentMethod, grossAmount });
 
-    if (!result.success) {
-      toast.error(result.error ?? 'Failed to mock payment.');
-      return;
+      if (!result.success) {
+        toast.error(result.error ?? 'Failed to mock payment.');
+        return;
+      }
+
+      await onPaymentStatusCheck();
+    } finally {
+      setIsLoading(false);
     }
-
-    onPaid();
   };
 
   return (
@@ -194,22 +289,31 @@ function vaNumberSizeClass(vaNumber: string): string {
 
 function PaymentCountdown({
   expiryTime,
-  onExpired,
+  onExpiryReached,
 }: {
   expiryTime: string | Date | null;
-  onExpired: () => void;
+  onExpiryReached: () => void;
 }) {
+  const lastCheckedExpiry = useRef<number | null>(null);
+
   useEffect(() => {
+    if (!expiryTime) return;
+
+    const expiresAt = moment(expiryTime);
+    if (!expiresAt.isValid()) return;
+
     const interval = setInterval(() => {
-      if (!expiryTime) onExpired();
+      if (!expiresAt.isSameOrBefore(new Date())) return;
 
-      const isExpired = moment(expiryTime).isSameOrBefore(new Date());
+      const expiryTimestamp = expiresAt.valueOf();
+      if (lastCheckedExpiry.current === expiryTimestamp) return;
 
-      if (isExpired) onExpired();
+      lastCheckedExpiry.current = expiryTimestamp;
+      onExpiryReached();
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [expiryTime, onExpired]);
+  }, [expiryTime, onExpiryReached]);
 
   return (
     <div className="flex items-center gap-3">
@@ -226,33 +330,18 @@ function PaymentCountdown({
 }
 
 function CheckPaymentStatusButton({
-  orderId,
-  onPaid,
+  onPaymentStatusCheck,
   isPaymentStatusLoading,
-  setIsPaymentStatusLoading,
 }: {
-  orderId: number;
-  onPaid: () => void;
+  onPaymentStatusCheck: () => Promise<void>;
   isPaymentStatusLoading: boolean;
-  setIsPaymentStatusLoading: (bool: boolean) => void;
 }) {
-  const onClick = async () => {
-    setIsPaymentStatusLoading(true);
-    const payment = await getPaymentByOrderId<Pick<Payment, 'status'>>({
-      orderId,
-      columns: ['status'],
-    });
-
-    if (payment.result?.status === PaymentStatus.SUCCESS) {
-      toast.success('Payment received!');
-      onPaid();
-    }
-
-    setIsPaymentStatusLoading(false);
-  };
-
   return (
-    <Button variant="outline" onClick={onClick}>
+    <Button
+      variant="outline"
+      onClick={() => void onPaymentStatusCheck()}
+      disabled={isPaymentStatusLoading}
+    >
       {isPaymentStatusLoading ? <Loader2Icon className="animate-spin" /> : 'Check Payment Status'}
     </Button>
   );

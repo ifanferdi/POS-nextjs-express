@@ -5,25 +5,31 @@ import { useEffect, useRef, useState } from 'react';
 interface UseSseOptions<T> {
   events?: string[];
   onEvent?: (data: { entity: string; action: string; event: string; data: T[] }) => void;
+  onOpen?: () => void;
   enabled?: boolean;
 }
 export function useSSE<T>(options: UseSseOptions<T>) {
-  const { enabled = true, events = ['message'], onEvent } = options;
+  const { enabled = true, events = ['message'], onEvent, onOpen } = options;
+  const eventKey = [...new Set(events)].join('\u0000');
 
   const [status, setStatus] = useState('connecting');
   const onEventRef = useRef(onEvent);
+  const onOpenRef = useRef(onOpen);
 
-  // pindah ke sini — jalan setelah render, bukan selama render
   useEffect(() => {
     onEventRef.current = onEvent;
-  }, [onEvent]);
+    onOpenRef.current = onOpen;
+  }, [onEvent, onOpen]);
 
   useEffect(() => {
     if (!enabled) return;
-
     const es = new EventSource('/api/sse');
+    const registeredEvents = eventKey ? eventKey.split('\u0000') : [];
 
-    es.onopen = () => setStatus('open');
+    es.onopen = () => {
+      setStatus('open');
+      onOpenRef.current?.();
+    };
     es.onerror = () => setStatus('error');
 
     const handleMessage = (event: MessageEvent) => {
@@ -31,17 +37,16 @@ export function useSSE<T>(options: UseSseOptions<T>) {
         const data = JSON.parse(event.data);
         onEventRef.current?.(data);
       } catch {
-        onEventRef.current?.(event.data);
+        return;
       }
     };
 
-    events?.forEach((event) => es.addEventListener(event, handleMessage));
+    registeredEvents.forEach((event) => es.addEventListener(event, handleMessage));
     return () => {
+      registeredEvents.forEach((event) => es.removeEventListener(event, handleMessage));
       es.close();
-      setStatus('closed');
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enabled, events?.join(',')]);
+  }, [enabled, eventKey]);
 
-  return { status };
+  return { status: enabled ? status : 'closed' };
 }
