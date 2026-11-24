@@ -31,18 +31,23 @@ import { Textarea } from '@/components/ui/textarea';
 import { options } from '@/config/config';
 import { CategoryOption, ProductList } from '@/domain';
 import { createCategoryAction } from '@/features/categories/action';
-import { createProductAction, updateProductAction } from '@/features/products/action';
+import {
+  createProductAction,
+  refreshProductImageUrlAction,
+  updateProductAction,
+} from '@/features/products/action';
 import {
   CreateProductInput,
   CreateProductSchema,
   UpdateProductInput,
 } from '@/features/products/schema';
 import { ImageFileSchema } from '@/features/uploads/schema';
+import { useFreshImageUrl } from '@/hooks/use-fresh-image-url';
 import { uploadImageToS3 } from '@/lib/upload';
 import { cn } from '@/lib/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
 import _ from 'lodash';
-import { ChevronDown, Loader2Icon, PlusIcon, XIcon } from 'lucide-react';
+import { ChevronDown, ImageIcon, Loader2Icon, PlusIcon, XIcon } from 'lucide-react';
 import Image from 'next/image';
 import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { Controller, useForm, UseFormRegisterReturn, UseFormReturn } from 'react-hook-form';
@@ -174,6 +179,7 @@ function ProductForm(props: ProductFormProps) {
       <div className="overflow-y-auto flex-1 px-6 py-4">
         <ProductFormFields
           form={form}
+          product={product}
           categories={categories}
           isPending={isPending}
           previewUrl={previewUrl}
@@ -203,10 +209,12 @@ interface ProductFormFieldsProps {
   previewUrl: string | null;
   imageField: UseFormRegisterReturn;
   onImageClear: () => void;
+  product?: ProductList;
   autoFocus?: boolean;
 }
 function ProductFormFields(props: ProductFormFieldsProps) {
-  const { form, categories, isPending, previewUrl, imageField, onImageClear, autoFocus } = props;
+  const { form, categories, isPending, previewUrl, imageField, onImageClear, autoFocus, product } =
+    props;
   const { formState } = form;
   const imageError = formState.errors.imageFile;
   return (
@@ -412,6 +420,8 @@ function ProductFormFields(props: ProductFormFieldsProps) {
         <FieldLabel htmlFor="image">Image</FieldLabel>
         <ProductImageInput
           previewUrl={previewUrl}
+          productId={product?.id}
+          imagePath={previewUrl === product?.imageUrl ? product?.imagePath : null}
           imageField={imageField}
           onClear={onImageClear}
           disabled={isPending}
@@ -425,40 +435,61 @@ function ProductFormFields(props: ProductFormFieldsProps) {
 
 function ProductImageInput({
   previewUrl,
+  productId,
+  imagePath,
   imageField,
   onClear,
   disabled,
 }: {
   previewUrl: string | null;
+  productId?: number;
+  imagePath?: string | null;
   imageField: UseFormRegisterReturn;
   onClear: () => void;
   disabled?: boolean;
 }) {
   const [isLoading, setIsLoading] = useState(true);
+  const { src, isManaged, hasError, onError } = useFreshImageUrl(
+    previewUrl,
+    imagePath,
+    'products/',
+    productId ? () => refreshProductImageUrlAction(productId) : null,
+  );
 
   if (previewUrl) {
     return (
       <div key={previewUrl}>
         <div className="relative size-44">
-          {isLoading && (
+          {isLoading && !hasError && (
             <div className="flex size-44 items-center justify-center rounded-lg border border-border/60 bg-muted">
               <Loader2Icon className="size-5 animate-spin text-muted-foreground" />
             </div>
           )}
-          <a href={previewUrl} target="_blank" rel="noopener noreferrer">
-            <Image
-              src={previewUrl}
-              width={500}
-              height={500}
-              loading="lazy"
-              alt="Product preview"
-              onLoad={() => setIsLoading(false)}
-              className={cn(
-                'size-44 rounded-lg border border-border/60 object-cover transition-opacity',
-                isLoading ? 'opacity-0' : 'opacity-100',
-              )}
-            />
-          </a>
+          {src && !hasError ? (
+            <a href={src} target="_blank" rel="noopener noreferrer">
+              <Image
+                src={src}
+                width={500}
+                height={500}
+                loading="lazy"
+                alt="Product preview"
+                onLoad={() => setIsLoading(false)}
+                onError={() => {
+                  setIsLoading(false);
+                  onError();
+                }}
+                unoptimized={isManaged}
+                className={cn(
+                  'size-44 rounded-lg border border-border/60 object-cover transition-opacity',
+                  isLoading ? 'opacity-0' : 'opacity-100',
+                )}
+              />
+            </a>
+          ) : (
+            <div className="flex size-44 items-center justify-center rounded-lg border border-border/60 bg-muted">
+              <ImageIcon className="size-8 text-muted-foreground" />
+            </div>
+          )}
           <button
             type="button"
             onClick={onClear}

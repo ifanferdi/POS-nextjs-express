@@ -5,6 +5,8 @@ import { PosOrderHistoryDialog } from '@/app/(pos)/_components/pos-order-history
 import { DiscountBadge } from '@/components/shared/discount';
 import { Button } from '@/components/ui/button';
 import { PosLastOrder } from '@/domain';
+import { refreshProductImageUrlAction } from '@/features/products/action';
+import { useFreshImageUrl } from '@/hooks/use-fresh-image-url';
 import { formatCurrency } from '@/lib/helper';
 import { cn } from '@/lib/utils';
 import {
@@ -19,6 +21,7 @@ import {
 import Image from 'next/image';
 import { useState } from 'react';
 import {
+  CartItem,
   cartCount,
   cartDiscount,
   cartSubtotal,
@@ -101,20 +104,7 @@ export function PosCart({ onCheckoutSuccess }: PosCartProps) {
                   className="flex gap-3 items-center rounded-lg border border-border/40 p-2.5 bg-muted-foreground/10 dark:bg-muted-foreground/10 hover:bg-muted-foreground/20 hover:dark:bg-muted-foreground/20 transition"
                 >
                   <div className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-md bg-card">
-                    {item.imageUrl ? (
-                      <Image
-                        src={item.imageUrl}
-                        alt={item.name}
-                        className="size-full object-cover"
-                        loading="lazy"
-                        height={200}
-                        width={200}
-                      />
-                    ) : (
-                      <span className="text-xs font-medium text-muted-foreground">
-                        {item.name.slice(0, 2).toUpperCase()}
-                      </span>
-                    )}
+                    <CartItemImage item={item} />
                   </div>
                   <div className="flex flex-1 flex-col gap-1">
                     <div className="flex items-start justify-between gap-2">
@@ -238,5 +228,33 @@ export function PosCart({ onCheckoutSuccess }: PosCartProps) {
 
       <PosOrderHistoryDialog open={historyOpen} setOpen={setHistoryOpen} />
     </div>
+  );
+}
+function CartItemImage({ item }: { item: CartItem }) {
+  const { src, isManaged, hasError, onError } = useFreshImageUrl(
+    item.imageUrl,
+    item.imagePath,
+    'products/',
+    () => refreshProductImageUrlAction(item.productId),
+  );
+
+  if (!src || hasError)
+    return (
+      <span className="text-xs font-medium text-muted-foreground">
+        {item.name.slice(0, 2).toUpperCase()}
+      </span>
+    );
+
+  return (
+    <Image
+      src={src}
+      alt={item.name}
+      className="size-full object-cover"
+      loading="lazy"
+      height={200}
+      width={200}
+      unoptimized={isManaged}
+      onError={onError}
+    />
   );
 }
