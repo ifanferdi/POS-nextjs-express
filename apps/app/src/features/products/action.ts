@@ -66,6 +66,8 @@ export async function getAllProductsAction<T = Product>(
 ): Promise<PaginatedResponse<T>> {
   return await guard(async () => await api.getAllProducts(params), 'Failed to fetch products.');
 }
+
+/** Ambil URL terbaru gambar produk managed saat URL lama gagal dimuat. */
 export async function refreshProductImageUrlAction(id: number): Promise<string | null> {
   return await guard(async () => {
     if (!Number.isSafeInteger(id) || id < 1) return null;

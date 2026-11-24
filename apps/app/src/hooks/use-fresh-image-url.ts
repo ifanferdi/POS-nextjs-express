@@ -8,6 +8,7 @@ interface ImageAttempt {
   failed: boolean;
 }
 
+/** Gunakan URL saat ini; refresh hanya jika gambar managed gagal dimuat. */
 export function useFreshImageUrl(
   imageUrl: string | null | undefined,
   imagePath: string | null | undefined,

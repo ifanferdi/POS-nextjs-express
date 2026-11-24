@@ -44,13 +44,13 @@ export default async function AccountPage() {
       <section className={glass}>
         <div className="flex flex-col gap-6 p-6 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-5">
-            <div className="rounded-full bg-linear-to-br from-primary via-info to-primary p-0.75 shadow-lg shadow-primary/20">
+            <div className="shrink-0 rounded-full bg-linear-to-br from-primary via-info to-primary p-0.75 shadow-lg shadow-primary/20">
               <AccountProfileAvatar
                 imageUrl={profile?.imageUrl}
                 imagePath={profile?.imagePath}
                 username={me.username}
                 fullName={profile?.fullName}
-                className="size-20 ring-4 ring-white/60 dark:ring-white/10"
+                className="data-[size=lg]:size-20 sm:data-[size=lg]:size-20 ring-4 ring-white/60 dark:ring-white/10"
                 fallbackClassName="bg-background/80 text-xl text-primary backdrop-blur"
               />
             </div>
