@@ -38,20 +38,6 @@ export function PosPaymentModule({
   const shouldNotifyPaymentStatusError = useRef(false);
   const isPaymentResolved = useRef(false);
   const lastReportedStatus = useRef<PaymentStatus | null>(null);
-  const generation = useRef(0);
-
-  useEffect(() => {
-    // Abaikan respons yang kembali setelah order berganti atau dialog ditutup.
-    generation.current += 1;
-    isCheckingPaymentStatus.current = false;
-    shouldRecheckPaymentStatus.current = false;
-    shouldNotifyPaymentStatusError.current = false;
-    isPaymentResolved.current = false;
-    lastReportedStatus.current = null;
-    return () => {
-      generation.current += 1;
-    };
-  }, [orderId]);
 
   async function checkPaymentStatus(showLoading = false) {
     if (isPaymentResolved.current) return;
@@ -67,31 +53,14 @@ export function PosPaymentModule({
     }
 
     isCheckingPaymentStatus.current = true;
-    const currentGeneration = generation.current;
     try {
       do {
         shouldRecheckPaymentStatus.current = false;
         const shouldNotifyError = shouldNotifyPaymentStatusError.current;
         shouldNotifyPaymentStatusError.current = false;
-        const response = await getPaymentByOrderId<Payment>({ orderId }).catch(() => ({
-          success: false as const,
-          error: 'Failed to check payment status.',
-          result: undefined,
-        }));
+        const response = await getPaymentByOrderId<Payment>({ orderId });
 
-        if (generation.current !== currentGeneration) return;
-        if (shouldRecheckPaymentStatus.current) {
-          // Event baru dapat membuat respons yang sedang diproses kedaluwarsa.
-          shouldNotifyPaymentStatusError.current ||= shouldNotifyError;
-          continue;
-        }
-
-        if (
-          !response.success ||
-          !response.result ||
-          response.result.orderId !== orderId ||
-          !Object.values(PaymentStatus).includes(response.result.status)
-        ) {
+        if (!response.success || !response.result) {
           if (shouldNotifyError) {
             toast.error(response.error ?? 'Failed to check payment status.');
           }
@@ -99,7 +68,6 @@ export function PosPaymentModule({
         }
 
         const confirmedPayment = response.result;
-        if (confirmedPayment.status === PaymentStatus.PENDING) setTerminalStatus(null);
         if (confirmedPayment.status === PaymentStatus.SUCCESS) {
           isPaymentResolved.current = true;
           onPaid(confirmedPayment);
@@ -123,10 +91,8 @@ export function PosPaymentModule({
         lastReportedStatus.current = confirmedPayment.status;
       } while (shouldRecheckPaymentStatus.current && !isPaymentResolved.current);
     } finally {
-      if (generation.current === currentGeneration) {
-        isCheckingPaymentStatus.current = false;
-        setIsPaymentStatusLoading(false);
-      }
+      isCheckingPaymentStatus.current = false;
+      setIsPaymentStatusLoading(false);
     }
   }
 
@@ -136,16 +102,15 @@ export function PosPaymentModule({
       void checkPaymentStatus();
     },
     onEvent: ({ data }) => {
-      const isCurrentOrder =
-        Array.isArray(data) &&
-        data.some(
-          (order) =>
-            order?.id === orderId ||
-            order?.orderId === orderId ||
-            order?.orderNumber === orderNumber,
-        );
+      const hasOrderIdentity = data.some(
+        (order) => order?.id != null || order?.orderId != null || order?.orderNumber != null,
+      );
+      const isCurrentOrder = data.some(
+        (order) =>
+          order?.id === orderId || order?.orderId === orderId || order?.orderNumber === orderNumber,
+      );
 
-      if (!isCurrentOrder) return;
+      if (hasOrderIdentity && !isCurrentOrder) return;
       void checkPaymentStatus();
     },
   });
