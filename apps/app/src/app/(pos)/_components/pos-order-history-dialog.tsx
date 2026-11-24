@@ -372,7 +372,7 @@ function PaymentDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">Payment</DialogTitle>
         </DialogHeader>
-        {
+        {open && (
           <PosPaymentModule
             orderId={payOrder.id}
             orderNumber={payOrder.orderNumber}
@@ -381,7 +381,7 @@ function PaymentDialog({
             onPaid={handlePaid}
             onExpired={handlePayExpired}
           />
-        }
+        )}
       </DialogContent>
     </Dialog>
   );

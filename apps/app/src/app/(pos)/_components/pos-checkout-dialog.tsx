@@ -512,7 +512,7 @@ export function PosCheckoutDialog({
             </form>
           </div>
 
-          {isPaymentMode && pendingPayment && createdOrder && (
+          {open && isPaymentMode && pendingPayment && createdOrder && (
             <div className="flex flex-col pl-6">
               <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider">Payment</h3>
               <PosPaymentModule
