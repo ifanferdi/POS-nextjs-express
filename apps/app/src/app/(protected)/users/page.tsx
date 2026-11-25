@@ -1,13 +1,17 @@
 import { UserFilter } from '@/app/(protected)/users/_components/user-filter';
 import { UserFormDialog } from '@/app/(protected)/users/_components/user-form-dialog';
 import { UserSearch } from '@/app/(protected)/users/_components/user-search';
-import { UserTableSection } from '@/app/(protected)/users/_components/user-table';
+import {
+  headers as userHeaders,
+  UserTableSection,
+} from '@/app/(protected)/users/_components/user-table';
 import { UserTableSkeleton } from '@/app/(protected)/users/_components/user-table-skeleton';
 import { auth } from '@/auth';
 import { ParamsError } from '@/components/shared/error';
+import { ErrorTable } from '@/components/shared/table-server';
 import { RoleOption, UserRelation } from '@/domain';
 import { getAllRoles } from '@/features/roles/api';
-import { GetAllUserParams, GetAllUserSchema } from '@/features/users/schema';
+import { GetAllUserSchema } from '@/features/users/schema';
 import { hasPermission, PERMISSION } from '@/lib/permission';
 import { forbidden } from 'next/navigation';
 import { Suspense } from 'react';
@@ -33,15 +37,13 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
   const roleIdNum = roleId ? Number(roleId) : undefined;
   const isActiveBool = isActive === 'true' ? true : isActive === 'false' ? false : undefined;
 
-  const params: GetAllUserParams = {
+  const result = GetAllUserSchema.safeParse({
     page: pageNum,
     q,
     roleId: roleIdNum,
     isActive: isActiveBool,
     with: [UserRelation.PROFILE, UserRelation.ROLE],
-  };
-
-  const result = GetAllUserSchema.safeParse(params);
+  });
 
   const { data: roles } = await getAllRoles<RoleOption>({
     limit: -1,
@@ -66,9 +68,13 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
         <UserSearch />
         <UserFilter roles={roles} />
       </div>
-      <Suspense fallback={<UserTableSkeleton />}>
-        <UserTableSection params={params} roles={roleOptions} canManage={canManage} />
-      </Suspense>
+      {result.success ? (
+        <Suspense fallback={<UserTableSkeleton />}>
+          <UserTableSection params={result.data} roles={roleOptions} canManage={canManage} />
+        </Suspense>
+      ) : (
+        <ErrorTable headers={userHeaders} recoveryHref="/users" />
+      )}
     </div>
   );
 }

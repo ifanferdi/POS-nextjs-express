@@ -1,6 +1,7 @@
-import type { VariantProps } from 'class-variance-authority';
-import React from 'react';
 import { Button as ButtonComponent, buttonVariants } from '@/components/ui/button';
+import type { VariantProps } from 'class-variance-authority';
+import { PlusIcon } from 'lucide-react';
+import React from 'react';
 
 const buttonClass = 'h-10 min-w-24 px-3';
 
@@ -16,6 +17,7 @@ export function DialogCreateButton({
   }) {
   return (
     <ButtonComponent variant={variant} className={`${buttonClass} ${props.className}`} {...props}>
+      <PlusIcon />
       {text}
     </ButtonComponent>
   );

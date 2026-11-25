@@ -1,4 +1,5 @@
 import { UserActions } from '@/app/(protected)/users/_components/user-actions';
+import { UserFormDialog } from '@/app/(protected)/users/_components/user-form-dialog';
 import { TablePagination } from '@/components/shared/table';
 import { DataTable, EmptyTable, TooltipedCell } from '@/components/shared/table-server';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -39,7 +40,12 @@ interface UserTableProps {
 }
 function UserTable(props: UserTableProps) {
   const { users, roles, canManage } = props;
-  if (users.length === 0) return <EmptyTable headers={headers} entities="users" icon="user" />;
+  if (users.length === 0)
+    return (
+      <EmptyTable headers={headers} entities="users" icon="user">
+        {canManage && <UserFormDialog mode="create" roles={roles} />}
+      </EmptyTable>
+    );
 
   return (
     <DataTable

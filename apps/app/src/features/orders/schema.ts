@@ -6,8 +6,8 @@ import { z } from 'zod';
 const Relation = z.array(z.enum(OrderRelation)).optional();
 
 export const GetAllOrderSchema = BasePagination.extend({
-  status: z.enum(OrderStatus).optional(),
-  paymentMethod: z.enum(PaymentMethod).optional(),
+  status: z.string().trim().pipe(z.enum(OrderStatus)).optional(),
+  paymentMethod: z.string().trim().pipe(z.enum(PaymentMethod)).optional(),
   customerId: z.union([numberSchema, z.array(numberSchema)]).optional(),
   userId: z.union([numberSchema, z.array(numberSchema)]).optional(),
   with: Relation,
@@ -76,10 +76,7 @@ export const CreateOrderSchema = BaseOrderSchema;
 export const UpdateOrderSchema = CreateOrderSchema;
 
 export type OrderRelationParams = z.infer<typeof Relation>;
-export type GetAllOrderParams = Omit<z.input<typeof GetAllOrderSchema>, 'status' | 'paymentMethod'> & {
-  status?: string;
-  paymentMethod?: string;
-};
+export type GetAllOrderParams = z.input<typeof GetAllOrderSchema>;
 export type CreateOrderInput = z.input<typeof CreateOrderSchema>;
 export type UpdateOrderInput = z.input<typeof UpdateOrderSchema>;
 export type PosCheckoutForm = z.input<typeof PosCheckoutFormSchema>;

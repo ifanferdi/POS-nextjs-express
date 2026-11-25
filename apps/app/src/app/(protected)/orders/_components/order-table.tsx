@@ -8,8 +8,7 @@ interface OrderTableSectionProps {
   params: GetAllOrderParams;
 }
 
-export async function OrderTableSection(props: OrderTableSectionProps) {
-  const { params } = props;
+export async function OrderTableSection({ params }: OrderTableSectionProps) {
   const { data: orders, ...meta } = await getAllOrders<OrderList>(params);
   return (
     <>

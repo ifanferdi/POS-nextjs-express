@@ -1,21 +1,24 @@
 import { ProductFilter } from '@/app/(protected)/products/_components/product-filter';
 import { ProductFormDialog } from '@/app/(protected)/products/_components/product-form-dialog';
 import { ProductSearch } from '@/app/(protected)/products/_components/product-search';
-import { ProductTableSection } from '@/app/(protected)/products/_components/product-table';
+import { headers, ProductTableSection } from '@/app/(protected)/products/_components/product-table';
 import { ProductTableSkeleton } from '@/app/(protected)/products/_components/product-table-skeleton';
 import { auth } from '@/auth';
+import { ParamsError } from '@/components/shared/error';
+import { ErrorTable } from '@/components/shared/table-server';
 import { CategoryOption, ProductRelation } from '@/domain';
 import { getAllCategories } from '@/features/categories/api';
-import { GetAllProductParams } from '@/features/products/schema';
+import { GetAllProductSchema } from '@/features/products/schema';
 import { hasPermission, PERMISSION } from '@/lib/permission';
 import { forbidden } from 'next/navigation';
 import { Suspense } from 'react';
+import { z } from 'zod';
 
 interface ProductsPageProps {
   searchParams: Promise<{
     page?: string;
     q?: string;
-    'categoryId[]'?: string[];
+    'categoryId[]'?: string | string[];
     isActive?: string;
   }>;
 }
@@ -35,14 +38,14 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
     categoryIds && categoryIds.length > 0 ? categoryIds.map((val) => Number(val)) : undefined;
   const isActiveBool = isActive === 'true' ? true : isActive === 'false' ? false : undefined;
 
-  const params: GetAllProductParams = {
+  const result = GetAllProductSchema.safeParse({
     page: pageNum,
     q,
     categoryId: categoryIdsNum,
     isActive: isActiveBool,
     with: [ProductRelation.CATEGORIES, ProductRelation.DISCOUNT_CYCLES],
     orderBy: ['isActive:desc', 'name:asc'],
-  };
+  });
 
   const { data: categories } = await getAllCategories<CategoryOption>({
     limit: -1,
@@ -52,6 +55,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
 
   return (
     <div className="space-y-6">
+      {!result.success && <ParamsError errors={z.flattenError(result.error).fieldErrors} />}
       <div className="flex items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Products</h1>
@@ -63,9 +67,13 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
         <ProductSearch />
         <ProductFilter categories={categories} />{' '}
       </div>
-      <Suspense fallback={<ProductTableSkeleton />}>
-        <ProductTableSection categories={categories} params={params} canManage={canManage} />
-      </Suspense>
+      {result.success ? (
+        <Suspense fallback={<ProductTableSkeleton />}>
+          <ProductTableSection categories={categories} params={result.data} canManage={canManage} />
+        </Suspense>
+      ) : (
+        <ErrorTable headers={headers} recoveryHref="/products" />
+      )}
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const numberSchema = z.number();
+export const numberSchema = z.number().int().positive();
 export const stringSchema = z.string().trim();
 export const requiredStringSchema = (string = 'Column') =>
   z.string().trim().min(1, `${string} cannot be empty`);

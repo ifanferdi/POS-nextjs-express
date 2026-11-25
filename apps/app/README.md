@@ -78,8 +78,6 @@ Each feature module holds flat, consistently named files:
 | `action.ts` | Server Actions (mutations) | Server (called from Client Components) |
 | `dto.ts` | Request/response DTO types | Universal |
 
-Not every feature has all four files — add them as needed. Feature-specific UI components live in `app/(protected)/<feature>/_components/`.
-
 ## Generic vs project-specific
 
 Because this is meant to be reused, some parts are deliberately separated:
