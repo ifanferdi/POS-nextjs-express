@@ -6,13 +6,9 @@ import { handleNumberOrArrayRequest, handleOrderByRequest } from '@/helpers/comm
 import uploadFile from '@/helpers/multer.helper';
 import { BaseFindById } from '@/validations/base-validation';
 import {
-  CreateProductDto,
-  CreateProductSchema,
-  FindAllProductDto,
   FindAllProductSchema,
-  FindByIdProductDto,
   FindByIdProductSchema,
-  UpdateProductDto,
+  CreateProductSchema,
   UpdateProductSchema,
 } from '@/validations/product-validation';
 import e from 'express';
@@ -22,7 +18,7 @@ export default class ProductController extends BaseController {
   findAll = asyncHandler(async (req: e.Request & Record<string, any>, res: e.Response) => {
     const request = req.route.methods.get ? req.query : req.body;
 
-    const params: FindAllProductDto = {
+    const params = FindAllProductSchema.parse({
       page: Number(request.page) || 1,
       limit: Number(request.limit) || 10,
       orderBy: handleOrderByRequest(request),
@@ -36,9 +32,7 @@ export default class ProductController extends BaseController {
       sku: request.sku,
       categoryId: handleNumberOrArrayRequest(request.categoryId),
       with: request.with,
-    };
-
-    FindAllProductSchema.parse(params);
+    });
 
     const result = await this.useCases.productUseCase.findAllProduct.execute(params);
 
@@ -46,13 +40,11 @@ export default class ProductController extends BaseController {
   });
 
   findOne = asyncHandler(async (req: e.Request, res: e.Response) => {
-    const params: FindByIdProductDto = {
+    const params = FindByIdProductSchema.parse({
       id: Number(req.params.id),
       with: req.query.with as any,
       columns: req.query.columns as any,
-    };
-
-    FindByIdProductSchema.parse(params);
+    });
 
     const result = await this.useCases.productUseCase.findByIdProduct.execute(params);
 
@@ -60,7 +52,7 @@ export default class ProductController extends BaseController {
   });
 
   create = asyncHandler(async (req: e.Request, res: e.Response) => {
-    const payload: CreateProductDto = {
+    const payload = CreateProductSchema.parse({
       name: req.body.name,
       description: req.body.description,
       price: req.body.price,
@@ -71,9 +63,7 @@ export default class ProductController extends BaseController {
       isActive: req.body.isActive,
       stock: req.body.stock,
       categoryIds: req.body.categoryIds,
-    };
-
-    CreateProductSchema.parse(payload);
+    });
 
     const product = await this.useCases.productUseCase.createProduct.execute(payload);
 
@@ -81,7 +71,7 @@ export default class ProductController extends BaseController {
   });
 
   update = asyncHandler(async (req: e.Request, res: e.Response) => {
-    const payload: UpdateProductDto = {
+    const payload = UpdateProductSchema.parse({
       id: Number(req.params.id),
       name: req.body.name,
       description: req.body.description,
@@ -93,9 +83,7 @@ export default class ProductController extends BaseController {
       isActive: req.body.isActive,
       stock: req.body.stock,
       categoryIds: req.body.categoryIds,
-    };
-
-    UpdateProductSchema.parse(payload);
+    });
 
     const product = await this.useCases.productUseCase.updateProduct.execute(payload);
 
@@ -103,19 +91,17 @@ export default class ProductController extends BaseController {
   });
 
   destroy = asyncHandler(async (req: e.Request, res: e.Response) => {
-    const params = { id: Number(req.params.id) };
-    BaseFindById.parse(params);
+    const params = BaseFindById.parse({ id: Number(req.params.id) });
 
-    await this.useCases.productUseCase.deleteProduct.execute(params as BaseFindById);
+    await this.useCases.productUseCase.deleteProduct.execute(params);
 
     res.send({ message: 'Success.' });
   });
 
   destroyPermanently = asyncHandler(async (req: e.Request, res: e.Response) => {
-    const params = { id: Number(req.params.id) };
-    BaseFindById.parse(params);
+    const params = BaseFindById.parse({ id: Number(req.params.id) });
 
-    await this.useCases.productUseCase.deleteProduct.execute(params as BaseFindById, {
+    await this.useCases.productUseCase.deleteProduct.execute(params, {
       isPermanently: true,
     });
 
@@ -123,10 +109,9 @@ export default class ProductController extends BaseController {
   });
 
   restore = asyncHandler(async (req: e.Request, res: e.Response) => {
-    const params = { id: Number(req.params.id) };
-    BaseFindById.parse(params);
+    const params = BaseFindById.parse({ id: Number(req.params.id) });
 
-    await this.useCases.productUseCase.restoreProduct.execute(params as BaseFindById);
+    await this.useCases.productUseCase.restoreProduct.execute(params);
 
     res.send({ message: 'Success.' });
   });

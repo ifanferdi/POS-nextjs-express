@@ -1,9 +1,7 @@
 import BaseController from '@/adapters/http/controller/_base-controller';
 import { handleNumberOrArrayRequest, handleOrderByRequest } from '@/helpers/common.helper';
 import {
-  FindAllPaymentDto,
   FindAllPaymentSchema,
-  FindByIdPaymentDto,
   FindByIdPaymentSchema,
 } from '@/validations/payment-validation';
 import e from 'express';
@@ -13,7 +11,7 @@ export default class PaymentController extends BaseController {
   findAll = asyncHandler(async (req: e.Request & Record<string, any>, res: e.Response) => {
     const request = req.route.methods.get ? req.query : req.body;
 
-    const params: FindAllPaymentDto = {
+    const params = FindAllPaymentSchema.parse({
       page: Number(request.page) || 1,
       limit: Number(request.limit) || 10,
       orderBy: handleOrderByRequest(request),
@@ -24,9 +22,7 @@ export default class PaymentController extends BaseController {
       orderId: handleNumberOrArrayRequest(request.orderId),
       status: request.status,
       method: request.method,
-    };
-
-    FindAllPaymentSchema.parse(params);
+    });
 
     const result = await this.useCases.paymentUseCase.findAllPayment.execute(params);
 
@@ -34,13 +30,11 @@ export default class PaymentController extends BaseController {
   });
 
   findOne = asyncHandler(async (req: e.Request, res: e.Response) => {
-    const params: FindByIdPaymentDto = {
+    const params = FindByIdPaymentSchema.parse({
       id: Number(req.params.id),
       with: req.query.with as any,
       columns: req.query.columns as any,
-    };
-
-    FindByIdPaymentSchema.parse(params);
+    });
 
     const result = await this.useCases.paymentUseCase.findByIdPayment.execute(params);
 
@@ -48,13 +42,11 @@ export default class PaymentController extends BaseController {
   });
 
   findOneByOrderId = asyncHandler(async (req: e.Request, res: e.Response) => {
-    const params: FindByIdPaymentDto = {
+    const params = FindByIdPaymentSchema.parse({
       id: Number(req.params.orderId),
       with: req.query.with as any,
       columns: req.query.columns as any,
-    };
-
-    FindByIdPaymentSchema.parse(params);
+    });
 
     const result = await this.useCases.paymentUseCase.findByOrderId.execute(params);
 

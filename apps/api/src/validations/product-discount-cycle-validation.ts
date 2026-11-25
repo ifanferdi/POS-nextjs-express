@@ -1,10 +1,15 @@
 import { ProductDiscountCycleRelation } from '@/domain/entities/enums/product-discount-cycle.enum';
 import { PRODUCT_DISCOUNT_CYCLE_FIELD } from '@/domain/entities/models/product-discount-cycle';
-import { BaseFindById, BasePagination, NumberSchema } from '@/validations/base-validation';
+import {
+  BaseFindById,
+  BasePagination,
+  NumberSchema,
+  Trimmed,
+} from '@/validations/base-validation';
 import { z } from 'zod';
 
-const Relations = z.array(z.nativeEnum(ProductDiscountCycleRelation).optional()).optional();
-const columns = z.array(z.nativeEnum(PRODUCT_DISCOUNT_CYCLE_FIELD)).optional();
+const Relations = z.array(Trimmed(z.nativeEnum(ProductDiscountCycleRelation)).optional()).optional();
+const columns = z.array(Trimmed(z.nativeEnum(PRODUCT_DISCOUNT_CYCLE_FIELD))).optional();
 
 export const FindByIdProductDiscountCycleSchema = BaseFindById.extend({ with: Relations, columns });
 export const FindAllProductDiscountCycleSchema = BasePagination(PRODUCT_DISCOUNT_CYCLE_FIELD)

@@ -5,13 +5,9 @@ import { BaseFindById } from '@/validations/base-validation';
 import {
   CheckQuotaProductDiscountCycleDto,
   CheckQuotaProductDiscountCycleSchema,
-  CreateProductDiscountCycleDto,
   CreateProductDiscountCycleSchema,
-  FindAllProductDiscountCycleDto,
   FindAllProductDiscountCycleSchema,
-  FindByIdProductDiscountCycleDto,
   FindByIdProductDiscountCycleSchema,
-  UpdateProductDiscountCycleDto,
   UpdateProductDiscountCycleSchema,
 } from '@/validations/product-discount-cycle-validation';
 import e from 'express';
@@ -21,7 +17,7 @@ export default class ProductDiscountCycleController extends BaseController {
   findAll = asyncHandler(async (req: e.Request & Record<string, any>, res: e.Response) => {
     const request = req.route.methods.get ? req.query : req.body;
 
-    const params: FindAllProductDiscountCycleDto = {
+    const params = FindAllProductDiscountCycleSchema.parse({
       page: Number(request.page) || 1,
       limit: Number(request.limit) || 10,
       orderBy: handleOrderByRequest(request),
@@ -34,9 +30,7 @@ export default class ProductDiscountCycleController extends BaseController {
       from: request.from ? new Date(request.from) : undefined,
       to: request.to ? new Date(request.to) : undefined,
       with: request.with,
-    };
-
-    FindAllProductDiscountCycleSchema.parse(params);
+    });
 
     const result =
       await this.useCases.productDiscountCycleUseCase.findAllProductDiscountCycle.execute(params);
@@ -45,13 +39,11 @@ export default class ProductDiscountCycleController extends BaseController {
   });
 
   findOne = asyncHandler(async (req: e.Request, res: e.Response) => {
-    const params: FindByIdProductDiscountCycleDto = {
+    const params = FindByIdProductDiscountCycleSchema.parse({
       id: Number(req.params.id),
       with: req.query.with as any,
       columns: req.query.columns as any,
-    };
-
-    FindByIdProductDiscountCycleSchema.parse(params);
+    });
 
     const result =
       await this.useCases.productDiscountCycleUseCase.findByIdProductDiscountCycle.execute(params);
@@ -60,15 +52,13 @@ export default class ProductDiscountCycleController extends BaseController {
   });
 
   create = asyncHandler(async (req: e.Request, res: e.Response) => {
-    const payload: CreateProductDiscountCycleDto = {
+    const payload = CreateProductDiscountCycleSchema.parse({
       productId: req.body.productId,
       amount: req.body.amount,
       quota: req.body.quota,
       startDate: req.body.startDate,
       endDate: req.body.endDate,
-    };
-
-    CreateProductDiscountCycleSchema.parse(payload);
+    });
 
     const discount =
       await this.useCases.productDiscountCycleUseCase.createProductDiscountCycle.execute(payload);
@@ -77,16 +67,14 @@ export default class ProductDiscountCycleController extends BaseController {
   });
 
   update = asyncHandler(async (req: e.Request, res: e.Response) => {
-    const payload: UpdateProductDiscountCycleDto = {
+    const payload = UpdateProductDiscountCycleSchema.parse({
       id: Number(req.params.id),
       productId: req.body.productId,
       amount: req.body.amount,
       quota: req.body.quota,
       startDate: req.body.startDate,
       endDate: req.body.endDate,
-    };
-
-    UpdateProductDiscountCycleSchema.parse(payload);
+    });
 
     const discount =
       await this.useCases.productDiscountCycleUseCase.updateProductDiscountCycle.execute(payload);
@@ -114,12 +102,9 @@ export default class ProductDiscountCycleController extends BaseController {
   });
 
   destroy = asyncHandler(async (req: e.Request, res: e.Response) => {
-    const params = { id: Number(req.params.id) };
-    BaseFindById.parse(params);
+    const params = BaseFindById.parse({ id: Number(req.params.id) });
 
-    await this.useCases.productDiscountCycleUseCase.deleteProductDiscountCycle.execute(
-      params as BaseFindById,
-    );
+    await this.useCases.productDiscountCycleUseCase.deleteProductDiscountCycle.execute(params);
 
     res.send({ message: 'Success.' });
   });

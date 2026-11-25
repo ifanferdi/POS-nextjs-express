@@ -9,6 +9,7 @@ import ProductRoutes from '@/adapters/http/routes/product.routes';
 import RoleRoutes from '@/adapters/http/routes/role.routes';
 import UserRoutes from '@/adapters/http/routes/user.routes';
 import { Controllers } from '@/domain/adapters/controller.interface';
+import { UploadSchema } from '@/validations/storage.validation';
 import Authorization from '@/use-cases/auth/authorization';
 import e, { Express } from 'express';
 import asyncHandler from 'express-async-handler';
@@ -19,7 +20,9 @@ export default function Routes(app: Express, controllers: Controllers, auth: Aut
   app.post(
     '/api/v1/uploads/generate-presign-url',
     asyncHandler(async (req: e.Request, _res: e.Response, next: e.NextFunction) => {
-      if (req.body?.folder === 'products') {
+      const payload = UploadSchema.parse(req.body);
+      req.body = payload;
+      if (payload.folder === 'products') {
         await auth.authorize(['Manage Product'])(req, _res, next);
         return;
       }

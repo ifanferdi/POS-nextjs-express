@@ -5,12 +5,13 @@ import {
   BasePagination,
   NumberSchema,
   StringSchema,
+  Trimmed,
 } from '@/validations/base-validation';
 import _ from 'lodash';
 import { z } from 'zod';
 
-const Relations = z.array(z.nativeEnum(RoleRelation)).optional();
-const roleColumns = z.array(z.nativeEnum(ROLE_FIELD)).optional();
+const Relations = z.array(Trimmed(z.nativeEnum(RoleRelation))).optional();
+const roleColumns = z.array(Trimmed(z.nativeEnum(ROLE_FIELD))).optional();
 export const FindByIdRoleSchema = BaseFindById.extend({
   with: Relations,
   columns: roleColumns,
