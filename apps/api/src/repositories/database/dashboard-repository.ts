@@ -54,12 +54,12 @@ export default class DashboardRepository extends DatabaseBaseRepository {
     const [row] = await this.prisma.$queryRaw<SummaryRow[]>(Prisma.sql`
       SELECT
         count(*) FILTER (WHERE ${this.dateFilter({ from, to, tz })})::int AS "totalOrders",
-        count(*) FILTER (WHERE o.status IN ('paid', 'completed')
+        count(*) FILTER (WHERE o.status = 'completed'
           AND ${this.dateFilter({ from, to, tz })})::int AS "revenueOrders",
-        COALESCE(sum(o.total) FILTER (WHERE o.status IN ('paid', 'completed')
+        COALESCE(sum(o.total) FILTER (WHERE o.status = 'completed'
           AND ${this.dateFilter({ from, to, tz })}), 0)::bigint AS "totalRevenue",
         count(*) FILTER (WHERE ${this.dateFilter({ from: prevFrom, to: prevTo, tz })})::int AS "totalOrdersPrev",
-        COALESCE(sum(o.total) FILTER (WHERE o.status IN ('paid', 'completed')
+        COALESCE(sum(o.total) FILTER (WHERE o.status = 'completed'
           AND ${this.dateFilter({ from: prevFrom, to: prevTo, tz })}), 0)::bigint AS "totalRevenuePrev"
       FROM orders o
     `);
@@ -78,7 +78,7 @@ export default class DashboardRepository extends DatabaseBaseRepository {
       SELECT
         date_trunc(${granularity}, o."createdAt" AT TIME ZONE ${tz})::date::text AS bucket,
         count(*)::int AS orders,
-        COALESCE(sum(o.total) FILTER (WHERE o.status IN ('paid', 'completed')), 0)::bigint AS revenue
+        COALESCE(sum(o.total) FILTER (WHERE o.status = 'completed'), 0)::bigint AS revenue
       FROM orders o
       WHERE ${this.dateFilter({ from, to, tz })}
       GROUP BY bucket
@@ -139,7 +139,7 @@ export default class DashboardRepository extends DatabaseBaseRepository {
       FROM order_items oi
       JOIN orders o ON o.id = oi."orderId"
       LEFT JOIN products p ON p.id = oi."productId"
-      WHERE o.status IN ('paid', 'completed') AND ${this.dateFilter({ from, to, tz })}
+      WHERE o.status = 'completed' AND ${this.dateFilter({ from, to, tz })}
       GROUP BY p.id, p.name
       ORDER BY quantity DESC, revenue DESC
       LIMIT ${limit}
