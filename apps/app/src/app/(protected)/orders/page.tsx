@@ -3,7 +3,7 @@ import { OrderSearch } from '@/app/(protected)/orders/_components/order-search';
 import { OrderTableSection } from '@/app/(protected)/orders/_components/order-table';
 import { OrderTableSkeleton } from '@/app/(protected)/orders/_components/order-table-skeleton';
 import { auth } from '@/auth';
-import { OrderRelation, OrderStatus, PaymentMethod } from '@/domain';
+import { OrderRelation } from '@/domain';
 import { GetAllOrderParams } from '@/features/orders/schema';
 import { hasPermission, PERMISSION } from '@/lib/permission';
 import { forbidden } from 'next/navigation';
@@ -18,27 +18,18 @@ interface OrdersPageProps {
   }>;
 }
 
-function coerceEnum<T extends string>(
-  value: string | undefined,
-  values: readonly T[],
-): T | undefined {
-  return value && (values as readonly string[]).includes(value) ? (value as T) : undefined;
-}
-
 export default async function OrdersPage({ searchParams }: OrdersPageProps) {
   const session = await auth();
   if (!hasPermission(session?.user.permissions, [PERMISSION.SHOW_ORDER])) forbidden();
 
   const { page, q, status, paymentMethod } = await searchParams;
   const pageNum = Number(page ?? 1);
-  const statusEnum = coerceEnum(status, Object.values(OrderStatus));
-  const paymentMethodEnum = coerceEnum(paymentMethod, Object.values(PaymentMethod));
 
   const params: GetAllOrderParams = {
     page: pageNum,
     q,
-    status: statusEnum,
-    paymentMethod: paymentMethodEnum,
+    status,
+    paymentMethod,
     with: [OrderRelation.PAYMENT],
   };
 

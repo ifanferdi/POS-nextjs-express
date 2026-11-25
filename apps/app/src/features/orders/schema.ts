@@ -76,7 +76,10 @@ export const CreateOrderSchema = BaseOrderSchema;
 export const UpdateOrderSchema = CreateOrderSchema;
 
 export type OrderRelationParams = z.infer<typeof Relation>;
-export type GetAllOrderParams = z.infer<typeof GetAllOrderSchema>;
+export type GetAllOrderParams = Omit<z.input<typeof GetAllOrderSchema>, 'status' | 'paymentMethod'> & {
+  status?: string;
+  paymentMethod?: string;
+};
 export type CreateOrderInput = z.input<typeof CreateOrderSchema>;
 export type UpdateOrderInput = z.input<typeof UpdateOrderSchema>;
 export type PosCheckoutForm = z.input<typeof PosCheckoutFormSchema>;
