@@ -2,11 +2,11 @@ import { RoleRelation } from '@/domain';
 import { BasePagination, numberSchema, stringSchema } from '@/lib/base.schema';
 import { z } from 'zod';
 
-const Relation = z.array(z.enum(RoleRelation)).optional();
+const Relation = z.array(z.string().trim().pipe(z.enum(RoleRelation))).optional();
 
 export const GetAllRoleSchema = BasePagination.extend({
   with: Relation,
-  columns: z.array(z.string()).optional(),
+  columns: z.array(stringSchema).optional(),
 });
 
 const BaseRoleSchema = z.object({

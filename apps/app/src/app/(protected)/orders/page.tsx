@@ -22,12 +22,14 @@ interface OrdersPageProps {
   }>;
 }
 
+const OrderPageParamsSchema = GetAllOrderSchema.extend({ page: z.number().int().positive() });
+
 export default async function OrdersPage({ searchParams }: OrdersPageProps) {
   const session = await auth();
   if (!hasPermission(session?.user.permissions, [PERMISSION.SHOW_ORDER])) forbidden();
 
   const { page, q, status, paymentMethod } = await searchParams;
-  const result = GetAllOrderSchema.safeParse({
+  const result = OrderPageParamsSchema.safeParse({
     page: Number(page ?? 1),
     q,
     status,

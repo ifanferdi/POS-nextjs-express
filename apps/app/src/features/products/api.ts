@@ -2,6 +2,7 @@ import { ApiResponse, PaginatedResponse, Product } from '@/domain';
 import {
   CreateProductInput,
   GetAllProductParams,
+  GetAllProductSchema,
   ProductRelationParams,
   UpdateProductInput,
 } from '@/features/products/schema';
@@ -13,14 +14,16 @@ interface ProductApiResponse extends ApiResponse {
 
 export async function getAllProducts<T = Product>(params: GetAllProductParams) {
   const api = await createServerApiClient();
-  const response = await api.get<PaginatedResponse<T>>('/v1/products', { params });
+  const response = await api.get<PaginatedResponse<T>>('/v1/products', {
+    params: GetAllProductSchema.parse(params),
+  });
   return response.data;
 }
 
 export async function getProductById<T = Product>(id: number, relation?: ProductRelationParams) {
   const api = await createServerApiClient();
   const response = await api.get<T>(`/v1/products/${id}`, {
-    params: { with: relation },
+    params: { with: GetAllProductSchema.shape.with.parse(relation) },
   });
   return response.data;
 }

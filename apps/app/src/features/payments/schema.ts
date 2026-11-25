@@ -2,15 +2,15 @@ import { PaymentMethod, PaymentRelation } from '@/domain';
 import { numberSchema, stringSchema } from '@/lib/base.schema';
 import z from 'zod';
 
-const Relation = z.array(z.enum(PaymentRelation)).optional();
+const Relation = z.array(z.string().trim().pipe(z.enum(PaymentRelation))).optional();
 export const GetPaymentByOrderIdSchema = z.object({
   orderId: numberSchema,
   with: Relation,
-  columns: z.array(z.string()).optional(),
+  columns: z.array(stringSchema).optional(),
 });
 export const MockMidtransPaymentSchema = z.object({
   orderNumber: stringSchema,
-  paymentMethod: z.enum(PaymentMethod),
+  paymentMethod: z.string().trim().pipe(z.enum(PaymentMethod)),
   grossAmount: numberSchema,
 });
 

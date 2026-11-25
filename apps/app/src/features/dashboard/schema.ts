@@ -1,13 +1,17 @@
 import { z } from 'zod';
 
 export const DashboardRangeSchema = z.object({
-  from: z.string().date(),
-  to: z.string().date(),
-  tz: z.string().min(1),
+  from: z.string().trim().date(),
+  to: z.string().trim().date(),
+  tz: z.string().trim().min(1),
 });
 
 export const DashboardTrendSchema = DashboardRangeSchema.extend({
-  granularity: z.enum(['day', 'week', 'month']).default('day'),
+  granularity: z
+    .string()
+    .trim()
+    .pipe(z.enum(['day', 'week', 'month']))
+    .default('day'),
 });
 
 export const DashboardTopProductsSchema = DashboardRangeSchema.extend({

@@ -1,9 +1,15 @@
 import { OrderRelation, OrderStatus } from '@/domain';
 import { PaymentMethod } from '@/domain/payment.types';
-import { BasePagination, idSchema, numberSchema, optionalStringSchema } from '@/lib/base.schema';
+import {
+  BasePagination,
+  idSchema,
+  numberSchema,
+  optionalStringSchema,
+  stringSchema,
+} from '@/lib/base.schema';
 import { z } from 'zod';
 
-const Relation = z.array(z.enum(OrderRelation)).optional();
+const Relation = z.array(z.string().trim().pipe(z.enum(OrderRelation))).optional();
 
 export const GetAllOrderSchema = BasePagination.extend({
   status: z.string().trim().pipe(z.enum(OrderStatus)).optional(),
@@ -11,7 +17,7 @@ export const GetAllOrderSchema = BasePagination.extend({
   customerId: z.union([numberSchema, z.array(numberSchema)]).optional(),
   userId: z.union([numberSchema, z.array(numberSchema)]).optional(),
   with: Relation,
-  columns: z.array(z.string()).optional(),
+  columns: z.array(stringSchema).optional(),
 });
 
 const OrderItemSchema = z.object({
@@ -26,7 +32,7 @@ const BaseOrderSchema = z
     customerId: idSchema.optional().nullable(),
     notes: optionalStringSchema,
     items: z.array(OrderItemSchema).min(1),
-    paymentMethod: z.enum(PaymentMethod),
+    paymentMethod: z.string().trim().pipe(z.enum(PaymentMethod)),
     amount: numberSchema.optional(),
   })
   .superRefine((data, ctx) => {

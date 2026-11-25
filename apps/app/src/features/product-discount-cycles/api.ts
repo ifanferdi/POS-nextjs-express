@@ -10,6 +10,7 @@ import {
   CheckQuotaInput,
   CreateProductDiscountCycleInput,
   GetAllProductDiscountCycleParams,
+  GetAllProductDiscountCycleSchema,
   UpdateProductDiscountCycleInput,
 } from './schema';
 
@@ -20,7 +21,7 @@ export async function getAllProductDiscountCycles(params: GetAllProductDiscountC
   const api = await createServerApiClient();
   const response = await api.get<PaginatedResponse<ProductDiscountCycleList>>(
     '/v1/product-discount-cycles',
-    { params },
+    { params: GetAllProductDiscountCycleSchema.parse(params) },
   );
   return response.data;
 }
