@@ -7,9 +7,10 @@ export async function generatePresignUrlAction(
   input: PresignUrlInput,
 ): Promise<PresignUrlResponse> {
   const api = await createServerApiClient();
+  const validatedInput = PresignUrlSchema.parse(input);
   const { data } = await api.post<PresignUrlResponse>(
     '/v1/uploads/generate-presign-url',
-    PresignUrlSchema.parse(input),
+    validatedInput,
   );
 
   return data;

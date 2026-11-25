@@ -17,8 +17,9 @@ interface UserApiResponse extends ApiResponse {
 export async function getAllUsers<T = User>(params: GetAllUserParams) {
   try {
     const api = await createServerApiClient();
+    const validatedParams = GetAllUserSchema.parse(params);
     const response = await api.get<PaginatedResponse<T>>('/v1/users', {
-      params: GetAllUserSchema.parse(params),
+      params: validatedParams,
     });
     return response.data;
   } catch (e) {
@@ -30,8 +31,9 @@ export async function getAllUsers<T = User>(params: GetAllUserParams) {
 
 export async function getUserById<T = User>(id: number, relation?: UserRelationParams) {
   const api = await createServerApiClient();
+  const validatedRelation = GetAllUserSchema.shape.with.parse(relation);
   const response = await api.get<T>(`/v1/users/${id}`, {
-    params: { with: GetAllUserSchema.shape.with.parse(relation) },
+    params: { with: validatedRelation },
   });
   return response.data;
 }

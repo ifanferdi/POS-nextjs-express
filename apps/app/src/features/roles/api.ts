@@ -7,8 +7,9 @@ import { unstable_rethrow } from 'next/navigation';
 export async function getAllRoles<T = Role>(params: GetAllRoleParams) {
   try {
     const api = await createServerApiClient();
+    const validatedParams = GetAllRoleSchema.parse(params);
     const response = await api.get<PaginatedResponse<T>>('/v1/roles', {
-      params: GetAllRoleSchema.parse(params),
+      params: validatedParams,
     });
     return response.data;
   } catch (e) {

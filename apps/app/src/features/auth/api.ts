@@ -9,9 +9,10 @@ import axios from 'axios';
  */
 
 export async function loginRequest(username: string, password: string) {
+  const validatedInput = LoginSchema.parse({ username, password });
   const response = await axios.post<LoginResultDto>(
     `${configApi.baseUrl}/v1/auth/sign-in`,
-    LoginSchema.parse({ username, password }),
+    validatedInput,
   );
   return response.data; // { accessToken, refreshToken, exp, ... }
 }

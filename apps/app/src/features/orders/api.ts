@@ -10,16 +10,18 @@ import { createServerApiClient } from '@/lib/api-server';
 
 export async function getAllOrders<T = Order>(params: GetAllOrderParams) {
   const api = await createServerApiClient();
+  const validatedParams = GetAllOrderSchema.parse(params);
   const response = await api.get<PaginatedResponse<T>>('/v1/orders', {
-    params: GetAllOrderSchema.parse(params),
+    params: validatedParams,
   });
   return response.data;
 }
 
 export async function getOrderById<T = Order>(id: number, relation?: OrderRelationParams) {
   const api = await createServerApiClient();
+  const validatedRelation = GetAllOrderSchema.shape.with.parse(relation);
   const response = await api.get<T>(`/v1/orders/${id}`, {
-    params: { with: GetAllOrderSchema.shape.with.parse(relation) },
+    params: { with: validatedRelation },
   });
   return response.data;
 }

@@ -19,9 +19,10 @@ export type CheckQuotaResponse =
 
 export async function getAllProductDiscountCycles(params: GetAllProductDiscountCycleParams) {
   const api = await createServerApiClient();
+  const validatedParams = GetAllProductDiscountCycleSchema.parse(params);
   const response = await api.get<PaginatedResponse<ProductDiscountCycleList>>(
     '/v1/product-discount-cycles',
-    { params: GetAllProductDiscountCycleSchema.parse(params) },
+    { params: validatedParams },
   );
   return response.data;
 }
