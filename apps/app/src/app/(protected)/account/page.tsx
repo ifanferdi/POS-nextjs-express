@@ -2,10 +2,9 @@ import { AccountPasswordDialog } from '@/app/(protected)/account/_components/acc
 import { AccountProfileDialog } from '@/app/(protected)/account/_components/account-profile-dialog';
 import { auth, getMeCached } from '@/auth';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { getInitials } from '@/lib/helper';
+import { formatDate, getInitials } from '@/lib/helper';
 import _ from 'lodash';
 import { KeyRoundIcon, ShieldCheckIcon } from 'lucide-react';
-import moment from 'moment';
 import { redirect } from 'next/navigation';
 
 const glass =
@@ -28,7 +27,7 @@ export default async function AccountPage() {
     { label: 'Place of Birth', value: profile?.placeOfBirth || '-' },
     {
       label: 'Date of Birth',
-      value: profile?.dateOfBirth ? moment(profile.dateOfBirth).format('MMMM Do YYYY') : '-',
+      value: profile?.dateOfBirth ? formatDate(profile.dateOfBirth) : '-',
     },
     { label: 'Age', value: profile?.age ? `${profile.age} years` : '-' },
   ];
@@ -116,7 +115,7 @@ export default async function AccountPage() {
           </div>
         </section>
 
-        <section className={`${glass} p-6`}>
+        <section className={`${glass} p-6`} hidden>
           <div className="flex items-center gap-2">
             <span className="flex size-9 items-center justify-center rounded-xl bg-info/10 text-info backdrop-blur">
               <ShieldCheckIcon className="size-4" />

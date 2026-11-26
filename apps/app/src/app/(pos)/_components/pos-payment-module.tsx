@@ -1,8 +1,8 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { app } from '@/config/config';
-import { CreatedOrder, Payment, PaymentStatus } from '@/domain';
+import * as config from '@/config/config';
+import { Payment, PaymentStatus, PosLastOrder } from '@/domain';
 import { getPaymentMethod, PaymentMethod, PaymentMidtrans } from '@/domain/payment.types';
 import { getPaymentByOrderId, mockMidtransPaymentAction } from '@/features/payments/action';
 import { useSSE } from '@/hooks/use-sse';
@@ -21,6 +21,7 @@ interface PosPaymentModuleProps {
   payment: PaymentMidtrans;
   onPaid: () => void;
   onExpired: () => void;
+  onCheckoutSuccess?: (result: PosLastOrder) => void;
 }
 
 export function PosPaymentModule({
@@ -30,14 +31,17 @@ export function PosPaymentModule({
   payment,
   onPaid,
   onExpired,
+  onCheckoutSuccess,
 }: PosPaymentModuleProps) {
   const [isPaymentStatusLoading, setIsPaymentStatusLoading] = useState(false);
 
-  useSSE<CreatedOrder>({
+  useSSE<PosLastOrder>({
     events: ['order.status'],
     onEvent: ({ data }) => {
       const paidOrder = data[0];
       if (paidOrder?.orderNumber !== orderNumber) return;
+      if (onCheckoutSuccess) onCheckoutSuccess(paidOrder);
+
       onPaid();
     },
   });
@@ -74,6 +78,14 @@ export function PosPaymentModule({
             <p className="max-w-xs text-center text-xs text-muted-foreground">
               Open your e-wallet app and scan this code to complete payment
             </p>
+            {!config.midtrans.isProduction && (
+              <MockMidtransPaymentButton
+                orderNumber={orderNumber}
+                onPaid={onPaid}
+                paymentMethod={paymentMethod}
+                grossAmount={payment.amount}
+              />
+            )}
           </div>
         ) : payment.midtransDetail.vaNumber ? (
           <div className="flex w-full max-w-md flex-col items-center gap-6">
@@ -111,7 +123,7 @@ export function PosPaymentModule({
               isPaymentStatusLoading={isPaymentStatusLoading}
               setIsPaymentStatusLoading={setIsPaymentStatusLoading}
             />
-            {app.env !== 'production' && (
+            {!config.midtrans.isProduction && (
               <MockMidtransPaymentButton
                 orderNumber={orderNumber}
                 onPaid={onPaid}
@@ -231,7 +243,7 @@ function CheckPaymentStatusButton({
       columns: ['status'],
     });
 
-    if (payment.status === PaymentStatus.SUCCESS) {
+    if (payment.result?.status === PaymentStatus.SUCCESS) {
       toast.success('Payment received!');
       onPaid();
     }

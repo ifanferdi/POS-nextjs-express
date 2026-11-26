@@ -4,7 +4,7 @@ import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 
 export function CategoryTableSkeleton({ rows = 10 }: { rows?: number }) {
   return (
-    <div className="overflow-hidden rounded-lg border border-border/60 md:w-lg">
+    <div className="overflow-hidden rounded-lg border border-border/60 md:w-xl">
       <Table>
         <HeaderTable headers={headers} />
         <TableBody>

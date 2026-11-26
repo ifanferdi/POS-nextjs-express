@@ -16,11 +16,14 @@ export async function getPaymentByOrderId<T = Payment>(input: GetPaymentByOrderI
     const session = await auth();
     requirePermission(session?.user.permissions, [PERMISSION.SHOW_PAYMENT]);
 
-    const response = await api.getPaymentByOrderId<T>(input);
-    return response;
+    const result = await api.getPaymentByOrderId<T>(input);
+    return { success: true, result };
   } catch (error) {
     unstable_rethrow(error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to load payment.');
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to load payment.',
+    };
   }
 }
 

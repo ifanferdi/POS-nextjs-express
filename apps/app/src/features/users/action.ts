@@ -1,20 +1,22 @@
 'use server';
 
 import { auth } from '@/auth';
-import { ActionResult } from '@/domain';
+import { ActionResult, PaginatedResponse } from '@/domain';
 import { User } from '@/domain/user.types';
 import * as api from '@/features/users/api';
 import {
   CreateUserInput,
   CreateUserSchema,
+  GetAllUserParams,
   UpdateUserInput,
   UpdateUserSchema,
 } from '@/features/users/schema';
+import { guard } from '@/lib/helper';
 import { PERMISSION, requirePermission } from '@/lib/permission';
 import { revalidatePath } from 'next/cache';
 import { unstable_rethrow } from 'next/navigation';
 
-const MANAGE_USER = [PERMISSION.MANAGE_USER, PERMISSION.MANAGE_TRAINEE];
+const MANAGE_USER = [PERMISSION.MANAGE_USER];
 
 export async function createUserAction(input: CreateUserInput): Promise<ActionResult<User>> {
   const validate = CreateUserSchema.safeParse(input);
@@ -77,4 +79,10 @@ export async function deleteUserAction(id: number): Promise<ActionResult<User>> 
       error: error instanceof Error ? error.message : 'Failed to delete user.',
     };
   }
+}
+
+export async function getAllUsersAction<T = User>(
+  params: GetAllUserParams,
+): Promise<PaginatedResponse<T>> {
+  return await guard(async () => await api.getAllUsers(params), 'Failed to fetch products.');
 }

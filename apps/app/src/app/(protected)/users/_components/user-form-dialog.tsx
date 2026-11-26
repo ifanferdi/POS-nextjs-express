@@ -30,7 +30,7 @@ import {
   UpdateUserInput,
   UpdateUserSchema,
 } from '@/features/users/schema';
-import { formatDate } from '@/lib/helper';
+import { formatDateISO } from '@/lib/helper';
 import { zodResolver } from '@hookform/resolvers/zod';
 import moment from 'moment';
 import { useState, useTransition } from 'react';
@@ -248,7 +248,7 @@ function UserFormFields(props: UserFormFieldsProps) {
                 <Input
                   {...field}
                   type="date"
-                  value={field.value ? formatDate(new Date(field.value)) : ''}
+                  value={field.value ? formatDateISO(new Date(field.value)) : ''}
                   aria-invalid={fieldState.invalid}
                   disabled={isPending}
                 />

@@ -49,3 +49,4 @@ PRD.md
 
 !.prettier*
 !README.md
+.env*.local

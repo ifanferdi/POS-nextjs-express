@@ -1,27 +1,27 @@
 import { UserActions } from '@/app/(protected)/users/_components/user-actions';
 import { TablePagination } from '@/components/shared/table';
-import { DataTable, EmptyTable } from '@/components/shared/table-server';
+import { DataTable, EmptyTable, TooltipedCell } from '@/components/shared/table-server';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { RoleOption, UserList } from '@/domain';
-import { getAllUser } from '@/features/users/api';
+import { getAllUsersAction } from '@/features/users/action';
 import { GetAllUserParams } from '@/features/users/schema';
-import { getInitials } from '@/lib/helper';
+import { formatDate, getInitials } from '@/lib/helper';
 import _ from 'lodash';
-import moment from 'moment';
 
 export const headers = ['#', 'Name', 'Username', 'Gender', 'Birth', 'Role', 'Status', ''];
 
 interface UserTableSectionProps {
   params: GetAllUserParams;
   roles: RoleOption[];
+  canManage: boolean;
 }
 export async function UserTableSection(props: UserTableSectionProps) {
-  const { params, roles } = props;
-  const { data: users, ...meta } = await getAllUser<UserList>(params);
+  const { params, roles, canManage } = props;
+  const { data: users, ...meta } = await getAllUsersAction<UserList>(params);
   return (
     <>
-      <UserTable users={users} roles={roles} />
+      <UserTable users={users} roles={roles} canManage={canManage} />
       <TablePagination
         page={meta.page}
         totalPages={meta.totalPages}
@@ -35,10 +35,11 @@ export async function UserTableSection(props: UserTableSectionProps) {
 interface UserTableProps {
   users: UserList[];
   roles: RoleOption[];
+  canManage: boolean;
 }
 function UserTable(props: UserTableProps) {
-  const { users, roles } = props;
-  if (users.length === 0) return <EmptyTable entities="users" icon="user" />;
+  const { users, roles, canManage } = props;
+  if (users.length === 0) return <EmptyTable headers={headers} entities="users" icon="user" />;
 
   return (
     <DataTable
@@ -56,7 +57,7 @@ function UserTable(props: UserTableProps) {
                   {getInitials(user.profile.fullName)}
                 </AvatarFallback>
               </Avatar>
-              <span className="font-medium group-hover:underline">{user.profile.fullName}</span>
+              {TooltipedCell(user.profile.fullName)}
             </>
           ),
         },
@@ -69,7 +70,7 @@ function UserTable(props: UserTableProps) {
         { key: 'gender', content: _.capitalize(user.profile.gender) },
         {
           key: 'birth',
-          content: `${user.profile.placeOfBirth}, ${moment(user.profile.dateOfBirth).format('MMM D YYYY')}`,
+          content: `${user.profile.placeOfBirth}, ${formatDate(user.profile.dateOfBirth)}`,
         },
         { key: 'role', content: user.role.name },
         {
@@ -92,7 +93,7 @@ function UserTable(props: UserTableProps) {
           type: 'custom',
           content: (
             <div className="flex justify-end gap-2">
-              <UserActions user={user} roles={roles} />
+              <UserActions user={user} roles={roles} canManage={canManage} />
             </div>
           ),
         },

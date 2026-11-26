@@ -1,4 +1,3 @@
-import { auth as authConfig } from '@/config/config';
 import { getMe, loginRequest, refreshTokenRequest } from '@/features/auth/api';
 import { RefreshTokenResponseDto } from '@/features/auth/dto';
 import { LoginSchema } from '@/features/auth/schema';
@@ -44,13 +43,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       }
 
       // Request berikutnya — cek proaktif apakah token perlu di-refresh
-      const bufferMs = authConfig.refreshBufferSeconds * 1000;
       const tokenExpiry = token.tokenExpiry;
       // tokenExpiry undefined (cookie lama) → paksa refresh
-      const isExpiringSoon = !tokenExpiry || Date.now() > tokenExpiry * 1000 - bufferMs;
+      const isExpired = !tokenExpiry || Date.now() > tokenExpiry * 1000;
 
-      if (!isExpiringSoon) {
+      if (!isExpired) {
         return token; // token masih fresh, gak perlu refresh
+      }
+
+      if (!token.refreshToken) {
+        return { ...token, error: 'RefreshTokenError' };
       }
 
       try {
@@ -58,7 +60,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         token.id = refreshed.user.id;
         token.accessToken = refreshed.token;
-        token.refreshToken = refreshed.refreshToken;
+        token.refreshToken = refreshed.refreshToken ?? token.refreshToken;
         token.tokenExpiry = refreshed.exp;
         token.user = refreshed.user;
         token.error = undefined;

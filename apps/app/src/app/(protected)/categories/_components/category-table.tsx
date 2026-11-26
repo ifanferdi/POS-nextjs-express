@@ -11,18 +11,20 @@ export const headers = ['#', 'Name', 'Total Products', ''];
 
 interface categoriesTableSectionProps {
   params: GetAllCategoryParams;
+  canManage: boolean;
 }
 export async function CategoriesTableSection(props: categoriesTableSectionProps) {
-  const { params } = props;
+  const { params, canManage } = props;
   const { data: categories, ...meta } = await getAllCategories<CategoryList>(params);
   return (
     <>
-      <CategoryTable categories={categories} />
+      <CategoryTable categories={categories} canManage={canManage} />
       <TablePagination
         page={meta.page}
         totalPages={meta.totalPages}
         total={meta.total}
         baseUrl="/categories"
+        className="md:w-xl"
       />
     </>
   );
@@ -30,10 +32,14 @@ export async function CategoriesTableSection(props: categoriesTableSectionProps)
 
 interface CategoryTableProps {
   categories: CategoryList[];
+  canManage: boolean;
 }
 function CategoryTable(props: CategoryTableProps) {
-  const { categories } = props;
-  if (categories.length === 0) return <EmptyTable entities="categories" icon="category" />;
+  const { categories, canManage } = props;
+  if (categories.length === 0)
+    return (
+      <EmptyTable headers={headers} className="md:w-xl" entities="categories" icon="category" />
+    );
 
   return (
     <DataTable
@@ -67,7 +73,7 @@ function CategoryTable(props: CategoryTableProps) {
           type: 'custom',
           content: (
             <div className="flex justify-end gap-2">
-              <CategoryActions category={category} />
+              <CategoryActions category={category} canManage={canManage} />
             </div>
           ),
         },

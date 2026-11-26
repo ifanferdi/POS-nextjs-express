@@ -24,6 +24,8 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
   const session = await auth();
   if (!hasPermission(session?.user.permissions, [PERMISSION.SHOW_PRODUCT])) forbidden();
 
+  const canManage = hasPermission(session?.user.permissions, [PERMISSION.MANAGE_PRODUCT]);
+
   const { page, q, isActive, ...props } = await searchParams;
   const categoryIds =
     typeof props['categoryId[]'] === 'string' ? [props['categoryId[]']] : props['categoryId[]'];
@@ -38,8 +40,8 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
     q,
     categoryId: categoryIdsNum,
     isActive: isActiveBool,
-    with: [ProductRelation.CATEGORIES],
-    orderBy: ['name:asc'],
+    with: [ProductRelation.CATEGORIES, ProductRelation.DISCOUNT_CYCLES],
+    orderBy: ['isActive:desc', 'name:asc'],
   };
 
   const { data: categories } = await getAllCategories<CategoryOption>({
@@ -55,18 +57,14 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
           <h1 className="text-2xl font-semibold tracking-tight">Products</h1>
           <p className="mt-1 text-sm text-muted-foreground">Manage your application products</p>
         </div>
-        <ProductFormDialog mode="create" categories={categories} />
+        {canManage && <ProductFormDialog mode="create" categories={categories} />}
       </div>
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <Suspense fallback={null}>
-          <ProductSearch />
-        </Suspense>
-        <Suspense fallback={null}>
-          <ProductFilter categories={categories} />{' '}
-        </Suspense>
+        <ProductSearch />
+        <ProductFilter categories={categories} />{' '}
       </div>
       <Suspense fallback={<ProductTableSkeleton />}>
-        <ProductTableSection categories={categories} params={params} />
+        <ProductTableSection categories={categories} params={params} canManage={canManage} />
       </Suspense>
     </div>
   );

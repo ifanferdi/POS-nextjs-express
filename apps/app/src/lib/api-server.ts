@@ -15,6 +15,14 @@ import { redirect } from 'next/navigation';
  * bisa dipakai ulang di project lain yang punya backend dengan Bearer token auth.
  */
 
+/** Error body berbentuk array, mis. `check-quota` yang mengembalikan `[{ productId, itemLeft }]`. */
+export class ApiArrayError extends Error {
+  constructor(public readonly data: unknown[]) {
+    super('Request rejected.');
+    this.name = 'ApiArrayError';
+  }
+}
+
 export async function createServerApiClient() {
   const session = await auth();
   const instance = axios.create({
@@ -37,6 +45,11 @@ export async function createServerApiClient() {
       // JWT expired — redirect ke login (refresh token juga sudah expired/fail)
       if (error.response?.status === 401 || error.response?.data?.message === 'jwt expired') {
         redirect('/login?reason=expired');
+      }
+
+      // Sebagian endpoint (check-quota) memakai array sebagai body error, bukan envelope.
+      if (error.response?.status === 400 && Array.isArray(error.response.data)) {
+        throw new ApiArrayError(error.response.data);
       }
 
       const message =

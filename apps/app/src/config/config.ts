@@ -10,6 +10,7 @@
  */
 
 import {
+  BadgePercentIcon,
   BoxesIcon,
   BoxIcon,
   KeyRoundIcon,
@@ -56,6 +57,7 @@ export const icons = {
   role: ShieldUserIcon,
   permission: KeyRoundIcon,
   product: BoxIcon,
+  discount: BadgePercentIcon,
   isActive: UserRoundCheckIcon,
   category: BoxesIcon,
   order: ShoppingCartIcon,
@@ -86,6 +88,9 @@ export const files = {
 };
 
 export const midtrans = {
+  isProduction:
+    (process.env.APP_ENV || '').toLowerCase() === 'production' &&
+    process.env.MIDTRANS_IS_PRODUCTION?.toLowerCase() === 'true',
   clientKey: process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY ?? '',
   snapUrl:
     process.env.NEXT_PUBLIC_MIDTRANS_IS_PRODUCTION === 'true'
@@ -95,3 +100,8 @@ export const midtrans = {
 
 export const sse = { allowedChannels: ['products', 'users', 'orders', 'pos'] as const };
 export type SseType = (typeof sse.allowedChannels)[number];
+
+export const dashboard = {
+  timezone: process.env.DASHBOARD_TZ ?? 'Asia/Jakarta',
+  defaultRangeDays: 30,
+};

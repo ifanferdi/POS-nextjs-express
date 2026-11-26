@@ -1,4 +1,5 @@
 import { ProductActions } from '@/app/(protected)/products/_components/product-actions';
+import { PriceTag } from '@/components/shared/discount';
 import { TablePagination } from '@/components/shared/table';
 import { DataTable, EmptyTable, TooltipedCell } from '@/components/shared/table-server';
 import { Badge } from '@/components/ui/badge';
@@ -6,20 +7,21 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { CategoryOption, ProductList } from '@/domain';
 import { getAllProducts } from '@/features/products/api';
 import { GetAllProductParams } from '@/features/products/schema';
-import { formatCurrency } from '@/lib/helper';
+import { getActiveDiscount } from '@/lib/helper';
 
 export const headers = ['#', 'Name', 'Sku', 'Stock', 'Price', 'Categories', 'Is Active?', ''];
 
 interface ProductTableSectionProps {
   params: GetAllProductParams;
   categories: CategoryOption[];
+  canManage: boolean;
 }
 export async function ProductTableSection(props: ProductTableSectionProps) {
-  const { params, categories } = props;
+  const { params, categories, canManage } = props;
   const { data: products, ...meta } = await getAllProducts<ProductList>(params);
   return (
     <>
-      <ProductTable products={products} categories={categories} />
+      <ProductTable products={products} categories={categories} canManage={canManage} />
       <TablePagination
         page={meta.page}
         totalPages={meta.totalPages}
@@ -33,10 +35,12 @@ export async function ProductTableSection(props: ProductTableSectionProps) {
 interface ProductTableProps {
   products: ProductList[];
   categories: CategoryOption[];
+  canManage: boolean;
 }
 function ProductTable(props: ProductTableProps) {
-  const { products, categories } = props;
-  if (products.length === 0) return <EmptyTable entities="products" icon="product" />;
+  const { products, categories, canManage } = props;
+  if (products.length === 0)
+    return <EmptyTable entities="products" icon="product" headers={headers} />;
 
   return (
     <DataTable
@@ -44,14 +48,25 @@ function ProductTable(props: ProductTableProps) {
       records={products}
       cells={(product) => [
         {
-          key: 'fullname',
+          key: 'name',
           type: 'link',
           url: `/products/${product.id}`,
           content: TooltipedCell(product.name),
         },
         { key: 'sku', content: product.sku === '' ? '-' : product.sku },
         { key: 'stock', content: `${product.stock} item` },
-        { key: 'price', content: formatCurrency(product.price) },
+        {
+          key: 'price',
+          type: 'custom',
+          content: (
+            <PriceTag
+              price={product.price}
+              finalPrice={getActiveDiscount(product.discount)?.finalPrice ?? product.price}
+              finalClassName="tabular-nums text-sm"
+              className="whitespace-nowrap"
+            />
+          ),
+        },
         { key: 'categories', content: handleCategoriesColumn(product) },
         {
           key: 'isActive',
@@ -72,7 +87,7 @@ function ProductTable(props: ProductTableProps) {
           key: 'actions',
           content: (
             <div className="flex justify-end gap-2">
-              <ProductActions product={product} categories={categories} />
+              <ProductActions product={product} categories={categories} canManage={canManage} />
             </div>
           ),
         },

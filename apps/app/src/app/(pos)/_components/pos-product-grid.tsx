@@ -118,7 +118,7 @@ export function PosProductGrid({
       page: Math.ceil(products.length / PAGE_SIZE) + 1,
       limit: PAGE_SIZE,
       orderBy: ['name:asc'],
-      with: [ProductRelation.CATEGORIES],
+      with: [ProductRelation.CATEGORIES, ProductRelation.DISCOUNT_CYCLES],
     })
       .then(({ data: newProducts, total: newTotal }) => {
         setProducts([...products, ...newProducts]);
@@ -271,7 +271,7 @@ function CategoryPill({
         'shrink-0 whitespace-nowrap rounded-full px-3 py-1 text-xs font-medium transition-colors',
         active
           ? 'bg-primary text-primary-foreground'
-          : 'bg-muted text-muted-foreground hover:bg-muted/80',
+          : 'border dark:border-foreground/30 border-foreground/20 text-muted-foreground dark:text-gray-300 hover:bg-muted dark:hover:bg-muted hover:border-muted dark:hover:border-muted',
       )}
     >
       {children}

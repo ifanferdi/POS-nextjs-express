@@ -13,7 +13,7 @@ interface UserApiResponse extends ApiResponse {
   user: User;
 }
 
-export async function getAllUser<T = User>(params: GetAllUserParams) {
+export async function getAllUsers<T = User>(params: GetAllUserParams) {
   try {
     const api = await createServerApiClient();
     const response = await api.get<PaginatedResponse<T>>('/v1/users', { params });

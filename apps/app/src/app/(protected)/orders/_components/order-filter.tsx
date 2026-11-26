@@ -17,7 +17,7 @@ export function OrderFilter() {
   const hasActiveFilter = Boolean(currentStatus || currentPaymentMethod);
 
   function pushParams(params: URLSearchParams) {
-    params.set('page', '1');
+    params.delete('page');
     startTransition(() => router.push(`/orders?${params.toString()}`));
   }
 

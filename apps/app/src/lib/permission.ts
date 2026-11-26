@@ -3,13 +3,13 @@ import { Permission } from '@/domain';
 /** String persis mengikuti permission di backend (`api/src/adapters/http/routes/*`). */
 export const PERMISSION = {
   SHOW_USER: 'Show User',
-  SHOW_TRAINEE: 'Show Trainee',
   MANAGE_USER: 'Manage User',
-  MANAGE_TRAINEE: 'Manage Trainee',
   SHOW_CATEGORY: 'Show Category',
   MANAGE_CATEGORY: 'Manage Category',
   SHOW_PRODUCT: 'Show Product',
   MANAGE_PRODUCT: 'Manage Product',
+  SHOW_PRODUCT_DISCOUNT_CYCLE: 'Show Product Discount Cycle',
+  MANAGE_PRODUCT_DISCOUNT_CYCLE: 'Manage Product Discount Cycle',
   SHOW_ORDER: 'Show Order',
   MANAGE_ORDER: 'Manage Order',
   SHOW_PAYMENT: 'Show Payment',

@@ -25,7 +25,7 @@ import {
   PaymentRelation,
 } from '@/domain';
 import { getPaymentMethod, PaymentMethod, PaymentMidtrans } from '@/domain/payment.types';
-import { getOrderByIdAction, getOrdersAction } from '@/features/orders/action';
+import { getAllOrdersAction, getOrderByIdAction } from '@/features/orders/action';
 import { getPaymentByOrderId } from '@/features/payments/action';
 import _ from 'lodash';
 import {
@@ -40,7 +40,7 @@ import moment from 'moment';
 import { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 15;
 const DEFAULT_STATUS = OrderStatus.PENDING;
 
 interface PosOrderHistoryDialogProps {
@@ -112,7 +112,7 @@ export function PosOrderHistoryDialog({ open, setOpen }: PosOrderHistoryDialogPr
     const id = ++fetchIdRef.current;
     const fetchOrders = async () => {
       setIsLoading(true);
-      const result = await getOrdersAction<OrderList>({
+      const result = await getAllOrdersAction<OrderList>({
         page: 1,
         limit: PAGE_SIZE,
         q: query || undefined,
@@ -141,7 +141,7 @@ export function PosOrderHistoryDialog({ open, setOpen }: PosOrderHistoryDialogPr
     const id = ++fetchIdRef.current;
     if (append) setIsLoadingMore(true);
     else setIsLoading(true);
-    const result = await getOrdersAction<OrderList>({
+    const result = await getAllOrdersAction<OrderList>({
       page: nextPage,
       limit: PAGE_SIZE,
       q: query || undefined,
@@ -195,13 +195,17 @@ export function PosOrderHistoryDialog({ open, setOpen }: PosOrderHistoryDialogPr
     setPayment(null);
     setIsPayLoading(true);
 
-    const result = await getPaymentByOrderId<PaymentMidtrans>({
+    const { result, error } = await getPaymentByOrderId<PaymentMidtrans>({
       orderId: order.id,
       with: [PaymentRelation.MIDTRANS_DETAIL],
     });
 
     setIsPayLoading(false);
 
+    if (error) {
+      toast.error(error);
+      return;
+    }
     if (!result || !result.midtransDetail) {
       toast.error('No payment terminal available for this order.');
       return;
@@ -240,7 +244,7 @@ export function PosOrderHistoryDialog({ open, setOpen }: PosOrderHistoryDialogPr
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="flex h-[90%] flex-col overflow-hidden sm:max-w-[90%]">
+      <DialogContent className="flex h-auto max-h-[90%] flex-col overflow-hidden sm:max-w-[90%]">
         {payOrder && payment && (
           <PaymentDialog
             open={payOpen}

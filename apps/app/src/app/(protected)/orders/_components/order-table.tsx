@@ -7,6 +7,7 @@ import { GetAllOrderParams } from '@/features/orders/schema';
 interface OrderTableSectionProps {
   params: GetAllOrderParams;
 }
+
 export async function OrderTableSection(props: OrderTableSectionProps) {
   const { params } = props;
   const { data: orders, ...meta } = await getAllOrders<OrderList>(params);

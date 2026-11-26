@@ -14,14 +14,15 @@ function PasswordInput({ className, disabled, ...props }: React.ComponentProps<'
         {...props}
         type={show ? 'text' : 'password'}
         disabled={disabled}
-        className={cn('pr-10', className)}
+        className={cn('pr-12', className)}
       />
       <button
         type="button"
         onClick={() => setShow((prev) => !prev)}
         aria-label={show ? 'Hide password' : 'Show password'}
-        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
-        tabIndex={-1}
+        aria-pressed={show}
+        disabled={disabled}
+        className="absolute right-1 top-1/2 flex size-11 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {show ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
       </button>

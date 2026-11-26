@@ -17,6 +17,8 @@ export const GetAllOrderSchema = BasePagination.extend({
 const OrderItemSchema = z.object({
   productId: idSchema,
   quantity: numberSchema.min(1),
+  /** false = paksa harga normal; kosong = default server (true). */
+  useDiscount: z.boolean().optional(),
 });
 
 const BaseOrderSchema = z
@@ -43,7 +45,6 @@ const BaseOrderSchema = z
 
 export const PosCheckoutFormSchema = z
   .object({
-    subtotal: z.number().min(0),
     paymentMethod: z.enum(PaymentMethod),
     notes: optionalStringSchema,
     amountTendered: z.number().min(0).optional(),
@@ -58,13 +59,6 @@ export const PosCheckoutFormSchema = z
           path: ['amountTendered'],
           code: 'custom',
           message: 'Amount is required for cash payments!',
-        });
-      }
-      if (tendered && tendered < data.subtotal) {
-        ctx.addIssue({
-          code: 'custom',
-          path: ['amountTendered'],
-          message: 'Amount tendered cannot less than subtotal.',
         });
       }
     } else {
