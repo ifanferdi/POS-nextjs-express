@@ -11,13 +11,14 @@ import {
   Password,
   StringSchema,
   Username,
+  Trimmed,
 } from '@/validations/base-validation';
 import { assertManagedFileKey } from '@/helpers/managed-file-key';
 import { z } from 'zod';
 
 // User Validation
-const Relations = z.array(z.nativeEnum(UserRelation).optional()).optional();
-const userColumns = z.array(z.nativeEnum(USER_SELECT_FIELD)).optional();
+const Relations = z.array(Trimmed(z.nativeEnum(UserRelation)).optional()).optional();
+const userColumns = z.array(Trimmed(z.nativeEnum(USER_SELECT_FIELD))).optional();
 export const FindByIdUserSchema = BaseFindById.extend({ with: Relations, columns: userColumns });
 export const FindOneUserSchema = z
   .object({
@@ -95,7 +96,7 @@ const BaseProfileSchema = z.object({
   fullName: StringSchema.min(1, 'FullName cannot be empty.').max(255),
   placeOfBirth: StringSchema.min(1, 'PlaceOfBirth cannot be empty.').max(255),
   dateOfBirth: DateSchema,
-  gender: z.nativeEnum(Gender),
+  gender: Trimmed(z.nativeEnum(Gender)),
   imagePath: ProfileImagePathSchema,
 });
 export const CreateProfileSchema = BaseProfileSchema.transform((data) => ({

@@ -5,14 +5,15 @@ import {
   BasePagination,
   NumberSchema,
   StringSchema,
+  Trimmed,
 } from '@/validations/base-validation';
 import { z } from 'zod';
 
 // Permission Validation
-const PermissionWithEnum = z.array(z.nativeEnum(PermissionRelation).optional()).optional();
-const permissionColumns = z
-  .array(z.enum(Object.keys(PERMISSION_FIELD) as [PERMISSION_FIELD, ...PERMISSION_FIELD[]]))
-  .optional();
+const PermissionWithEnum = z.array(Trimmed(z.nativeEnum(PermissionRelation)).optional()).optional();
+const permissionColumns = z.array(
+  Trimmed(z.enum(Object.keys(PERMISSION_FIELD) as [PERMISSION_FIELD, ...PERMISSION_FIELD[]])),
+).optional();
 
 export const FindByIdPermissionSchema = BaseFindById.extend({
   with: PermissionWithEnum,

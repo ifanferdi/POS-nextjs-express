@@ -6,12 +6,13 @@ import {
   BasePagination,
   NumberSchema,
   StringSchema,
+  Trimmed,
 } from '@/validations/base-validation';
 import { assertProductImagePath } from '@/helpers/product-image-path';
 import { z } from 'zod';
 
-const Relations = z.array(z.nativeEnum(ProductRelation).optional()).optional();
-const columns = z.array(z.nativeEnum(PRODUCT_FIELD)).optional();
+const Relations = z.array(Trimmed(z.nativeEnum(ProductRelation)).optional()).optional();
+const columns = z.array(Trimmed(z.nativeEnum(PRODUCT_FIELD))).optional();
 
 export const FindByIdProductSchema = BaseFindById.extend({ with: Relations, columns });
 export const FindAllProductSchema = BasePagination(PRODUCT_FIELD)
@@ -56,7 +57,7 @@ export const UpdateProductSchema = CreateProductSchema.extend({
   imagePath: ImagePathSchema.nullable(),
 }).partial({ name: true, price: true });
 
-export interface FindAllProductDto extends z.input<typeof FindAllProductSchema>, SoftDeleteFields {}
+export interface FindAllProductDto extends z.infer<typeof FindAllProductSchema>, SoftDeleteFields {}
 export interface FindByIdProductDto extends z.infer<typeof FindByIdProductSchema> {}
 export interface CreateProductDto extends z.infer<typeof CreateProductSchema> {}
 export interface UpdateProductDto extends z.infer<typeof UpdateProductSchema> {}

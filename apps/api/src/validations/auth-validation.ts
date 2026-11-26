@@ -12,7 +12,7 @@ export const ResendOtpSchema = z.object({ userId: NumberSchema });
 export const VerifyOtpSchema = z.object({
   otp: StringSchema.min(1, 'Otp cannot be empty.'),
   userId: NumberSchema,
-  challengeId: z.string().uuid(),
+  challengeId: StringSchema.uuid(),
 });
 
 export interface SignInAuthDto extends z.infer<typeof SignInAuthSchema> {

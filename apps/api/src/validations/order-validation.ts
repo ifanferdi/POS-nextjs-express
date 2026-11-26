@@ -6,24 +6,33 @@ import {
   BasePagination,
   NumberSchema,
   StringSchema,
+  Trimmed,
 } from '@/validations/base-validation';
 import { z } from 'zod';
 
-const Relations = z.array(z.nativeEnum(OrderRelation).optional()).optional();
-const columns = z.array(z.nativeEnum(ORDER_FIELD)).optional();
+const Relations = z.array(Trimmed(z.nativeEnum(OrderRelation)).optional()).optional();
+const columns = z.array(Trimmed(z.nativeEnum(ORDER_FIELD))).optional();
 
 export const FindByIdOrderSchema = BaseFindById.extend({ with: Relations, columns });
 export const FindOneOrderSchema = z.object({
   id: NumberSchema.optional(),
   orderNumber: StringSchema.optional(),
-  columns: z.array(z.nativeEnum(ORDER_FIELD)).optional(),
+  columns: z.array(Trimmed(z.nativeEnum(ORDER_FIELD))).optional(),
   with: Relations,
 });
 export const FindAllOrderSchema = BasePagination(ORDER_FIELD)
   .extend({
-    status: z.union([z.nativeEnum(OrderStatus), z.array(z.nativeEnum(OrderStatus))]).optional(),
+    status: z
+      .union([
+        Trimmed(z.nativeEnum(OrderStatus)),
+        z.array(Trimmed(z.nativeEnum(OrderStatus))),
+      ])
+      .optional(),
     paymentMethod: z
-      .union([z.nativeEnum(PaymentMethod), z.array(z.nativeEnum(PaymentMethod))])
+      .union([
+        Trimmed(z.nativeEnum(PaymentMethod)),
+        z.array(Trimmed(z.nativeEnum(PaymentMethod))),
+      ])
       .optional(),
     customerId: z.union([NumberSchema, z.array(NumberSchema)]).optional(),
     orderNumber: z.union([StringSchema, z.array(StringSchema)]).optional(),
@@ -51,7 +60,7 @@ export const CreateOrderSchema = z
     idempotencyKey: StringSchema.uuid('Idempotency-Key must be a valid UUID.'),
     notes: StringSchema.optional(),
     items: z.array(OrderItemSchema).min(1),
-    paymentMethod: z.nativeEnum(PaymentMethod),
+    paymentMethod: Trimmed(z.nativeEnum(PaymentMethod)),
     amount: NumberSchema.optional(),
   })
   .superRefine((data, ctx) => {
@@ -75,7 +84,7 @@ export const CreateOrderSchema = z
 
 export const UpdateOrderStatusSchema = z.object({
   id: NumberSchema,
-  status: z.nativeEnum(OrderStatus),
+  status: Trimmed(z.nativeEnum(OrderStatus)),
 });
 
 export interface FindAllOrderDto extends z.infer<typeof FindAllOrderSchema> {}

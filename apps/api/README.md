@@ -67,6 +67,7 @@ Schema: `src/infrastructure/database/prisma/schemas/schema.prisma`.
 ## API surface
 
 All routes are prefixed `/api/v1` and protected by JWT middleware unless noted. The authoritative contract is the Swagger UI and `docs/openapi.yaml`.
+Nilai string yang divalidasi Zod di-trim sebelum diteruskan ke use case, termasuk password/token pada body serta nilai string enum dan array yang tercakup schema. Input yang tidak melewati schema (termasuk teks multipart tanpa validasi), field tak dikenal, metadata file, dan header mentah tidak otomatis di-trim. Body webhook Midtrans produksi tetap asli agar verifikasi signature dan `rawNotification` memakai nilai persis dari pengirim.
 
 | Resource    | Verbs / endpoints                                                                                                                                                                                 | Notes                            |
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------- |

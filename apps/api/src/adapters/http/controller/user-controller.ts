@@ -3,15 +3,11 @@ import { HttpStatusCode } from '@/constants/http-status.constant';
 import { handleNumberOrArrayRequest, handleOrderByRequest } from '@/helpers/common.helper';
 import { BaseFindById } from '@/validations/base-validation';
 import {
-  ChangePasswordDto,
   ChangePasswordSchema,
-  CreateUserProfileDto,
   CreateUserProfileSchema,
-  FindAllUserDto,
   FindAllUserSchema,
   FindByIdUserDto,
   FindByIdUserSchema,
-  UpdateUserProfileDto,
   UpdateUserProfileSchema,
 } from '@/validations/user-validation';
 import e from 'express';
@@ -23,7 +19,7 @@ export default class UserController extends BaseController {
   findAll = asyncHandler(async (req: e.Request & Record<string, any>, res: e.Response) => {
     const request = req.route.methods.get ? req.query : req.body;
 
-    const params: FindAllUserDto = {
+    const params = FindAllUserSchema.parse({
       page: Number(request.page) || 1,
       limit: Number(request.limit) || 10,
       orderBy: handleOrderByRequest(request),
@@ -36,10 +32,7 @@ export default class UserController extends BaseController {
       email: request.email,
       role: request.role,
       with: request.with,
-    };
-
-    /** Request Validation **/
-    FindAllUserSchema.parse(params);
+    });
 
     const result = await this.user.findAllUser.execute(params);
 
@@ -58,31 +51,32 @@ export default class UserController extends BaseController {
 
   private handleFindOne(params: FindByIdUserDto) {
     /** Request Validation **/
-    FindByIdUserSchema.parse(params);
+    const parsedParams = FindByIdUserSchema.parse(params);
 
-    return this.user.findByIdUser.execute(params);
+    return this.user.findByIdUser.execute(parsedParams);
   }
 
   create = asyncHandler(async (req: e.Request, res: e.Response) => {
-    let payload: CreateUserProfileDto = {
+    /** Request Validation **/
+    const payload = CreateUserProfileSchema.parse({
       username: req.body.username,
       password: req.body.password,
       confirmPassword: req.body.confirmPassword,
       isActive: req.body.isActive,
       roleId: req.body.roleId,
-    };
-    if (req.body.profile)
-      payload.profile = {
-        fullName: req.body.profile.fullName,
-        placeOfBirth: req.body.profile.placeOfBirth,
-        dateOfBirth: req.body.profile.dateOfBirth,
-        gender: req.body.profile.gender,
-        age: req.body.profile.age,
-        imagePath: req.body.profile.imagePath,
-      };
-
-    /** Request Validation **/
-    payload = CreateUserProfileSchema.parse(payload);
+      ...(req.body.profile
+        ? {
+            profile: {
+              fullName: req.body.profile.fullName,
+              placeOfBirth: req.body.profile.placeOfBirth,
+              dateOfBirth: req.body.profile.dateOfBirth,
+              gender: req.body.profile.gender,
+              age: req.body.profile.age,
+              imagePath: req.body.profile.imagePath,
+            },
+          }
+        : {}),
+    });
 
     // Save to database
     const user = await this.user.createUser.execute(payload);
@@ -124,31 +118,31 @@ export default class UserController extends BaseController {
     res: e.Response,
     actorRoleId?: number,
   ) {
-    let payload: UpdateUserProfileDto = {
+    /** Request Validation **/
+    const payload = UpdateUserProfileSchema.parse({
       id,
       username: body.username,
       isActive: access.isActive,
       roleId: access.roleId,
-    };
-    if (body.profile)
-      payload.profile = {
-        fullName: body.profile.fullName,
-        placeOfBirth: body.profile.placeOfBirth,
-        dateOfBirth: body.profile.dateOfBirth,
-        gender: body.profile.gender,
-        age: body.profile.age,
-        imagePath: body.profile.imagePath,
-      };
+      ...(body.profile
+        ? {
+            profile: {
+              fullName: body.profile.fullName,
+              placeOfBirth: body.profile.placeOfBirth,
+              dateOfBirth: body.profile.dateOfBirth,
+              gender: body.profile.gender,
+              age: body.profile.age,
+              imagePath: body.profile.imagePath,
+            },
+          }
+        : {}),
+    });
 
-    const payloadPassword: ChangePasswordDto = {
+    const payloadPassword = ChangePasswordSchema.parse({
       password: body.password,
       confirmPassword: body.confirmPassword,
       oldPassword: body.oldPassword,
-    };
-
-    /** Request Validation **/
-    payload = UpdateUserProfileSchema.parse(payload);
-    ChangePasswordSchema.parse(payloadPassword);
+    });
 
     // Update to database
     const user = await this.user.updateUser.execute(payload, payloadPassword, actorRoleId);
@@ -157,11 +151,10 @@ export default class UserController extends BaseController {
   }
 
   destroy = asyncHandler(async (req: e.Request & Record<string, any>, res: e.Response) => {
-    const params = { id: Number(req.params.id) };
     /** Request Validation **/
-    BaseFindById.parse(params);
+    const params = BaseFindById.parse({ id: Number(req.params.id) });
 
-    await this.user.deleteUser.execute(params as BaseFindById, {
+    await this.user.deleteUser.execute(params, {
       requestedBy: req.user.id,
     });
 
@@ -170,11 +163,10 @@ export default class UserController extends BaseController {
 
   destroyPermanently = asyncHandler(
     async (req: e.Request & Record<string, any>, res: e.Response) => {
-      const params = { id: Number(req.params.id) };
       /** Request Validation **/
-      BaseFindById.parse(params);
+      const params = BaseFindById.parse({ id: Number(req.params.id) });
 
-      await this.user.deleteUser.execute(params as BaseFindById, {
+      await this.user.deleteUser.execute(params, {
         requestedBy: req.user.id,
         isPermanently: true,
       });
@@ -184,11 +176,10 @@ export default class UserController extends BaseController {
   );
 
   restore = asyncHandler(async (req: e.Request, res: e.Response) => {
-    const params = { id: Number(req.params.id) };
     /** Request Validation **/
-    BaseFindById.parse(params);
+    const params = BaseFindById.parse({ id: Number(req.params.id) });
 
-    await this.user.restoreUser.execute(params as BaseFindById);
+    await this.user.restoreUser.execute(params);
 
     res.send({ message: 'Success.' });
   });

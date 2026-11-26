@@ -3,13 +3,10 @@ import { HttpStatusCode } from '@/constants/http-status.constant';
 import { handleNumberOrArrayRequest, handleOrderByRequest } from '@/helpers/common.helper';
 import { BaseFindById } from '@/validations/base-validation';
 import {
-  CreateOrderDto,
-  CreateOrderSchema,
   FindAllOrderDto,
   FindAllOrderSchema,
-  FindByIdOrderDto,
   FindByIdOrderSchema,
-  UpdateOrderStatusDto,
+  CreateOrderSchema,
   UpdateOrderStatusSchema,
 } from '@/validations/order-validation';
 import e from 'express';
@@ -21,7 +18,7 @@ export default class OrderController extends BaseController {
   findAll = asyncHandler(async (req: e.Request & Record<string, any>, res: e.Response) => {
     const request = req.route.methods.get ? req.query : req.body;
 
-    let params: FindAllOrderDto = {
+    const requestParams: FindAllOrderDto = {
       page: Number(request.page) || 1,
       limit: Number(request.limit) || 10,
       orderBy: handleOrderByRequest(request),
@@ -38,9 +35,14 @@ export default class OrderController extends BaseController {
       createdAtDay: request.createdAtDay,
     };
 
-    params = await this.order.authorizationOrder.all(params, req.user.id);
-
-    FindAllOrderSchema.parse(params);
+    const authorizedParams = await this.order.authorizationOrder.all(
+      requestParams,
+      req.user.id,
+    );
+    const params = {
+      ...authorizedParams,
+      ...FindAllOrderSchema.parse(authorizedParams),
+    };
 
     const result = await this.order.findAllOrder.execute(params);
 
@@ -48,13 +50,11 @@ export default class OrderController extends BaseController {
   });
 
   findOne = asyncHandler(async (req: e.Request & Record<string, any>, res: e.Response) => {
-    const params: FindByIdOrderDto = {
+    const params = FindByIdOrderSchema.parse({
       id: Number(req.params.id),
       with: req.query.with as any,
       columns: req.query.columns as any,
-    };
-
-    FindByIdOrderSchema.parse(params);
+    });
 
     const result = await this.order.findByIdOrder.execute(params);
 
@@ -65,16 +65,14 @@ export default class OrderController extends BaseController {
   });
 
   create = asyncHandler(async (req: e.Request & Record<string, any>, res: e.Response) => {
-    const payload: CreateOrderDto = {
+    const payload = CreateOrderSchema.parse({
       userId: req.user?.id,
       idempotencyKey: String(req.headers['idempotency-key'] ?? ''),
       notes: req.body.notes,
       items: req.body.items,
       paymentMethod: req.body.paymentMethod,
       amount: req.body.amount,
-    };
-
-    CreateOrderSchema.parse(payload);
+    });
 
     const result = await this.order.createOrder.execute(payload);
 
@@ -82,12 +80,10 @@ export default class OrderController extends BaseController {
   });
 
   updateStatus = asyncHandler(async (req: e.Request & Record<string, any>, res: e.Response) => {
-    const payload: UpdateOrderStatusDto = {
+    const payload = UpdateOrderStatusSchema.parse({
       id: Number(req.params.id),
       status: req.body.status,
-    };
-
-    UpdateOrderStatusSchema.parse(payload);
+    });
 
     // Periksa kepemilikan sebelum mengubah status.
     const target = await this.order.findByIdOrder.execute({
@@ -102,14 +98,13 @@ export default class OrderController extends BaseController {
   });
 
   cancel = asyncHandler(async (req: e.Request & Record<string, any>, res: e.Response) => {
-    const params = { id: Number(req.params.id) };
-    BaseFindById.parse(params);
+    const params = BaseFindById.parse({ id: Number(req.params.id) });
 
     // Periksa kepemilikan sebelum membatalkan.
     const target = await this.order.findByIdOrder.execute({ id: params.id, columns: ['userId'] });
     await this.order.authorizationOrder.canAccessOrder(target?.userId, req.user.id);
 
-    await this.order.cancelOrder.execute(params as BaseFindById);
+    await this.order.cancelOrder.execute(params);
 
     res.send({ message: 'Success.' });
   });
