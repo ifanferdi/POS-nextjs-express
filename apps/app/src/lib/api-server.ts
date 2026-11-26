@@ -22,6 +22,16 @@ export class ApiArrayError extends Error {
     this.name = 'ApiArrayError';
   }
 }
+export class ApiRequestError extends Error {
+  constructor(
+    message: string,
+    public readonly status?: number,
+    public readonly isNetworkError = false,
+  ) {
+    super(message);
+    this.name = 'ApiRequestError';
+  }
+}
 
 export async function createServerApiClient() {
   const session = await auth();
@@ -29,7 +39,7 @@ export async function createServerApiClient() {
     baseURL: configApi.baseUrl,
     headers: {
       'Content-Type': 'application/json',
-      ...(session?.accessToken && { Authorization: `Bearer ${session.accessToken.trim()}` }),
+      ...(session?.accessToken && { Authorization: `Bearer ${session.accessToken}` }),
     },
     timeout: 30_000,
   });
@@ -57,7 +67,7 @@ export async function createServerApiClient() {
         error.message ??
         'INTERNAL_SERVER_ERROR';
 
-      throw new Error(message);
+      throw new ApiRequestError(message, error.response?.status, !error.response);
     },
   );
 

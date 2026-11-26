@@ -78,8 +78,6 @@ Each feature module holds flat, consistently named files:
 | `action.ts` | Server Actions (mutations) | Server (called from Client Components) |
 | `dto.ts` | Request/response DTO types | Universal |
 
-Not every feature has all four files — add them as needed. Feature-specific UI components live in `app/(protected)/<feature>/_components/`.
-
 ## Generic vs project-specific
 
 Because this is meant to be reused, some parts are deliberately separated:
@@ -88,7 +86,7 @@ Because this is meant to be reused, some parts are deliberately separated:
 |---|---|---|
 | Refresh-token mechanism (`jwt()` callback) | Generic | Reusable in other projects without major changes |
 | Server Component / Server Action pattern | Generic | Base architecture, not domain-bound |
-| `createServerApiClient()` (`lib/api-server.ts`) | Generic | Injects the bearer token from the session |
+| `createServerApiClient()` (`lib/api-server.ts`) | Generic | Injects the bearer token and handles backend responses; request strings are trimmed by feature schemas, not by an interceptor. |
 | `role` / `permissions` fields on the session (`next-auth.d.ts`) | Project-specific | RBAC-specific; remove/adjust for non-RBAC projects |
 | `PERMISSION` constants (`lib/permission.ts`) | Project-specific | Must match the backend routes |
 | Feature modules (`users`, `products`, ...) | Reference implementation | Pattern to copy when adding a new feature |
@@ -120,6 +118,14 @@ See `config/config.ts` and the root `docker-compose.yml` (`x-app-env`) for the f
 - `API_BASE_URL` — the Express backend URL (default `http://localhost:8000/api`)
 - `NEXT_PUBLIC_MIDTRANS_CLIENT_KEY` / `NEXT_PUBLIC_MIDTRANS_IS_PRODUCTION` — Midtrans Snap
 
+## API compatibility notes
+
+- OTP sign-in challenges are not supported by this frontend. Keep `AUTH_USE_2FA` disabled until an OTP verification flow is implemented.
+- The orders page rejects invalid pagination and filter values before fetching orders; clear the filters to recover.
+- Payment and order SSE messages are notifications, not proof of payment. The backend branch must restrict SSE recipients and payloads before it is used with sensitive data.
+- The current backend does not expose payment recovery and can lose an idempotency key after an order has been persisted. An uncertain checkout requires operator reconciliation before starting another transaction.
+- Order cancellation is not exposed in the frontend. Paid online orders are rejected by the backend cancellation route; no refund is implied.
+
 ## Adding a new feature
 
 Follow the existing pattern (e.g. `features/products/`):
@@ -129,3 +135,5 @@ Follow the existing pattern (e.g. `features/products/`):
 3. Write fetch functions (for Server Components) in `api.ts`.
 4. Write Server Actions (for mutations) in `action.ts`.
 5. Create the page under `app/(protected)/<feature>/page.tsx` and any components in `_components/`.
+
+Use trimmed Zod string fields in request schemas and send the parsed result from query repositories or mutation actions; unparsed requests bypass trimming. Keep passwords and tokens unchanged.

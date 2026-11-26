@@ -3,6 +3,7 @@ import {
   CategoryRelationParams,
   CreateCategoryInput,
   GetAllCategoryParams,
+  GetAllCategorySchema,
   UpdateCategoryInput,
 } from '@/features/categories/schema';
 import { createServerApiClient } from '@/lib/api-server';
@@ -13,15 +14,19 @@ interface CategoryApiResponse extends ApiResponse {
 
 export async function getAllCategories<T = Category>(params: GetAllCategoryParams) {
   const api = await createServerApiClient();
-  const response = await api.get<PaginatedResponse<T>>('/v1/categories', { params });
+  const validatedParams = GetAllCategorySchema.parse(params);
+  const response = await api.get<PaginatedResponse<T>>('/v1/categories', {
+    params: validatedParams,
+  });
 
   return response.data;
 }
 
 export async function getCategoryById<T = Category>(id: number, relation?: CategoryRelationParams) {
   const api = await createServerApiClient();
+  const validatedRelation = GetAllCategorySchema.shape.with.parse(relation);
   const response = await api.get<T>(`/v1/categories/${id}`, {
-    params: { with: relation },
+    params: { with: validatedRelation },
   });
   return response.data;
 }

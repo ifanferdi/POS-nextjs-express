@@ -4,9 +4,12 @@ import { z } from 'zod';
 
 export const PresignUrlSchema = z.object({
   filename: stringSchema,
-  folder: z.enum(['products', 'profiles']),
-  fileType: z.literal('image'),
-  contentType: z.enum(files.image.enum),
+  folder: z
+    .string()
+    .trim()
+    .pipe(z.enum(['products', 'profiles'])),
+  fileType: z.string().trim().pipe(z.literal('image')),
+  contentType: z.string().trim().pipe(z.enum(files.image.enum)),
   fileSize: numberSchema.max(files.image.size),
 });
 

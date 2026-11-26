@@ -2,6 +2,7 @@ import { ActionResult, ApiResponse, Order, OrderApiResponse, PaginatedResponse }
 import {
   CreateOrderInput,
   GetAllOrderParams,
+  GetAllOrderSchema,
   OrderRelationParams,
   UpdateOrderInput,
 } from '@/features/orders/schema';
@@ -9,13 +10,19 @@ import { createServerApiClient } from '@/lib/api-server';
 
 export async function getAllOrders<T = Order>(params: GetAllOrderParams) {
   const api = await createServerApiClient();
-  const response = await api.get<PaginatedResponse<T>>('/v1/orders', { params });
+  const validatedParams = GetAllOrderSchema.parse(params);
+  const response = await api.get<PaginatedResponse<T>>('/v1/orders', {
+    params: validatedParams,
+  });
   return response.data;
 }
 
 export async function getOrderById<T = Order>(id: number, relation?: OrderRelationParams) {
   const api = await createServerApiClient();
-  const response = await api.get<T>(`/v1/orders/${id}`, { params: { with: relation } });
+  const validatedRelation = GetAllOrderSchema.shape.with.parse(relation);
+  const response = await api.get<T>(`/v1/orders/${id}`, {
+    params: { with: validatedRelation },
+  });
   return response.data;
 }
 
@@ -25,7 +32,7 @@ export async function createOrder(input: CreateOrderInput, idempotencyKey: strin
     headers: { 'Idempotency-Key': idempotencyKey },
   });
 
-  return response.data;
+  return { data: response.data, status: response.status };
 }
 
 export async function retryPayment(orderId: number) {

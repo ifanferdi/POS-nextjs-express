@@ -6,7 +6,6 @@ import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { redirect } from 'next/navigation';
 import React from 'react';
-import { Toaster } from 'sonner';
 
 export default async function ProtectedLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -25,7 +24,6 @@ export default async function ProtectedLayout({ children }: { children: React.Re
             <main className="min-w-0 flex-1 bg-background p-4 sm:p-6 lg:p-8">{children}</main>
           </SidebarInset>
         </SidebarProvider>
-        <Toaster richColors position="top-right" />
       </TooltipProvider>
     </QueryProvider>
   );

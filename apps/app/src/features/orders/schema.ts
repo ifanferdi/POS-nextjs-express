@@ -1,17 +1,23 @@
 import { OrderRelation, OrderStatus } from '@/domain';
 import { PaymentMethod } from '@/domain/payment.types';
-import { BasePagination, idSchema, numberSchema, optionalStringSchema } from '@/lib/base.schema';
+import {
+  BasePagination,
+  idSchema,
+  numberSchema,
+  optionalStringSchema,
+  stringSchema,
+} from '@/lib/base.schema';
 import { z } from 'zod';
 
-const Relation = z.array(z.enum(OrderRelation)).optional();
+const Relation = z.array(z.string().trim().pipe(z.enum(OrderRelation))).optional();
 
 export const GetAllOrderSchema = BasePagination.extend({
-  status: z.enum(OrderStatus).optional(),
-  paymentMethod: z.enum(PaymentMethod).optional(),
+  status: z.string().trim().pipe(z.enum(OrderStatus)).optional(),
+  paymentMethod: z.string().trim().pipe(z.enum(PaymentMethod)).optional(),
   customerId: z.union([numberSchema, z.array(numberSchema)]).optional(),
   userId: z.union([numberSchema, z.array(numberSchema)]).optional(),
   with: Relation,
-  columns: z.array(z.string()).optional(),
+  columns: z.array(stringSchema).optional(),
 });
 
 const OrderItemSchema = z.object({
@@ -26,7 +32,7 @@ const BaseOrderSchema = z
     customerId: idSchema.optional().nullable(),
     notes: optionalStringSchema,
     items: z.array(OrderItemSchema).min(1),
-    paymentMethod: z.enum(PaymentMethod),
+    paymentMethod: z.string().trim().pipe(z.enum(PaymentMethod)),
     amount: numberSchema.optional(),
   })
   .superRefine((data, ctx) => {
@@ -76,7 +82,7 @@ export const CreateOrderSchema = BaseOrderSchema;
 export const UpdateOrderSchema = CreateOrderSchema;
 
 export type OrderRelationParams = z.infer<typeof Relation>;
-export type GetAllOrderParams = z.infer<typeof GetAllOrderSchema>;
+export type GetAllOrderParams = z.input<typeof GetAllOrderSchema>;
 export type CreateOrderInput = z.input<typeof CreateOrderSchema>;
 export type UpdateOrderInput = z.input<typeof UpdateOrderSchema>;
 export type PosCheckoutForm = z.input<typeof PosCheckoutFormSchema>;

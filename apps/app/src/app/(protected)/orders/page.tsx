@@ -3,11 +3,15 @@ import { OrderSearch } from '@/app/(protected)/orders/_components/order-search';
 import { OrderTableSection } from '@/app/(protected)/orders/_components/order-table';
 import { OrderTableSkeleton } from '@/app/(protected)/orders/_components/order-table-skeleton';
 import { auth } from '@/auth';
-import { OrderRelation, OrderStatus, PaymentMethod } from '@/domain';
-import { GetAllOrderParams } from '@/features/orders/schema';
+import { ParamsError } from '@/components/shared/error';
+import { ErrorTable } from '@/components/shared/table-server';
+import { OrderRelation } from '@/domain';
+import { GetAllOrderSchema } from '@/features/orders/schema';
 import { hasPermission, PERMISSION } from '@/lib/permission';
 import { forbidden } from 'next/navigation';
 import { Suspense } from 'react';
+import { z } from 'zod';
+import { headers } from './_components/order-data-table';
 
 interface OrdersPageProps {
   searchParams: Promise<{
@@ -18,32 +22,22 @@ interface OrdersPageProps {
   }>;
 }
 
-function coerceEnum<T extends string>(
-  value: string | undefined,
-  values: readonly T[],
-): T | undefined {
-  return value && (values as readonly string[]).includes(value) ? (value as T) : undefined;
-}
-
 export default async function OrdersPage({ searchParams }: OrdersPageProps) {
   const session = await auth();
   if (!hasPermission(session?.user.permissions, [PERMISSION.SHOW_ORDER])) forbidden();
 
   const { page, q, status, paymentMethod } = await searchParams;
-  const pageNum = Number(page ?? 1);
-  const statusEnum = coerceEnum(status, Object.values(OrderStatus));
-  const paymentMethodEnum = coerceEnum(paymentMethod, Object.values(PaymentMethod));
-
-  const params: GetAllOrderParams = {
-    page: pageNum,
+  const result = GetAllOrderSchema.safeParse({
+    page: Number(page ?? 1),
     q,
-    status: statusEnum,
-    paymentMethod: paymentMethodEnum,
+    status,
+    paymentMethod,
     with: [OrderRelation.PAYMENT],
-  };
+  });
 
   return (
     <div className="space-y-6">
+      {!result.success && <ParamsError errors={z.flattenError(result.error).fieldErrors} />}
       <div className="flex items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Orders</h1>
@@ -54,9 +48,13 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
         <OrderSearch />
         <OrderFilter />
       </div>
-      <Suspense fallback={<OrderTableSkeleton />}>
-        <OrderTableSection params={params} />
-      </Suspense>
+      {result.success ? (
+        <Suspense fallback={<OrderTableSkeleton />}>
+          <OrderTableSection params={result.data} />
+        </Suspense>
+      ) : (
+        <ErrorTable headers={headers} recoveryHref="/orders" />
+      )}
     </div>
   );
 }

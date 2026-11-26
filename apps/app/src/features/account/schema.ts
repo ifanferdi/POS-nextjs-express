@@ -1,10 +1,5 @@
 import { Gender } from '@/domain';
-import {
-  optionalStringSchema,
-  passwordSchema,
-  requiredStringSchema,
-  usernameSchema,
-} from '@/lib/base.schema';
+import { passwordSchema, optionalStringSchema, requiredStringSchema, usernameSchema } from '@/lib/base.schema';
 import { z } from 'zod';
 
 export const AccountProfileSchema = z.object({
@@ -13,7 +8,7 @@ export const AccountProfileSchema = z.object({
     fullName: requiredStringSchema('Full Name'),
     placeOfBirth: requiredStringSchema('Place Of Birth'),
     dateOfBirth: requiredStringSchema('Date Of Birth'),
-    gender: z.enum(Gender),
+    gender: z.string().trim().pipe(z.enum(Gender)),
     imagePath: z.string().trim().nullish(),
   }),
 });

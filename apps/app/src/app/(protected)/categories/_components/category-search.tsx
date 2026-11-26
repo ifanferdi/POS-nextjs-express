@@ -35,7 +35,9 @@ export function CategorySearch() {
 
   useEffect(() => {
     clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => pushSearch(value), 500);
+    debounceRef.current = setTimeout(() => {
+      if (value !== (searchParamsRef.current.get('q') ?? '')) pushSearch(value);
+    }, 500);
     return () => clearTimeout(debounceRef.current);
   }, [value, pushSearch]);
 

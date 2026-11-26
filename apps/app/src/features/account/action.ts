@@ -9,6 +9,8 @@ import {
   ChangePasswordInput,
   ChangePasswordSchema,
 } from '@/features/account/schema';
+import { getMe } from '@/features/auth/api';
+import { stringSchema } from '@/lib/base.schema';
 import { revalidatePath } from 'next/cache';
 import { unstable_rethrow } from 'next/navigation';
 
@@ -38,6 +40,13 @@ export async function updateMyAccountAction(
     };
   }
 }
+export async function refreshMyProfileImageUrlAction(): Promise<string | null> {
+  const session = await auth();
+  if (!session?.accessToken) return null;
+
+  const me = await getMe(session.accessToken);
+  return me.profile?.imagePath?.startsWith('profiles/') ? (me.profile.imageUrl ?? null) : null;
+}
 
 export async function changeMyPasswordAction(
   input: ChangePasswordInput,
@@ -51,7 +60,7 @@ export async function changeMyPasswordAction(
     const me = await getMeCached(session.accessToken);
 
     await updateAccount({
-      username: me.username,
+      username: stringSchema.parse(me.username),
       oldPassword: validate.data.oldPassword,
       password: validate.data.password,
       confirmPassword: validate.data.confirmPassword,

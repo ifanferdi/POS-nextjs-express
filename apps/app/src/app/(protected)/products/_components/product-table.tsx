@@ -1,4 +1,5 @@
 import { ProductActions } from '@/app/(protected)/products/_components/product-actions';
+import { ProductFormDialog } from '@/app/(protected)/products/_components/product-form-dialog';
 import { PriceTag } from '@/components/shared/discount';
 import { TablePagination } from '@/components/shared/table';
 import { DataTable, EmptyTable, TooltipedCell } from '@/components/shared/table-server';
@@ -40,7 +41,11 @@ interface ProductTableProps {
 function ProductTable(props: ProductTableProps) {
   const { products, categories, canManage } = props;
   if (products.length === 0)
-    return <EmptyTable entities="products" icon="product" headers={headers} />;
+    return (
+      <EmptyTable entities="products" icon="product" headers={headers}>
+        {canManage && <ProductFormDialog mode="create" categories={categories} />}
+      </EmptyTable>
+    );
 
   return (
     <DataTable

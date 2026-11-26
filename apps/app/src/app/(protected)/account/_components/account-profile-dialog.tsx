@@ -1,6 +1,6 @@
 'use client';
 
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { AccountProfileAvatar } from '@/app/(protected)/account/_components/account-profile-avatar';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -24,7 +24,7 @@ import { GENDER_VALUES } from '@/domain';
 import { updateMyAccountAction } from '@/features/account/action';
 import { AccountProfileInput, AccountProfileSchema } from '@/features/account/schema';
 import { MeResponseDto } from '@/features/auth/dto';
-import { formatDateISO, getInitials } from '@/lib/helper';
+import { formatDateISO } from '@/lib/helper';
 import { uploadImageToS3 } from '@/lib/upload';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
@@ -97,6 +97,7 @@ export function AccountProfileDialog({ me }: { me: MeResponseDto }) {
   }
 
   const avatarSrc = preview ?? me.profile?.imageUrl ?? undefined;
+  const avatarImagePath = preview ? null : me.profile?.imagePath;
 
   return (
     <Dialog
@@ -126,12 +127,14 @@ export function AccountProfileDialog({ me }: { me: MeResponseDto }) {
               <Field>
                 <FieldLabel htmlFor="avatar">Profile Photo</FieldLabel>
                 <div className="flex items-center gap-4">
-                  <Avatar size="lg" className="size-16">
-                    {avatarSrc && <AvatarImage src={avatarSrc} alt={me.username} />}
-                    <AvatarFallback className="bg-primary/10 text-primary">
-                      {getInitials(me.profile?.fullName ?? me.username)}
-                    </AvatarFallback>
-                  </Avatar>
+                  <AccountProfileAvatar
+                    imageUrl={avatarSrc}
+                    imagePath={avatarImagePath}
+                    username={me.username}
+                    fullName={me.profile?.fullName}
+                    className="size-16"
+                    fallbackClassName="bg-primary/10 text-primary"
+                  />
                   <Input
                     id="avatar"
                     type="file"

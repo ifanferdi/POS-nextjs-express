@@ -156,7 +156,6 @@ export function OrderTable({ orders, onView, onPay, isPayLoading }: OrderTablePr
 
 const ORDER_STATUS_STYLES: Record<OrderStatus, string> = {
   [OrderStatus.PENDING]: 'bg-warning/10 text-warning',
-  [OrderStatus.PAID]: 'bg-success/15 text-success',
   [OrderStatus.EXPIRED]: 'bg-destructive/10 text-destructive',
   [OrderStatus.COMPLETED]: 'bg-success/15 text-success',
   [OrderStatus.CANCELLED]: 'bg-destructive/10 text-destructive',

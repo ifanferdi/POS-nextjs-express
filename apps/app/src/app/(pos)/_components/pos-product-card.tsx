@@ -2,6 +2,8 @@ import { DiscountBadge, PriceTag, QuotaBadge } from '@/components/shared/discoun
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Product } from '@/domain';
+import { refreshProductImageUrlAction } from '@/features/products/action';
+import { useFreshImageUrl } from '@/hooks/use-fresh-image-url';
 import { getActiveDiscount } from '@/lib/helper';
 import { cn } from '@/lib/utils';
 import { Loader2Icon, MinusIcon, PackageIcon, PlusIcon, XIcon } from 'lucide-react';
@@ -41,7 +43,12 @@ export function ProductCard({
       )}
     >
       <div className="relative aspect-square w-full bg-muted-foreground/20 dark:bg-muted-foreground/20">
-        <ProductImage imageUrl={product.imageUrl} name={product.name} />
+        <ProductImage
+          productId={product.id}
+          imagePath={product.imagePath}
+          imageUrl={product.imageUrl}
+          name={product.name}
+        />
       </div>
       <div className="flex flex-1 flex-col gap-1 p-2">
         <p className="line-clamp-1 text-sm font-medium">{product.name}</p>
@@ -123,14 +130,21 @@ export function ProductCard({
 }
 
 interface ProductImageProps {
+  productId: number;
+  imagePath: string | null;
   imageUrl: string | null;
   name: string;
 }
-function ProductImage({ imageUrl, name }: ProductImageProps) {
-  const [error, setError] = useState(false);
+function ProductImage({ productId, imagePath, imageUrl, name }: ProductImageProps) {
+  const { src, isManaged, hasError, onError } = useFreshImageUrl(
+    imageUrl,
+    imagePath,
+    'products/',
+    () => refreshProductImageUrlAction(productId),
+  );
   const [isLoading, setIsLoading] = useState(true);
 
-  if (!imageUrl || error)
+  if (!src || hasError)
     return (
       <div className="flex size-full items-center justify-center">
         <PackageIcon className="size-10 text-muted-foreground" />
@@ -145,16 +159,17 @@ function ProductImage({ imageUrl, name }: ProductImageProps) {
         </div>
       )}
       <Image
-        src={imageUrl}
+        src={src}
         alt={name}
         fill
         className={`object-cover transition-all duration-300 group-hover:scale-105 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
         sizes="(max-width: 768px) 100px, 200px"
         loading="eager"
+        unoptimized={isManaged}
         onLoad={() => setIsLoading(false)}
         onError={() => {
           setIsLoading(false);
-          setError(true);
+          onError();
         }}
       />
     </>

@@ -1,3 +1,4 @@
+import { Button } from '@/components/ui/button';
 import { Skeleton as SkeletonComponent } from '@/components/ui/skeleton';
 import {
   Table,
@@ -11,6 +12,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { icons } from '@/config/config';
 import { stringEllipsis } from '@/lib/helper';
 import { cn } from '@/lib/utils';
+import { TriangleAlertIcon, XIcon } from 'lucide-react';
 import Link from 'next/link';
 import { ReactNode } from 'react';
 
@@ -145,11 +147,13 @@ export function EmptyTable({
   entities,
   icon,
   className,
+  children,
 }: {
   headers: string[];
   entities: string;
   icon: keyof typeof icons;
   className?: string;
+  children?: ReactNode;
 }) {
   const Icon = icons[icon];
   return (
@@ -168,7 +172,7 @@ export function EmptyTable({
           </TableRow>
         </TableHeader>
         <TableBody>
-          <TableRow>
+          <TableRow className={'hover:bg-transparent!'}>
             <TableCell colSpan={headers.length}>
               <div className="flex flex-col items-center justify-center rounded-lg py-16">
                 <div className="flex size-12 items-center justify-center rounded-full bg-muted mb-3">
@@ -176,6 +180,38 @@ export function EmptyTable({
                 </div>
                 <p className="text-sm font-medium mb-1">No {entities} found.</p>
                 <p className="text-sm text-muted-foreground">Try to add new data.</p>
+                {children && <div className="mt-4">{children}</div>}
+              </div>
+            </TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>
+    </div>
+  );
+}
+
+export function ErrorTable({ headers, recoveryHref }: { headers: string[]; recoveryHref: string }) {
+  return (
+    <div className="overflow-hidden rounded-lg border border-border/60">
+      <Table>
+        <HeaderTable headers={headers} />
+        <TableBody>
+          <TableRow className={'hover:bg-transparent!'}>
+            <TableCell colSpan={headers.length}>
+              <div className="flex flex-col items-center justify-center rounded-lg py-16">
+                <div className="flex size-12 items-center justify-center rounded-full bg-destructive/20 mb-3">
+                  <TriangleAlertIcon className="size-6 text-destructive" />
+                </div>
+                <p className="text-sm font-medium mb-1">Invalid URL parameters.</p>
+                <p className="text-sm text-muted-foreground">
+                  Check the filters or page number and try again.
+                </p>
+                <Button variant="destructive" size="sm" asChild className="mt-2">
+                  <Link href={recoveryHref}>
+                    <XIcon />
+                    Clear filters
+                  </Link>
+                </Button>
               </div>
             </TableCell>
           </TableRow>

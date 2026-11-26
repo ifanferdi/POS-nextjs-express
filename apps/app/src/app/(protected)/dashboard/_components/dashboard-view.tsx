@@ -27,9 +27,10 @@ const SSE_WIDGETS: Record<string, string[]> = {
 interface DashboardViewProps {
   initialSummary: DashboardSummary | null;
   initialRange: { from: string; to: string };
+  isKasir?: boolean;
 }
 
-export function DashboardView({ initialSummary, initialRange }: DashboardViewProps) {
+export function DashboardView({ initialSummary, initialRange, isKasir }: DashboardViewProps) {
   const [range, setRange] = useState(initialRange);
   const [granularity, setGranularity] = useState<DashboardGranularity>('day');
   const queryClient = useQueryClient();
@@ -57,18 +58,23 @@ export function DashboardView({ initialSummary, initialRange }: DashboardViewPro
           granularity={granularity}
           onRangeChange={setRange}
           onGranularityChange={setGranularity}
+          isKasir={isKasir}
         />
       </div>
 
-      <DashboardSummaryCards range={range} initialData={initialSummary} />
+      <DashboardSummaryCards range={range} initialData={initialSummary} isKasir={isKasir} />
 
-      <div className="grid gap-5 lg:grid-cols-3">
-        <DashboardTrendChart range={range} granularity={granularity} className="lg:col-span-2" />
+      {isKasir ? (
         <DashboardStatusDonut range={range} />
-      </div>
+      ) : (
+        <div className="grid gap-5 lg:grid-cols-3">
+          <DashboardTrendChart range={range} granularity={granularity} className="lg:col-span-2" />
+          <DashboardStatusDonut range={range} />
+        </div>
+      )}
 
       <div className="grid gap-5 lg:grid-cols-2">
-        <DashboardPayments range={range} />
+        {!isKasir && <DashboardPayments range={range} />}
         <DashboardTopProducts range={range} />
       </div>
     </div>

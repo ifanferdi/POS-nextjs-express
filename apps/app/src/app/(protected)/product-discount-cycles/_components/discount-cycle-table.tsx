@@ -1,4 +1,5 @@
 import { DiscountCycleActions } from '@/app/(protected)/product-discount-cycles/_components/discount-cycle-actions';
+import { CreateDiscountCycleButton } from '@/app/(protected)/product-discount-cycles/_components/create-discount-cycle-button';
 import type { DiscountProductOption } from '@/app/(protected)/product-discount-cycles/_components/discount-cycle-form-dialog';
 import { DiscountBadge } from '@/components/shared/discount';
 import { TablePagination } from '@/components/shared/table';
@@ -99,7 +100,9 @@ function DiscountCycleTable({
         entities="discount cycles"
         icon="discount"
         className="overflow-x-auto"
-      />
+      >
+        {canManage && <CreateDiscountCycleButton products={products} />}
+      </EmptyTable>
     );
 
   return (

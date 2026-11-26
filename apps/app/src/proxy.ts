@@ -17,6 +17,13 @@ const handler: AuthProxy = (req) => {
   const isPublicRoute = publicRoutes.includes(req.nextUrl.pathname);
   const isAuthRoute = authRoutes.includes(req.nextUrl.pathname);
 
+  if (session?.error === 'ServiceUnavailable' && !isPublicRoute) {
+    return new Response('Service temporarily unavailable. Please try again.', {
+      status: 503,
+      headers: { 'Retry-After': '5' },
+    });
+  }
+
   // sudah login (token valid) tapi akses /login -> redirect ke /users
   if (isAuthRoute && isLoggedIn) return NextResponse.redirect(new URL('/users', req.nextUrl));
 

@@ -4,6 +4,7 @@ import { app } from '@/config/config';
 import { Metadata } from 'next';
 import localFont from 'next/font/local';
 import React from 'react';
+import { Toaster } from 'sonner';
 
 const font = localFont({
   src: './fonts/ibm-plex-sans-latin.woff2',
@@ -22,6 +23,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={font.variable} suppressHydrationWarning>
       <body className={`${font.className} antialiased`}>
         <ThemeProvider>{children}</ThemeProvider>
+        <Toaster richColors position="top-right" />
       </body>
     </html>
   );

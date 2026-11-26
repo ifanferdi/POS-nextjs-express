@@ -1,4 +1,5 @@
 import { CategoryActions } from '@/app/(protected)/categories/_components/category-actions';
+import { CategoryFormDialog } from '@/app/(protected)/categories/_components/category-form-dialog';
 import { CategoryDetailDialog } from '@/app/(protected)/categories/_components/category-detail-dialog';
 import { TablePagination } from '@/components/shared/table';
 import { DataTable, EmptyTable } from '@/components/shared/table-server';
@@ -38,7 +39,9 @@ function CategoryTable(props: CategoryTableProps) {
   const { categories, canManage } = props;
   if (categories.length === 0)
     return (
-      <EmptyTable headers={headers} className="md:w-xl" entities="categories" icon="category" />
+      <EmptyTable headers={headers} className="md:w-xl" entities="categories" icon="category">
+        {canManage && <CategoryFormDialog mode="create" />}
+      </EmptyTable>
     );
 
   return (

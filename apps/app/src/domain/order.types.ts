@@ -6,7 +6,6 @@ import { ApiResponse } from './general.types';
 
 export enum OrderStatus {
   PENDING = 'pending',
-  PAID = 'paid',
   COMPLETED = 'completed',
   CANCELLED = 'cancelled',
   EXPIRED = 'expired',
