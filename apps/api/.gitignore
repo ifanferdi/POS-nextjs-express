@@ -4,10 +4,11 @@
 /storage/public
 .DS_Store
 /src/infrastructure/database/prisma/generated
-/src/infrastructure/database/migrations/
 .vercel
 .env*
+!.env.example
 *.md
 !README.md
-/sql/
+/docs/*.sql
 /reports/
+/src/infrastructure/database/migrations/20261026071411_migrations/migration.sql

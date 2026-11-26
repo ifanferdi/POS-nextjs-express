@@ -6,11 +6,13 @@ import {
   BasePagination,
   NumberSchema,
   StringSchema,
+  Trimmed,
 } from '@/validations/base-validation';
+import { assertProductImagePath } from '@/helpers/product-image-path';
 import { z } from 'zod';
 
-const Relations = z.array(z.nativeEnum(ProductRelation).optional()).optional();
-const columns = z.array(z.nativeEnum(PRODUCT_FIELD)).optional();
+const Relations = z.array(Trimmed(z.nativeEnum(ProductRelation)).optional()).optional();
+const columns = z.array(Trimmed(z.nativeEnum(PRODUCT_FIELD))).optional();
 
 export const FindByIdProductSchema = BaseFindById.extend({ with: Relations, columns });
 export const FindAllProductSchema = BasePagination(PRODUCT_FIELD)
@@ -28,6 +30,16 @@ export const FindAllProductSchema = BasePagination(PRODUCT_FIELD)
         message: 'ids and notId params cannot be used together!',
       });
   });
+const ImagePathSchema = StringSchema.optional().refine((path) => {
+  if (path === undefined || path === '') return true;
+
+  try {
+    assertProductImagePath(path);
+    return true;
+  } catch {
+    return false;
+  }
+}, 'Product image must be a products/ key or a third-party HTTP(S) URL.');
 export const CreateProductSchema = z.object({
   name: StringSchema.min(1, 'Name cannot be empty.').max(255),
   description: StringSchema.optional(),
@@ -35,16 +47,17 @@ export const CreateProductSchema = z.object({
   cost: NumberSchema.optional(),
   sku: StringSchema.max(100).optional(),
   barcode: StringSchema.max(100).optional(),
-  imagePath: StringSchema.optional(),
+  imagePath: ImagePathSchema,
   isActive: z.boolean().optional().default(true),
   stock: NumberSchema.optional().default(0),
   categoryIds: z.array(NumberSchema).optional(),
 });
 export const UpdateProductSchema = CreateProductSchema.extend({
   id: NumberSchema,
+  imagePath: ImagePathSchema.nullable(),
 }).partial({ name: true, price: true });
 
-export interface FindAllProductDto extends z.input<typeof FindAllProductSchema>, SoftDeleteFields {}
+export interface FindAllProductDto extends z.infer<typeof FindAllProductSchema>, SoftDeleteFields {}
 export interface FindByIdProductDto extends z.infer<typeof FindByIdProductSchema> {}
 export interface CreateProductDto extends z.infer<typeof CreateProductSchema> {}
 export interface UpdateProductDto extends z.infer<typeof UpdateProductSchema> {}

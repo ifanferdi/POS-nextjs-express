@@ -12,7 +12,7 @@ import {
   CreateUserDto,
   CreateUserProfileDto,
   FindAllUserDto,
-  FindOneUserDto,
+  FindOneUserInternalDto,
   UpdateUserDto,
   UpdateUserProfileDto,
 } from '@/validations/user-validation';
@@ -20,7 +20,7 @@ import _ from 'lodash';
 
 export default class UserRepository
   extends DatabaseBaseRepository
-  implements Repository<FindAllUserDto, FindOneUserDto, CreateUserDto, UpdateUserDto>
+  implements Repository<FindAllUserDto, FindOneUserInternalDto, CreateUserDto, UpdateUserDto>
 {
   async findAll<T = IUser>(params: Partial<FindAllUserDto>) {
     const page = params?.page || 1;
@@ -45,7 +45,7 @@ export default class UserRepository
     return this.prisma.user.count({ where: this.queryUserRepository.handleWhere(params) });
   }
 
-  async findOne<T = IUser>(params: FindOneUserDto) {
+  async findOne<T = IUser>(params: FindOneUserInternalDto) {
     return this.prisma.user.findFirst({
       where: this.queryUserRepository.handleWhere(params),
       select: {

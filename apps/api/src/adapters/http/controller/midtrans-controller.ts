@@ -1,23 +1,16 @@
 import config from '@/config/config';
 import { MidtransWebhookPayload } from '@/domain/infrastructures/midtrans.interface';
 import { createMidtransSignatureKey } from '@/helpers/common.helper';
-import MidtransRepository from '@/repositories/midtrans/midtrans-repository';
 import { MockMidtransSchema } from '@/validations/midtrans.validation';
 import { Request, Response } from 'express';
 import asyncHandler from 'express-async-handler';
 import moment from 'moment';
 import BaseController from './_base-controller';
 
-const midtrans = new MidtransRepository();
-
 export default class MidtransController extends BaseController {
   webhook = asyncHandler(async (req: Request, res: Response) => {
     const payload = req.body as MidtransWebhookPayload & { status_code: string };
 
-    if (!midtrans.verifySignature(payload)) {
-      res.status(401).json({ message: 'Invalid signature' });
-      return;
-    }
     await this.useCases.midtransUseCase.syncMidtransToDatabase.execute({
       orderNumber: payload.order_id,
       notification: payload,
@@ -29,7 +22,7 @@ export default class MidtransController extends BaseController {
   // Dev-only: crafts a signed Midtrans notification and runs it through the real production sync
   // path (signature verified, no isMock bypass). Guarded by env (404 in production).
   mock = asyncHandler(async (req: Request, res: Response) => {
-    if (config.app.env === 'production') {
+    if (config.midtrans.isProduction) {
       res.sendStatus(404);
       return;
     }

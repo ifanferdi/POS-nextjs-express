@@ -5,14 +5,15 @@ import {
   BasePagination,
   NumberSchema,
   StringSchema,
+  Trimmed,
 } from '@/validations/base-validation';
 import { z } from 'zod';
 
 // Permission Validation
-const PermissionWithEnum = z.array(z.nativeEnum(PermissionRelation).optional()).optional();
-const permissionColumns = z
-  .array(z.enum(Object.keys(PERMISSION_FIELD) as [PERMISSION_FIELD, ...PERMISSION_FIELD[]]))
-  .optional();
+const PermissionWithEnum = z.array(Trimmed(z.nativeEnum(PermissionRelation)).optional()).optional();
+const permissionColumns = z.array(
+  Trimmed(z.enum(Object.keys(PERMISSION_FIELD) as [PERMISSION_FIELD, ...PERMISSION_FIELD[]])),
+).optional();
 
 export const FindByIdPermissionSchema = BaseFindById.extend({
   with: PermissionWithEnum,
@@ -47,11 +48,12 @@ export const CheckValidPermissionSchema = z.object({
 export const ResetCachePermissionSchema = z
   .object({
     userId: NumberSchema.optional(),
-    roleId: NumberSchema.optional(),
+    userIds: z.array(NumberSchema).optional(),
+    roleId: z.union([NumberSchema, z.array(NumberSchema)]).optional(),
     permissionId: NumberSchema.optional(),
   })
   .superRefine((data, ctx) => {
-    if (!(data.userId || data.roleId || data.permissionId))
+    if (!(data.userId || data.userIds || data.roleId || data.permissionId))
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: `Must use one of ${Object.keys(data)} `,

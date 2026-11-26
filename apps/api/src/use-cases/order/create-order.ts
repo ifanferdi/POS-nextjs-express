@@ -15,13 +15,22 @@ import {
   MidtransChargePayload,
 } from '@/domain/infrastructures/midtrans.interface';
 import { calculateRounding } from '@/helpers/common.helper';
-import { ErrorBadRequest, ErrorConflict } from '@/helpers/error.helper';
-import { Product } from '@/infrastructure/database/prisma/generated/client';
+import {
+  effectiveUnitDiscount,
+  ensureRemainingCounter,
+  redisRemainingKey,
+  selectItemDiscount,
+} from '@/helpers/discount.helper';
+import { ErrorBadRequest, ErrorConflict, ErrorInternalServer } from '@/helpers/error.helper';
+import { Product, ProductDiscountCycle } from '@/infrastructure/database/prisma/generated/client';
 import { publishSSEEvent } from '@/infrastructure/event-stream/sse-redis-bridge';
 import BaseUseCase from '@/use-cases/_base-use-case';
 import { CreateOrderDto } from '@/validations/order-validation';
+import _ from 'lodash';
 import FindAllProduct from '../product/find-all-product';
 import FindByIdUser from '../user/find-by-id-user';
+
+import handleOrderImageUrls, { OrderWithImageRelations } from './handle-order-image-urls';
 
 const EXPIRY_IN_MINUTES = config.midtrans.expiryMinutes;
 
@@ -33,8 +42,8 @@ const IDEMPOTENCY_POLL_INTERVAL_MS = 100;
 type OrderResponse = { message: string; order: StoreOrderResponse };
 
 export default class CreateOrder extends BaseUseCase {
-  private findByIdUser = new FindByIdUser(this.redisClient);
-  private findAllProducts = new FindAllProduct(this.redisClient);
+  private findByIdUser = new FindByIdUser(this.repositories);
+  private findAllProducts = new FindAllProduct(this.repositories);
 
   get now() {
     return new Date();
@@ -44,30 +53,47 @@ export default class CreateOrder extends BaseUseCase {
     const key = this.idempotencyKey(payload.userId, payload.idempotencyKey);
 
     const cached = await this.repositories.redisRepository.findOne(key);
-    if (cached && cached !== IDEMPOTENCY_IN_PROGRESS)
-      return { isIdempoten: true, data: cached as OrderResponse };
+    if (cached && cached !== IDEMPOTENCY_IN_PROGRESS) {
+      const data = cached as OrderResponse;
+      await this.handleOrderResponseImages(data);
+      return { isIdempoten: true, data };
+    }
 
     const claimed = await this.repositories.redisRepository.storeNX(
       key,
       IDEMPOTENCY_IN_PROGRESS,
       IDEMPOTENCY_TTL,
     );
-    if (!claimed) return { isIdempoten: true, data: await this.waitForIdempotency(key) };
+    if (!claimed) {
+      const data = await this.waitForIdempotency(key);
+      await this.handleOrderResponseImages(data);
+      return { isIdempoten: true, data };
+    }
 
+    let data: OrderResponse;
     try {
       const result = await this.createOrderInternal(payload);
-      const data: OrderResponse = { message: 'Success.', order: result.order };
+      data = { message: 'Success.', order: result.order };
       await this.repositories.redisRepository.store({
         key,
         value: data,
         expired: IDEMPOTENCY_TTL,
         logging: false,
       });
-      return { isIdempoten: false, data };
     } catch (error) {
       await this.repositories.redisRepository.destroy(key);
       throw error;
     }
+
+    await this.handleOrderResponseImages(data);
+    return { isIdempoten: false, data };
+  }
+
+  private async handleOrderResponseImages(data: OrderResponse) {
+    await handleOrderImageUrls(
+      this.repositories.storageRepository,
+      data.order as unknown as OrderWithImageRelations,
+    );
   }
 
   private idempotencyKey(userId: number, key: string) {
@@ -91,41 +117,86 @@ export default class CreateOrder extends BaseUseCase {
       limit: -1,
       isActive: true,
     });
+    products.forEach((product) => delete product.imageUrl);
 
     const productMap: Map<number, Product> = new Map(products.map((p: any) => [p.id, p]));
 
-    const meta: MetaOrder = await this.handleMetaData(payload);
+    const activeDiscounts = await this.repositories.productDiscountCycleRepository.findActive(
+      productIds,
+      this.now,
+    );
+    const discountMap = new Map<number, ProductDiscountCycle>();
+    activeDiscounts.forEach((discount) => {
+      if (!discountMap.has(discount.productId)) discountMap.set(discount.productId, discount);
+    });
 
-    const computedItems: StoreOrderDtoItems[] = payload.items.map((item) => {
+    const computedItems: StoreOrderDtoItems[] = [];
+    const claims: Array<{ key: string; take: number }> = [];
+
+    for (const item of payload.items) {
       const product = productMap.get(item.productId);
       if (!product)
         throw new ErrorBadRequest(`Produk dengan ID ${item.productId} tidak ditemukan.`);
+
+      // Row diproses berurutan: row promo lebih awal diprioritaskan mendapat kuota.
+      // useDiscount default false → row tanpa flag / false = harga normal, tidak claim kuota.
+      const discount = selectItemDiscount(item.useDiscount, discountMap.get(item.productId));
+      const take = discount ? await this.claimUnits(discount, item.quantity) : 0;
       const meta: MetaOrderItems = { product };
 
-      return {
+      if (discount && take > 0) {
+        const discountAmount = effectiveUnitDiscount(discount.amount, product.price) * take;
+        meta.discount = discount;
+        meta.discountAmount = discountAmount;
+        meta.discountQty = take;
+        if (discount.quota != null) claims.push({ key: redisRemainingKey(discount.id), take });
+      }
+
+      computedItems.push({
         productId: item.productId,
         quantity: item.quantity,
         unitPrice: product.price,
         totalPrice: product.price * item.quantity,
+        discountId: discount && take > 0 ? discount.id : undefined,
+        discountQty: discount && take > 0 ? take : undefined,
         meta,
-      };
-    });
+      });
+    }
 
-    const subtotal = computedItems.reduce((sum, i) => sum + i.totalPrice, 0);
-    const tax = 0;
-    const discount = 0;
-    const total = subtotal + tax - discount;
+    const meta: MetaOrder = await this.handleMetaData(payload);
+    const snapshotAt = this.now;
+    meta.products = _.uniqBy(
+      computedItems.map((item) => ({ ...item.meta!.product!, snapshotAt })),
+      'id',
+    );
+    meta.discounts = _.uniqBy(
+      computedItems
+        .filter((item) => item.meta?.discount)
+        .map((item) => ({ ...item.meta!.discount!, snapshotAt })),
+      'id',
+    );
+
+    const subtotal = computedItems.reduce((sum, item) => sum + item.totalPrice, 0);
+    const totalDiscount = computedItems.reduce(
+      (sum, item) => sum + (item.meta?.discountAmount ?? 0),
+      0,
+    );
+    const total = subtotal - totalDiscount;
 
     const isOnlinePayment = payload.paymentMethod !== PaymentMethod.CASH;
     const rounding = isOnlinePayment ? 0 : calculateRounding(total).rounding;
     const totalRounding = isOnlinePayment ? total : calculateRounding(total).total;
     const amount = isOnlinePayment ? total : (payload.amount ?? 0);
 
+    if (!isOnlinePayment && amount < totalRounding) {
+      await this.restoreClaims(claims);
+      throw new ErrorBadRequest('Jumlah pembayaran tunai tidak mencukupi.');
+    }
+
     const storeInput: StoreOrderDto = {
       userId: payload.userId,
       subtotal,
-      tax,
-      discount,
+      totalDiscount,
       total,
       notes: payload.notes,
       items: computedItems,
@@ -139,25 +210,62 @@ export default class CreateOrder extends BaseUseCase {
       },
     };
 
-    const order = await this.repositories.orderRepository.store(storeInput);
+    let order: StoreOrderResponse;
+    try {
+      order = await this.repositories.orderRepository.store(storeInput);
+    } catch (error) {
+      // Transaksi DB rollback → kembalikan claim Redis agar kuota tidak ikut terbakar.
+      await this.restoreClaims(claims);
+      throw error;
+    }
 
     if (isOnlinePayment)
       return await this.handleOnlinePayment(order, total, computedItems, payload);
+
+    const eventOrder = _.cloneDeep(order);
+    await handleOrderImageUrls(
+      this.repositories.storageRepository,
+      eventOrder as unknown as OrderWithImageRelations,
+    );
 
     await publishSSEEvent({
       scope: 'order',
       entity: 'order',
       action: 'create',
-      data: [order],
+      data: [eventOrder],
     });
     await publishSSEEvent({
       scope: 'product',
       entity: 'product',
       action: 'update',
-      data: order.orderItems.map((orderItem) => orderItem.product),
+      data: eventOrder.orderItems.map((orderItem) => orderItem.product),
     });
 
     return { order };
+  }
+
+  private async restoreClaims(claims: Array<{ key: string; take: number }>) {
+    const results = await Promise.allSettled(
+      claims.map((claim) => this.repositories.redisRepository.incrBy(claim.key, claim.take)),
+    );
+    const failedCount = results.filter((result) => result.status === 'rejected').length;
+
+    if (failedCount > 0) {
+      console.error(`Failed to restore ${failedCount} discount quota claim(s).`);
+      throw new ErrorInternalServer();
+    }
+  }
+
+  private async claimUnits(discount: ProductDiscountCycle, quantity: number) {
+    if (discount.quota == null) return quantity;
+
+    await ensureRemainingCounter(discount, this.repositories.redisRepository);
+    const take = await this.repositories.redisRepository.claimRemaining(
+      redisRemainingKey(discount.id),
+      quantity,
+    );
+
+    return Math.max(take, 0);
   }
 
   private async handleOnlinePayment(
@@ -201,14 +309,40 @@ export default class CreateOrder extends BaseUseCase {
     computedItems: StoreOrderDtoItems[],
     payload: CreateOrderDto,
   ): MidtransChargePayload {
+    const rowOccurrences = new Map<number, number>();
     const chargePayload: MidtransChargeBasePayload = {
       transaction_details: { order_id: order.orderNumber, gross_amount: total },
-      item_details: computedItems.map((item) => ({
-        id: String(item.productId),
-        price: item.unitPrice,
-        quantity: item.quantity,
-        name: `Product ${item.meta?.product?.name || item.productId}`,
-      })),
+      // Midtrans: Σ item_details harus == gross_amount → harga bersih setelah diskon,
+      // item partial dipecah 2 baris (unit berdiskon + unit harga normal).
+      // id dibuat unik per row karena produk sama boleh muncul >1 row.
+      item_details: computedItems.flatMap((item) => {
+        const discount = item.meta?.discount;
+        const take = item.discountQty ?? 0;
+        const name = `Product ${item.meta?.product?.name || item.productId}`;
+        const occurrence = rowOccurrences.get(item.productId) ?? 0;
+        rowOccurrences.set(item.productId, occurrence + 1);
+        const baseId =
+          occurrence === 0 ? String(item.productId) : `${item.productId}-${occurrence}`;
+
+        if (!discount || take <= 0)
+          return [{ id: baseId, price: item.unitPrice, quantity: item.quantity, name }];
+
+        const netPrice =
+          item.unitPrice - effectiveUnitDiscount(discount.amount ?? 0, item.unitPrice);
+
+        if (take >= item.quantity)
+          return [{ id: baseId, price: netPrice, quantity: item.quantity, name }];
+
+        return [
+          { id: baseId, price: netPrice, quantity: take, name },
+          {
+            id: `${baseId}-full`,
+            price: item.unitPrice,
+            quantity: item.quantity - take,
+            name,
+          },
+        ];
+      }),
       custom_expiry: { expiry_duration: EXPIRY_IN_MINUTES, unit: 'minute' },
     };
 
@@ -241,6 +375,8 @@ export default class CreateOrder extends BaseUseCase {
         id: payload.userId,
         with: [UserRelation.PROFILE],
       })) as IUserProfile;
+
+    if (user?.profile) delete user.profile.imageUrl;
 
     const meta: MetaOrder = {};
     if (user) meta.user = user;

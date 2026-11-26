@@ -12,7 +12,7 @@ Backend API for the POS application: Express 4 + TypeScript + Prisma 7, organize
 | ORM            | Prisma 7 + PostgreSQL (via `@prisma/adapter-pg`)  |
 | Cache          | Redis (me cache, permission cache, order counter) |
 | Message queue  | RabbitMQ (`amqplib`)                              |
-| Object storage | MinIO / S3 (presigned uploads)                    |
+| Object storage | S3-compatible API (private bucket)                |
 | Auth           | JSON Web Tokens + argon2                          |
 | Payments       | Midtrans (Snap)                                   |
 | Realtime       | SSE, bridged across instances via Redis           |
@@ -67,6 +67,7 @@ Schema: `src/infrastructure/database/prisma/schemas/schema.prisma`.
 ## API surface
 
 All routes are prefixed `/api/v1` and protected by JWT middleware unless noted. The authoritative contract is the Swagger UI and `docs/openapi.yaml`.
+Nilai string yang divalidasi Zod di-trim sebelum diteruskan ke use case, termasuk password/token pada body serta nilai string enum dan array yang tercakup schema. Input yang tidak melewati schema (termasuk teks multipart tanpa validasi), field tak dikenal, metadata file, dan header mentah tidak otomatis di-trim. Body webhook Midtrans produksi tetap asli agar verifikasi signature dan `rawNotification` memakai nilai persis dari pengirim.
 
 | Resource    | Verbs / endpoints                                                                                                                                                                                 | Notes                            |
 | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------- |
@@ -80,27 +81,46 @@ All routes are prefixed `/api/v1` and protected by JWT middleware unless noted. 
 | Orders      | list/get + `POST /orders`, `PUT /orders/:id/status`, `POST /orders/:id/cancel`                                                                                                                    |                                  |
 | Payments    | list/get + `GET /payments/:orderId/order`                                                                                                                                                         |                                  |
 | Dashboard   | `GET /dashboard`                                                                                                                                                                                  | POS aggregate                    |
-| Uploads     | `POST /uploads/generate-presign-url`                                                                                                                                                              | S3/MinIO presigned URL           |
+| Uploads     | `POST /uploads/generate-presign-url`                                                                                                                                                              | S3 presigned PUT                  |
 | Webhooks    | `POST /webhooks/midtrans`, `POST /webhooks/midtrans/mock`                                                                                                                                         | Public                           |
 | SSE         | `GET /sse`                                                                                                                                                                                        | Realtime stream                  |
+
+## Penyimpanan file terkelola
+
+API menyimpan file produk dan profil yang dikelola aplikasi melalui S3 privat. AWS S3 dan endpoint yang kompatibel dengan S3 didukung. API tidak menyediakan backend filesystem/local atau endpoint file `/public/files`.
+
+`POST /api/v1/uploads/generate-presign-url` mengembalikan `key`, `presignUrl`, dan `expiresIn`. Client mengunggah bytes dengan PUT ke `presignUrl`, lalu menyimpan nilai `key` sebagai referensi permanen. Jangan menyimpan `presignUrl` sebagai `imagePath` atau referensi file yang stabil.
+
+Upload multipart produk melalui `POST /api/v1/products/upload` mengembalikan `message` dan `imagePath`; untuk file terkelola, `imagePath` adalah object key. Object key produk berada di prefix `products/`, sedangkan object key profil berada di `profiles/`.
+- Respons baca produk dan pengguna menampilkan `imagePath` dan `imageUrl`. Untuk file terkelola, `imagePath` adalah object key yang stabil dan `imageUrl` adalah signed GET URL sementara. Tampilkan `imageUrl`; setelah expiry, ambil ulang resource produk atau pengguna terkait agar API memberikan URL baru. Jangan membuat signature di client atau menyimpan signed URL sebagai referensi permanen.
+- URL gambar produk pihak ketiga tetap didukung. URL local API dan URL absolut endpoint S3 tidak diteruskan sebagai URL gambar tanpa signing.
+
+Client yang memakai Next.js Image perlu mengizinkan host pada `S3_PUBLIC_ENDPOINT`. Cart atau cache yang menyimpan `imageUrl` harus mengambil ulang produk ketika URL kedaluwarsa; menyimpan object key saja tidak memperbarui URL secara otomatis. Perubahan client ini belum diterapkan di repository API.
+
+Saat beralih dari penyimpanan local, tidak ada migrasi otomatis untuk file atau referensi lama. Rencanakan pemindahan file terkelola ke S3 dan penggantian referensinya dengan object key sebelum memakai API tanpa endpoint local. Jangan pindahkan URL gambar pihak ketiga ke S3 sebagai bagian dari perubahan ini.
+
+Bucket S3 harus privat. Akses anonim tidak didukung. Masa berlaku signed URL saat diperiksa adalah `config.storage.expiredTime`, sebesar 3600 detik; respons upload menyertakan `expiresIn`. Tidak ada environment variable khusus expiry yang tercatat.
 
 **Permission gating:** every resource's `showRoutes` is gated by a `"Show X"` permission and `manageRoutes` by `"Manage X"` via the `Authorization` middleware (see `routes/*.routes.ts`). Permission strings live in the frontend (`apps/app/lib/permission.ts`) and are seeded through `src/infrastructure/database/seeders/`.
 
 ## Auth
 
 - **Modes** — `AUTH_MODE` is `stateless` (JWT only) or `stateful` (session persisted in Redis).
-- **Tokens** — short-lived access token (default `7h`) + refresh token (default 30 days). Refresh rotates both.
+- **Tokens** — short-lived access token (JWT, stateless: no Redis lookup) + refresh token stateful Redis session, rotates automatically when used.
 - **2FA** — optional (`AUTH_USE_2FA`); an OTP is emailed via SMTP and verified before access, with rate limiting.
-- **Middleware chain** — `ExtractJwtToken` reads/validates the token, `Authorization` enforces permissions; `verifySignedUrl` guards local-file access.
+- **Middleware chain** — `ExtractJwtToken` reads/validates the token, `Authorization` enforces permissions; managed-file reads use signed S3 GET URLs, not local-file signatures.
 
 ## Setup
 
 ### Docker (from repo root)
 
 ```bash
+export HASH_SECRET="$(openssl rand -hex 64)"
 docker compose up -d --build
 docker compose --profile setup run --rm api-init   # push Prisma schema + seed
 ```
+
+Keep the generated value in an untracked `.env` file or a deployment secret store for later Compose commands.
 
 ### Manual
 
@@ -123,18 +143,18 @@ Swagger UI: http://localhost:8000/docs
 
 Defaults live in `src/config/` (grouped below); override via `.env` or the `x-api-env` anchor in the root `docker-compose.yml`.
 
-| Group    | Key variables                                                                                                     | Notes                                       |
-| -------- | ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
-| App      | `APP_NAME`, `APP_ENV`, `APP_PORT`, `APP_URL`, `APP_VERSION`                                                       |                                             |
-| Database | `DB_USER`, `DB_PASS`, `DB_NAME`, `DB_HOST`, `DB_PORT`, `DB_USE_SSL`                                               |                                             |
-| Auth     | `AUTH_MODE`, `AUTH_USE_2FA`, `AUTH_TOKEN_TIMEOUT`, `AUTH_REFRESH_TOKEN_TIMEOUT`, `AUTH_OTP_*`, `HASH_SECRET`      | `HASH_SECRET` must be changed in production |
-| Redis    | `REDIS_URL`, `ME_CACHE_TTL`, `ORDER_COUNTR_REDIS_TIMEOUT`                                                         |                                             |
-| RabbitMQ | `RABBITMQ_URL`, `RABBITMQ_EXCHANGE`                                                                               |                                             |
-| Storage  | `FILESYSTEM` (`s3`\|`local`), `STORAGE_SECRET`, `S3_REGION`, `S3_ACCESS`, `S3_SECRET`, `S3_ENDPOINT`, `S3_BUCKET` |                                             |
-| Midtrans | `MIDTRANS_SERVER_KEY`, `MIDTRANS_CLIENT_KEY`, `MIDTRANS_IS_PRODUCTION`, `MIDTRANS_EXPIRY_MINUTES`                 |                                             |
-| SMTP     | `SMTP_USER`, `SMTP_PASS`                                                                                          | Used for 2FA OTP                            |
-| Sentry   | `SENTRY_DSN`                                                                                                      |                                             |
-| SSE      | `SSE_CHANNEL`                                                                                                     |                                             |
+| Group | Key variables | Notes |
+| --- | --- | --- |
+| App | `APP_NAME`, `APP_ENV`, `APP_PORT`, `APP_URL`, `APP_VERSION` | |
+| Database | `DB_USER`, `DB_PASS`, `DB_NAME`, `DB_HOST`, `DB_PORT`, `DB_USE_SSL` | |
+| Auth | `AUTH_MODE`, `AUTH_USE_2FA`, `AUTH_TOKEN_TIMEOUT`, `AUTH_REFRESH_TOKEN_TIMEOUT`, `AUTH_OTP_*`, `HASH_SECRET` | Required; provide a unique value from the environment or a secret store (`openssl rand -hex 64`). |
+| Redis | `REDIS_URL`, `ME_CACHE_TTL`, `ORDER_COUNTR_REDIS_TIMEOUT` | |
+| RabbitMQ | `RABBITMQ_URL`, `RABBITMQ_EXCHANGE` | |
+| Storage | `S3_REGION`, `S3_BUCKET`, `S3_ACCESS`, `S3_SECRET`, `S3_ENDPOINT`, `S3_PUBLIC_ENDPOINT` | Bucket/region required; static keys are a pair or use the AWS credential provider chain. `S3_PUBLIC_ENDPOINT` is optional and must be reachable by clients. Use a private bucket. |
+| Midtrans | `MIDTRANS_SERVER_KEY`, `MIDTRANS_CLIENT_KEY`, `MIDTRANS_IS_PRODUCTION`, `MIDTRANS_EXPIRY_MINUTES` | |
+| SMTP | `SMTP_USER`, `SMTP_PASS` | Used for 2FA OTP. |
+| Sentry | `SENTRY_DSN` | |
+| SSE | `SSE_CHANNEL` | |
 
 Some entries in `config.ts` (Elasticsearch host/key, `GRPC_PORT`, `SCHEDULE_SERVICE_URL`, `AXIOS_TIMEOUT`) are scaffolding not used by the current stack.
 

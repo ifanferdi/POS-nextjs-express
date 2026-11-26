@@ -1,5 +1,5 @@
 import config from '@/config/config';
-import { JwtData, RedisDataAuth } from '@/domain/entities/types/auth.types';
+import { JwtData } from '@/domain/entities/types/auth.types';
 import { ErrorUnauthorized } from '@/helpers/error.helper';
 import * as jwt from '@/helpers/jwt.helper';
 import BaseUseCase from '@/use-cases/_base-use-case';
@@ -11,17 +11,23 @@ export default class CheckToken extends BaseUseCase {
   async execute({ token }: TokenDto) {
     const tokenData: JwtData = jwt.verify(token);
 
-    // check token to redis if stateful mode
-    if (AUTH_MODE === 'stateful') {
-      // cek apakah token masih ada di redis atau sudah dihapus (sign out) / expired
-      // note: 1 akun hanya 1 device, karna cache token akan ketimpa kalo ada login di device lain
-      const redisData: RedisDataAuth = await this.repositories.redisRepository.findOne(
-        jwt.key(tokenData.id),
-      );
-
-      if (redisData?.token !== token || !tokenData.isBearerToken)
-        throw new ErrorUnauthorized('Token tidak valid atau kadaluarsa.');
+    // Pencabutan sesi (mode stateful): token yang session-nya sudah
+    // logout/dihapus dari Redis tidak lagi berlaku.
+    if (AUTH_MODE === 'stateful' && tokenData.sessionId) {
+      const session = await this.repositories.redisRepository.findOne(jwt.key(tokenData.sessionId));
+      if (!session) throw new ErrorUnauthorized('Session tidak valid. Silakan login kembali.');
     }
+
+    // User dinonaktifkan/dihapus → token tidak berlaku (sebelumnya JWT-only
+    // tetap bisa diakses sampai token kedaluwarsa).
+    const activeUser = await this.repositories.userRepository.findOne({
+      id: tokenData.id,
+      isActive: true,
+      columns: ['id', 'roleId'],
+    });
+    if (!activeUser) throw new ErrorUnauthorized('Pengguna tidak aktif.');
+
+    tokenData.roleId = activeUser.roleId;
 
     if (tokenData.iat) tokenData.iatDate = new Date(tokenData.iat * 1000);
     if (tokenData.exp) tokenData.expDate = new Date(tokenData.exp * 1000);

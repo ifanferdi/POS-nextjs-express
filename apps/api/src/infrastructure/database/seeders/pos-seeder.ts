@@ -15,11 +15,13 @@ import {
 } from '@/infrastructure/database/prisma/generated/models';
 import { faker } from '@faker-js/faker';
 import axios from 'axios';
+import 'dotenv/config';
 import _ from 'lodash';
 import Progress from 'ts-progress';
 
-const TOTAL_PRODUCTS = 500_000;
-const TOTAL_ORDERS = 250_000;
+const TOTAL_PRODUCTS = Number(process.env.TOTAL_PRODUCTS) || 500_000;
+const TOTAL_ORDERS = Number(process.env.TOTAL_ORDERS) || 250_000;
+
 const CHUNK = 1000;
 
 export default class PosSeeder implements Seeder {
@@ -28,11 +30,57 @@ export default class PosSeeder implements Seeder {
   async execute(): Promise<void> {
     const categories = await this.seedCategories();
     const products = await this.seedProducts(categories);
+    await this.seedProductDiscountCycles(products);
     await this.seedOrders(products);
   }
 
+  private async seedProductDiscountCycles(products: Product[]) {
+    const now = Date.now();
+    const day = 86_400_000;
+    const picked = _.sampleSize(products, 20);
+
+    const data = picked.map((product, index) => {
+      const amount = Math.min(
+        Math.round(product.price * faker.number.float({ min: 0.05, max: 0.15 })),
+        product.price,
+      );
+      const active = {
+        productId: product.id,
+        amount,
+        startDate: new Date(now - day),
+        endDate: new Date(now + 7 * day),
+      };
+
+      // 4 variasi: aktif berkuota, aktif unlimited, mendatang, kedaluwarsa
+      switch (index % 4) {
+        case 0:
+          return { ...active, quota: 100 };
+        case 1:
+          return { ...active, quota: null };
+        case 2:
+          return {
+            ...active,
+            quota: null,
+            startDate: new Date(now + day),
+            endDate: new Date(now + 7 * day),
+          };
+        default:
+          return {
+            ...active,
+            quota: null,
+            startDate: new Date(now - 14 * day),
+            endDate: new Date(now - 7 * day),
+          };
+      }
+    });
+
+    await this.prisma.productDiscountCycle.createMany({ data });
+
+    console.info('✅ Seed Product Discount Cycles');
+  }
+
   private async seedCategories() {
-    const data = Array.from({ length: 100 }, (_: unknown, i: number) => ({
+    const data = Array.from({ length: 100 }, () => ({
       name: faker.commerce.department(),
       description: faker.commerce.productDescription(),
     }));
@@ -178,7 +226,7 @@ export default class PosSeeder implements Seeder {
         const status =
           paymentMethod === PaymentMethod.CASH
             ? _.sample([OrderStatus.COMPLETED, OrderStatus.CANCELLED])!
-            : _.sample([OrderStatus.PENDING, OrderStatus.EXPIRED])!;
+            : _.sample([OrderStatus.PENDING, OrderStatus.COMPLETED, OrderStatus.EXPIRED])!;
 
         const itemsCount = faker.number.int({ min: 1, max: 5 });
         const selectedProducts = _.sampleSize(products, itemsCount);
@@ -192,9 +240,8 @@ export default class PosSeeder implements Seeder {
         });
 
         const subtotal = _.sumBy(orderItemsData, 'totalPrice');
-        const tax = Math.round(subtotal * 0.11);
-        const discount = faker.number.int({ min: 0, max: Math.floor(subtotal * 0.1) });
-        const total = subtotal + tax - discount;
+        const totalDiscount = faker.number.int({ min: 0, max: subtotal });
+        const total = subtotal - totalDiscount;
 
         const paymentStatus =
           status === OrderStatus.COMPLETED
@@ -211,17 +258,20 @@ export default class PosSeeder implements Seeder {
         const paidAt = paymentStatus !== PaymentStatus.SUCCESS ? undefined : faker.date.anytime();
         const orderNumber = `INV-${String(id).padStart(6, '0')}`;
 
+        const createdAt = faker.date.anytime();
+        const updatedAt = createdAt;
         orders.push({
           id,
           customerId: null,
           userId: faker.number.int({ min: 1, max: countAllUsers }),
           orderNumber,
           subtotal,
-          tax,
-          discount,
+          totalDiscount,
           total,
           status,
           notes: faker.helpers.maybe(() => faker.lorem.sentence(), { probability: 0.3 }),
+          createdAt,
+          updatedAt,
         });
         payments.push({
           orderId: id,
@@ -232,6 +282,8 @@ export default class PosSeeder implements Seeder {
           method: paymentMethod,
           status: paymentStatus,
           paidAt,
+          createdAt,
+          updatedAt,
         });
       });
 

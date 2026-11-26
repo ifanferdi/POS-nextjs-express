@@ -3,23 +3,22 @@ import { HttpStatusCode } from '@/constants/http-status.constant';
 import { handleNumberOrArrayRequest, handleOrderByRequest } from '@/helpers/common.helper';
 import { BaseFindById } from '@/validations/base-validation';
 import {
-  CreateOrderDto,
-  CreateOrderSchema,
   FindAllOrderDto,
   FindAllOrderSchema,
-  FindByIdOrderDto,
   FindByIdOrderSchema,
-  UpdateOrderStatusDto,
+  CreateOrderSchema,
   UpdateOrderStatusSchema,
 } from '@/validations/order-validation';
 import e from 'express';
 import asyncHandler from 'express-async-handler';
 
 export default class OrderController extends BaseController {
+  private order = this.useCases.orderUseCase;
+
   findAll = asyncHandler(async (req: e.Request & Record<string, any>, res: e.Response) => {
     const request = req.route.methods.get ? req.query : req.body;
 
-    const params: FindAllOrderDto = {
+    const requestParams: FindAllOrderDto = {
       page: Number(request.page) || 1,
       limit: Number(request.limit) || 10,
       orderBy: handleOrderByRequest(request),
@@ -36,62 +35,76 @@ export default class OrderController extends BaseController {
       createdAtDay: request.createdAtDay,
     };
 
-    FindAllOrderSchema.parse(params);
+    const authorizedParams = await this.order.authorizationOrder.all(
+      requestParams,
+      req.user.id,
+    );
+    const params = {
+      ...authorizedParams,
+      ...FindAllOrderSchema.parse(authorizedParams),
+    };
 
-    const result = await this.useCases.orderUseCase.findAllOrder.execute(params);
+    const result = await this.order.findAllOrder.execute(params);
 
     res.send(result);
   });
 
-  findOne = asyncHandler(async (req: e.Request, res: e.Response) => {
-    const params: FindByIdOrderDto = {
+  findOne = asyncHandler(async (req: e.Request & Record<string, any>, res: e.Response) => {
+    const params = FindByIdOrderSchema.parse({
       id: Number(req.params.id),
       with: req.query.with as any,
       columns: req.query.columns as any,
-    };
+    });
 
-    FindByIdOrderSchema.parse(params);
+    const result = await this.order.findByIdOrder.execute(params);
 
-    const result = await this.useCases.orderUseCase.findByIdOrder.execute(params);
+    // Kasir hanya boleh membaca order miliknya sendiri.
+    await this.order.authorizationOrder.canAccessOrder(result?.userId, req.user.id);
 
     res.send(result);
   });
 
   create = asyncHandler(async (req: e.Request & Record<string, any>, res: e.Response) => {
-    const payload: CreateOrderDto = {
+    const payload = CreateOrderSchema.parse({
       userId: req.user?.id,
       idempotencyKey: String(req.headers['idempotency-key'] ?? ''),
       notes: req.body.notes,
       items: req.body.items,
       paymentMethod: req.body.paymentMethod,
       amount: req.body.amount,
-    };
+    });
 
-    CreateOrderSchema.parse(payload);
-
-    const result = await this.useCases.orderUseCase.createOrder.execute(payload);
+    const result = await this.order.createOrder.execute(payload);
 
     res.status(result.isIdempoten ? HttpStatusCode.OK : HttpStatusCode.CREATED).send(result.data);
   });
 
-  updateStatus = asyncHandler(async (req: e.Request, res: e.Response) => {
-    const payload: UpdateOrderStatusDto = {
+  updateStatus = asyncHandler(async (req: e.Request & Record<string, any>, res: e.Response) => {
+    const payload = UpdateOrderStatusSchema.parse({
       id: Number(req.params.id),
       status: req.body.status,
-    };
+    });
 
-    UpdateOrderStatusSchema.parse(payload);
+    // Periksa kepemilikan sebelum mengubah status.
+    const target = await this.order.findByIdOrder.execute({
+      id: payload.id,
+      columns: ['userId'],
+    });
+    await this.order.authorizationOrder.canAccessOrder(target?.userId, req.user.id);
 
-    const order = await this.useCases.orderUseCase.updateOrderStatus.execute(payload);
+    const order = await this.order.updateOrderStatus.execute(payload);
 
     res.send({ message: 'Success.', order });
   });
 
-  cancel = asyncHandler(async (req: e.Request, res: e.Response) => {
-    const params = { id: Number(req.params.id) };
-    BaseFindById.parse(params);
+  cancel = asyncHandler(async (req: e.Request & Record<string, any>, res: e.Response) => {
+    const params = BaseFindById.parse({ id: Number(req.params.id) });
 
-    await this.useCases.orderUseCase.cancelOrder.execute(params as BaseFindById);
+    // Periksa kepemilikan sebelum membatalkan.
+    const target = await this.order.findByIdOrder.execute({ id: params.id, columns: ['userId'] });
+    await this.order.authorizationOrder.canAccessOrder(target?.userId, req.user.id);
+
+    await this.order.cancelOrder.execute(params);
 
     res.send({ message: 'Success.' });
   });

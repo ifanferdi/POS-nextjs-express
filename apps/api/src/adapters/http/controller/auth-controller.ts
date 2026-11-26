@@ -1,65 +1,62 @@
-import e from 'express';
-import asyncHandler from 'express-async-handler';
+import BaseController from '@/adapters/http/controller/_base-controller';
 import { IUser } from '@/domain/entities/models/user';
 import { extractUserId } from '@/helpers/common.helper';
 import {
   ResendOtpSchema,
-  SignInAuthDto,
   SignInAuthSchema,
-  TokenDto,
   TokenSchema,
   VerifyOtpDto,
   VerifyOtpSchema,
 } from '@/validations/auth-validation';
-import { BaseFindById } from '@/validations/base-validation';
-import BaseController from '@/adapters/http/controller/_base-controller';
+import e from 'express';
+import asyncHandler from 'express-async-handler';
 
 export default class AuthController extends BaseController {
   signIn = asyncHandler(async (req: e.Request, res: e.Response) => {
-    const params: SignInAuthDto = {
-      username: req.body.username,
-      password: req.body.password,
+    // trust proxy sudah aktif → req.ip = IP klien asli (di belakang Caddy).
+    const params = {
+      ...SignInAuthSchema.parse({
+        username: req.body.username,
+        password: req.body.password,
+      }),
+      ipAddress: req.ip,
     };
-    SignInAuthSchema.parse(params);
 
     const token = await this.useCases.authUseCase.signIn.execute(params);
 
     res.json({ message: 'Success', ...token });
   });
 
-  signOut = asyncHandler(async (req: e.Request, res: e.Response) => {
-    const params = { id: extractUserId(req) };
-
-    // BaseFindById.parse(params);
-
-    await this.useCases.authUseCase.signOut.execute(params as BaseFindById);
+  signOut = asyncHandler(async (req: e.Request & Record<string, any>, res: e.Response) => {
+    await this.useCases.authUseCase.signOut.execute({
+      sessionId: req.user?.sessionId,
+    });
 
     res.json({ message: 'Success' });
   });
 
   checkToken = asyncHandler(async (req: e.Request, res: e.Response) => {
-    const params = { token: req.headers.authorization?.replace('Bearer ', '') };
-    TokenSchema.parse(params);
+    const params = TokenSchema.parse({
+      token: req.headers.authorization?.replace('Bearer ', ''),
+    });
 
-    res.json(await this.useCases.authUseCase.checkToken.execute(params as TokenDto));
+    res.json(await this.useCases.authUseCase.checkToken.execute(params));
   });
 
   refreshToken = asyncHandler(async (req: e.Request, res: e.Response) => {
-    const params = { token: req.body.refreshToken };
-    TokenSchema.parse(params);
+    const params = TokenSchema.parse({ token: req.body.refreshToken });
 
-    const refreshToken = await this.useCases.authUseCase.refreshToken.execute(params as TokenDto);
+    const refreshToken = await this.useCases.authUseCase.refreshToken.execute(params);
 
     res.json({ message: 'Success', ...refreshToken });
   });
 
   resendOtp = asyncHandler(async (req: e.Request, res: e.Response) => {
-    const userId = extractUserId(req);
-    ResendOtpSchema.parse({ userId });
+    const { userId } = ResendOtpSchema.parse({ userId: extractUserId(req) });
 
     const user = (await this.useCases.userUseCase.findByIdUser.execute({
       id: userId,
-    } as BaseFindById)) as IUser;
+    })) as IUser;
 
     await this.useCases.authUseCase.sendOtp.execute(user, true);
 
@@ -67,11 +64,14 @@ export default class AuthController extends BaseController {
   });
 
   verifyOTP = asyncHandler(async (req: e.Request, res: e.Response) => {
-    const params = { otp: req.body.otp, userId: extractUserId(req) };
-    VerifyOtpSchema.parse(params);
+    const params: VerifyOtpDto = VerifyOtpSchema.parse({
+      otp: req.body.otp,
+      userId: req.body.userId,
+      challengeId: req.body.challengeId,
+    });
 
-    const _verifyOTP = await this.useCases.authUseCase.verifyOtp.execute(params as VerifyOtpDto);
+    const verified = await this.useCases.authUseCase.verifyOtp.execute(params);
 
-    res.json({ message: 'Success', ..._verifyOTP });
+    res.json({ message: 'Success', ...verified });
   });
 }

@@ -20,12 +20,12 @@ const prismaConfig: PoolConfig = connectionString
       ssl: config.database.ssl,
     };
 
-const adapter = new PrismaPg(new Pool({ max: 3, ...prismaConfig }));
+const adapter = new PrismaPg(new Pool({ max: 3, ...prismaConfig }), { disposeExternalPool: true });
 const prisma =
   globalForPrisma.prisma ??
   new PrismaClient({
     adapter,
-    log: config.app.env === 'production' ? ['error'] : ['query', 'info', 'warn', 'error'],
+    // log: config.app.env === 'production' ? ['error'] : ['query', 'info', 'warn', 'error'],
   });
 
 const prismaNonLogger = globalForPrisma.prisma ?? new PrismaClient({ adapter, log: ['error'] });

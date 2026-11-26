@@ -1,6 +1,6 @@
+import { USER_FIELD } from '@/domain/entities/models/user';
+import { getRedisKeyMe, getRedisKeyPermissions, getRedisKeyRole } from '@/helpers/common.helper';
 import BaseUseCase from '@/use-cases/_base-use-case';
-import CheckValidPermission from '@/use-cases/permission/check-valid-permission';
-import MyAccount from '@/use-cases/user/my-account';
 import {
   ResetCachePermissionDto,
   ResetCachePermissionSchema,
@@ -13,20 +13,24 @@ export default class ResetCachePermission extends BaseUseCase {
     const userIds = await this.getUserIds(params);
 
     for (const userId of userIds) {
-      const permissionKey = new CheckValidPermission(this.redisClient).getRedisKey(userId);
-      const meKey = new MyAccount(this.redisClient).getRedisKey(userId);
+      const permissionKey = getRedisKeyPermissions(userId);
+      const meKey = getRedisKeyMe(userId);
+      const roleKey = getRedisKeyRole(userId);
 
       await this.repositories.redisRepository.destroy(permissionKey);
       await this.repositories.redisRepository.destroy(meKey);
+      await this.repositories.redisRepository.destroy(roleKey);
     }
   }
 
   private async getUserIds(params: ResetCachePermissionDto) {
     if (params.userId) return [params.userId];
+    else if (params.userIds) return params.userIds;
     else if (params.roleId) return this.getUserIdsByRoleId(params.roleId);
     else {
       const roles = await this.repositories.roleRepository.findAll({
         permissionId: params.permissionId,
+        limit: -1,
       });
       const roleIds = roles?.map((role) => role.id) ?? [];
 
@@ -35,11 +39,11 @@ export default class ResetCachePermission extends BaseUseCase {
   }
 
   private async getUserIdsByRoleId(roleId: number | number[]) {
-    const params: Record<string, any> = { limit: -1, columns: ['userId'] };
-    if (Array.isArray(roleId)) params.roleIds = roleId;
-    else params.roleId = roleId;
-
-    const users = await this.repositories.userRepository.findAll({ roleId: params.roleId });
+    const users = await this.repositories.userRepository.findAll({
+      roleId,
+      limit: -1,
+      columns: [USER_FIELD.id],
+    });
 
     return users.map((user) => user.id);
   }

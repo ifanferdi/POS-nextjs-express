@@ -6,6 +6,7 @@ export enum OrderRelation {
   ORDER_ITEMS = 'order-items',
   ORDER_ITEMS_PRODUCT = 'order-items.product',
   PAYMENT = 'payment',
+  PAYMENT_MIDTRANS = 'payment.midtrans',
 }
 
 export enum OrderStatus {

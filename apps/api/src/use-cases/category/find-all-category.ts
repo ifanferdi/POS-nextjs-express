@@ -1,6 +1,6 @@
 import paginate from '@/helpers/paginate.helper';
-import { FindAllCategoryDto } from '@/validations/category-validation';
 import BaseUseCase from '@/use-cases/_base-use-case';
+import { FindAllCategoryDto } from '@/validations/category-validation';
 
 export default class FindAllCategory extends BaseUseCase {
   async execute(params: FindAllCategoryDto) {

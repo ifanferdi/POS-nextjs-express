@@ -5,11 +5,12 @@ import {
   BasePagination,
   NumberSchema,
   StringSchema,
+  Trimmed,
 } from '@/validations/base-validation';
 import { z } from 'zod';
 
-const Relations = z.array(z.nativeEnum(CategoryRelation).optional()).optional();
-const columns = z.array(z.nativeEnum(CATEGORY_FIELD)).optional();
+const Relations = z.array(Trimmed(z.nativeEnum(CategoryRelation)).optional()).optional();
+const columns = z.array(Trimmed(z.nativeEnum(CATEGORY_FIELD))).optional();
 
 export const FindByIdCategorySchema = BaseFindById.extend({
   with: Relations,

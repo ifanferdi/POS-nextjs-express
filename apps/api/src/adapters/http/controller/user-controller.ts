@@ -3,25 +3,23 @@ import { HttpStatusCode } from '@/constants/http-status.constant';
 import { handleNumberOrArrayRequest, handleOrderByRequest } from '@/helpers/common.helper';
 import { BaseFindById } from '@/validations/base-validation';
 import {
-  ChangePasswordDto,
   ChangePasswordSchema,
-  CreateUserProfileDto,
   CreateUserProfileSchema,
-  FindAllUserDto,
   FindAllUserSchema,
   FindByIdUserDto,
   FindByIdUserSchema,
-  UpdateUserProfileDto,
   UpdateUserProfileSchema,
 } from '@/validations/user-validation';
 import e from 'express';
 import asyncHandler from 'express-async-handler';
 
 export default class UserController extends BaseController {
+  private user = this.useCases.userUseCase;
+
   findAll = asyncHandler(async (req: e.Request & Record<string, any>, res: e.Response) => {
     const request = req.route.methods.get ? req.query : req.body;
 
-    const params: FindAllUserDto = {
+    const params = FindAllUserSchema.parse({
       page: Number(request.page) || 1,
       limit: Number(request.limit) || 10,
       orderBy: handleOrderByRequest(request),
@@ -34,12 +32,9 @@ export default class UserController extends BaseController {
       email: request.email,
       role: request.role,
       with: request.with,
-    };
+    });
 
-    /** Request Validation **/
-    FindAllUserSchema.parse(params);
-
-    const result = await this.useCases.userUseCase.findAllUser.execute(params);
+    const result = await this.user.findAllUser.execute(params);
 
     res.send(result);
   });
@@ -56,34 +51,35 @@ export default class UserController extends BaseController {
 
   private handleFindOne(params: FindByIdUserDto) {
     /** Request Validation **/
-    FindByIdUserSchema.parse(params);
+    const parsedParams = FindByIdUserSchema.parse(params);
 
-    return this.useCases.userUseCase.findByIdUser.execute(params);
+    return this.user.findByIdUser.execute(parsedParams);
   }
 
   create = asyncHandler(async (req: e.Request, res: e.Response) => {
-    let payload: CreateUserProfileDto = {
+    /** Request Validation **/
+    const payload = CreateUserProfileSchema.parse({
       username: req.body.username,
       password: req.body.password,
       confirmPassword: req.body.confirmPassword,
       isActive: req.body.isActive,
       roleId: req.body.roleId,
-    };
-    if (req.body.profile)
-      payload.profile = {
-        fullName: req.body.profile.fullName,
-        placeOfBirth: req.body.profile.placeOfBirth,
-        dateOfBirth: req.body.profile.dateOfBirth,
-        gender: req.body.profile.gender,
-        age: req.body.profile.age,
-        imagePath: req.body.profile.imagePath,
-      };
-
-    /** Request Validation **/
-    payload = CreateUserProfileSchema.parse(payload);
+      ...(req.body.profile
+        ? {
+            profile: {
+              fullName: req.body.profile.fullName,
+              placeOfBirth: req.body.profile.placeOfBirth,
+              dateOfBirth: req.body.profile.dateOfBirth,
+              gender: req.body.profile.gender,
+              age: req.body.profile.age,
+              imagePath: req.body.profile.imagePath,
+            },
+          }
+        : {}),
+    });
 
     // Save to database
-    const user = await this.useCases.userUseCase.createUser.execute(payload);
+    const user = await this.user.createUser.execute(payload);
 
     res.status(HttpStatusCode.CREATED).send({ message: 'Success.', user });
   });
@@ -92,7 +88,13 @@ export default class UserController extends BaseController {
     const id = Number(req.params.id);
     await this.handleFindOne({ id });
 
-    await this.handleUpdate(req.body, id, { isActive: req.body.isActive, roleId: req.body.roleId }, res);
+    await this.handleUpdate(
+      req.body,
+      id,
+      { isActive: req.body.isActive, roleId: req.body.roleId },
+      res,
+      req.user?.roleId,
+    );
   });
 
   updateMyAccount = asyncHandler(async (req: e.Request & Record<string, any>, res: e.Response) => {
@@ -105,6 +107,7 @@ export default class UserController extends BaseController {
       id,
       { isActive: current.isActive, roleId: current.roleId! },
       res,
+      req.user?.roleId,
     );
   });
 
@@ -113,73 +116,76 @@ export default class UserController extends BaseController {
     id: number,
     access: { isActive: boolean; roleId: number },
     res: e.Response,
+    actorRoleId?: number,
   ) {
-    let payload: UpdateUserProfileDto = {
+    /** Request Validation **/
+    const payload = UpdateUserProfileSchema.parse({
       id,
       username: body.username,
       isActive: access.isActive,
       roleId: access.roleId,
-    };
-    if (body.profile)
-      payload.profile = {
-        fullName: body.profile.fullName,
-        placeOfBirth: body.profile.placeOfBirth,
-        dateOfBirth: body.profile.dateOfBirth,
-        gender: body.profile.gender,
-        age: body.profile.age,
-        imagePath: body.profile.imagePath,
-      };
+      ...(body.profile
+        ? {
+            profile: {
+              fullName: body.profile.fullName,
+              placeOfBirth: body.profile.placeOfBirth,
+              dateOfBirth: body.profile.dateOfBirth,
+              gender: body.profile.gender,
+              age: body.profile.age,
+              imagePath: body.profile.imagePath,
+            },
+          }
+        : {}),
+    });
 
-    const payloadPassword: ChangePasswordDto = {
+    const payloadPassword = ChangePasswordSchema.parse({
       password: body.password,
       confirmPassword: body.confirmPassword,
       oldPassword: body.oldPassword,
-    };
-
-    /** Request Validation **/
-    payload = UpdateUserProfileSchema.parse(payload);
-    ChangePasswordSchema.parse(payloadPassword);
+    });
 
     // Update to database
-    const user = await this.useCases.userUseCase.updateUser.execute(payload, payloadPassword);
+    const user = await this.user.updateUser.execute(payload, payloadPassword, actorRoleId);
 
     res.send({ message: 'Success.', user });
   }
 
-  destroy = asyncHandler(async (req: e.Request, res: e.Response) => {
-    const params = { id: Number(req.params.id) };
+  destroy = asyncHandler(async (req: e.Request & Record<string, any>, res: e.Response) => {
     /** Request Validation **/
-    BaseFindById.parse(params);
+    const params = BaseFindById.parse({ id: Number(req.params.id) });
 
-    await this.useCases.userUseCase.deleteUser.execute(params as BaseFindById);
-
-    res.send({ message: 'Success.' });
-  });
-
-  destroyPermanently = asyncHandler(async (req: e.Request, res: e.Response) => {
-    const params = { id: Number(req.params.id) };
-    /** Request Validation **/
-    BaseFindById.parse(params);
-
-    await this.useCases.userUseCase.deleteUser.execute(params as BaseFindById, {
-      isPermanently: true,
+    await this.user.deleteUser.execute(params, {
+      requestedBy: req.user.id,
     });
 
     res.send({ message: 'Success.' });
   });
 
-  restore = asyncHandler(async (req: e.Request, res: e.Response) => {
-    const params = { id: Number(req.params.id) };
-    /** Request Validation **/
-    BaseFindById.parse(params);
+  destroyPermanently = asyncHandler(
+    async (req: e.Request & Record<string, any>, res: e.Response) => {
+      /** Request Validation **/
+      const params = BaseFindById.parse({ id: Number(req.params.id) });
 
-    this.useCases.userUseCase.restoreUser.execute(params as BaseFindById);
+      await this.user.deleteUser.execute(params, {
+        requestedBy: req.user.id,
+        isPermanently: true,
+      });
+
+      res.send({ message: 'Success.' });
+    },
+  );
+
+  restore = asyncHandler(async (req: e.Request, res: e.Response) => {
+    /** Request Validation **/
+    const params = BaseFindById.parse({ id: Number(req.params.id) });
+
+    await this.user.restoreUser.execute(params);
 
     res.send({ message: 'Success.' });
   });
 
   myAccount = asyncHandler(async (req: e.Request & Record<string, any>, res) => {
-    const result = await this.useCases.userUseCase.myAccount.execute({
+    const result = await this.user.myAccount.execute({
       id: req.user.id,
     });
 

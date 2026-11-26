@@ -34,6 +34,56 @@ tags:
     description: Payment management for orders
 
 paths:
+  /uploads/generate-presign-url:
+    post:
+      tags: [Products, Users]
+      summary: Generate a private S3 upload URL
+      description: |
+        Store the returned key as imagePath after uploading with PUT to presignUrl.
+        Product uploads require Manage Product permission. Read the product or user
+        again to obtain a new signed imageUrl after expiry.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [filename, folder, fileType, contentType, fileSize]
+              properties:
+                filename:
+                  type: string
+                folder:
+                  type: string
+                  enum: [products, profiles]
+                fileType:
+                  type: string
+                  enum: [image, video]
+                contentType:
+                  type: string
+                  enum: [image/png, image/jpeg, image/jpg, video/mp4]
+                fileSize:
+                  type: number
+      responses:
+        '200':
+          description: Key and temporary PUT URL
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  key:
+                    type: string
+                  presignUrl:
+                    type: string
+                  expiresIn:
+                    type: integer
+        '400':
+          description: Invalid upload request
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
   # ═══════════════════════════════════════════════════════════
   # AUTH
   # ═══════════════════════════════════════════════════════════
@@ -42,7 +92,8 @@ paths:
       tags: [Auth]
       summary: Sign in
       description: |
-        Returns user + JWT token. In stateful mode (AUTH_MODE=stateful), also returns refreshToken and exp.
+        Returns user + JWT access token. In stateful mode (AUTH_MODE=stateful), also returns an opaque
+        refreshToken and exp. Every sign-in creates a new session, so multiple devices can be signed in at once.
       security: []
       requestBody:
         required: true
@@ -75,7 +126,7 @@ paths:
                     type: string
                   refreshToken:
                     type: string
-                    description: Only returned in stateful mode
+                    description: Only returned in stateful mode. Opaque token, not a JWT.
                   exp:
                     type: number
                     description: Only returned in stateful mode
@@ -94,7 +145,7 @@ paths:
     post:
       tags: [Auth]
       summary: Sign out
-      description: In stateless mode this is a no-op; in stateful mode destroys the token pair in Redis.
+      description: In stateless mode this is a no-op; in stateful mode destroys only the current session in Redis, so other devices stay signed in.
       responses:
         '200':
           description: Signed out successfully
@@ -109,7 +160,7 @@ paths:
     post:
       tags: [Auth]
       summary: Refresh access token
-      description: Only available in stateful mode (AUTH_MODE=stateful).
+      description: Only available in stateful mode (AUTH_MODE=stateful). Rotates the refresh token — the token used for this call is invalidated immediately.
       security: []
       requestBody:
         required: true
@@ -121,7 +172,7 @@ paths:
               properties:
                 refreshToken:
                   type: string
-                  description: The refresh token from sign-in
+                  description: Opaque refresh token from sign-in (or from the previous refresh)
       responses:
         '200':
           description: Token refreshed
@@ -151,25 +202,138 @@ paths:
   /dashboard:
     get:
       tags: [Dashboard]
-      summary: Get POS dashboard statistics
+      summary: Dashboard summary (KPI cards)
+      description: |
+        Total orders, revenue, avg order value, total products + delta (%) vs the previous period
+        of equal length. Revenue counts only `paid`/`completed` orders.
+      parameters:
+        - $ref: '#/components/parameters/dashboardFrom'
+        - $ref: '#/components/parameters/dashboardTo'
+        - $ref: '#/components/parameters/dashboardTz'
       responses:
         '200':
-          description: Dashboard data
+          description: Dashboard summary
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  totalProducts:
-                    type: integer
-                  totalOrdersToday:
-                    type: integer
-                  totalRevenueToday:
-                    type: number
-                  recentOrders:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Order'
+                $ref: '#/components/schemas/DashboardSummary'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /dashboard/orders-trend:
+    get:
+      tags: [Dashboard]
+      summary: Orders & revenue timeseries
+      description: Bucketed by day/week/month. `bucket` is the bucket start date. Revenue counts only `paid`/`completed` orders.
+      parameters:
+        - $ref: '#/components/parameters/dashboardFrom'
+        - $ref: '#/components/parameters/dashboardTo'
+        - $ref: '#/components/parameters/dashboardTz'
+        - name: granularity
+          in: query
+          schema:
+            type: string
+            enum: [day, week, month]
+            default: day
+      responses:
+        '200':
+          description: Trend points ordered by bucket ascending
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DashboardTrendPoint'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /dashboard/orders-by-status:
+    get:
+      tags: [Dashboard]
+      summary: Order count by status
+      description: Distribution of order statuses in the range (includes all DB statuses, e.g. `paid`).
+      parameters:
+        - $ref: '#/components/parameters/dashboardFrom'
+        - $ref: '#/components/parameters/dashboardTo'
+        - $ref: '#/components/parameters/dashboardTz'
+      responses:
+        '200':
+          description: Status distribution ordered by count descending
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DashboardStatusPoint'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /dashboard/payments:
+    get:
+      tags: [Dashboard]
+      summary: Payment breakdown by method and status
+      parameters:
+        - $ref: '#/components/parameters/dashboardFrom'
+        - $ref: '#/components/parameters/dashboardTo'
+        - $ref: '#/components/parameters/dashboardTz'
+      responses:
+        '200':
+          description: One row per method × status combination
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DashboardPaymentPoint'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /dashboard/top-products:
+    get:
+      tags: [Dashboard]
+      summary: Top products by quantity and revenue
+      description: Counts items of `paid`/`completed` orders only. `name` is null for deleted products.
+      parameters:
+        - $ref: '#/components/parameters/dashboardFrom'
+        - $ref: '#/components/parameters/dashboardTo'
+        - $ref: '#/components/parameters/dashboardTz'
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+      responses:
+        '200':
+          description: Top products ordered by quantity then revenue
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DashboardTopProduct'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /dashboard/orders/export:
+    get:
+      tags: [Dashboard]
+      summary: Export filtered orders as CSV
+      description: |
+        Returns a CSV attachment. Columns: orderNumber, createdAt, status, subtotal, tax,
+        discount, total, method, paymentStatus, itemCount.
+      parameters:
+        - $ref: '#/components/parameters/dashboardFrom'
+        - $ref: '#/components/parameters/dashboardTo'
+        - $ref: '#/components/parameters/dashboardTz'
+      responses:
+        '200':
+          description: CSV file
+          content:
+            text/csv:
+              schema:
+                type: string
         '401':
           $ref: '#/components/responses/Unauthorized'
 
@@ -347,39 +511,6 @@ paths:
                         items:
                           $ref: '#/components/schemas/User'
                   - $ref: '#/components/schemas/PaginatedMeta'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-
-  /users/profile/upload:
-    post:
-      tags: [Users]
-      summary: Upload profile image
-      requestBody:
-        required: true
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              required: [image]
-              properties:
-                image:
-                  type: string
-                  format: binary
-      responses:
-        '200':
-          description: Image uploaded
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: Success.
-                  imagePath:
-                    type: string
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -1199,7 +1330,7 @@ paths:
             type: array
             items:
               type: string
-              enum: [categories]
+              enum: [categories, discount-cycles]
       responses:
         '200':
           description: Paginated list
@@ -1289,7 +1420,7 @@ paths:
                       type: array
                       items:
                         type: string
-                        enum: [categories]
+                        enum: [categories, discount-cycles]
       responses:
         '200':
           description: Paginated list
@@ -1336,6 +1467,7 @@ paths:
                     example: Success.
                   imagePath:
                     type: string
+                    description: Product object key to store as imagePath, not a URL.
         '401':
           $ref: '#/components/responses/Unauthorized'
 
@@ -1353,7 +1485,7 @@ paths:
             type: array
             items:
               type: string
-              enum: [categories]
+              enum: [categories, discount-cycles]
       responses:
         '200':
           description: Product data
@@ -1869,6 +2001,31 @@ components:
       schema:
         type: string
         enum: [profile, role, role.permissions, permissions]
+    dashboardFrom:
+      name: from
+      in: query
+      schema:
+        type: string
+        format: date
+        example: '2026-10-01'
+      description: Start date (YYYY-MM-DD), default 30 days ago
+    dashboardTo:
+      name: to
+      in: query
+      schema:
+        type: string
+        format: date
+        example: '2026-10-26'
+      description: End date (YYYY-MM-DD), default today
+    dashboardTz:
+      name: tz
+      in: query
+      schema:
+        type: string
+        maxLength: 64
+        default: UTC
+        example: Asia/Jakarta
+      description: IANA timezone used for date bucketing and filtering
 
   schemas:
     SuccessMessage:
@@ -1928,6 +2085,83 @@ components:
           items:
             type: string
 
+    # ── Dashboard ────────────────────────────────────────────
+    DashboardSummary:
+      type: object
+      properties:
+        totalOrders:
+          type: integer
+        totalRevenue:
+          type: integer
+          description: Sum of order.total for paid/completed orders (IDR)
+        avgOrderValue:
+          type: integer
+          description: totalRevenue / paid-completed order count, rounded
+        totalProducts:
+          type: integer
+          description: Active products, not date-filtered
+        delta:
+          type: object
+          description: Percent change vs previous equal-length period; null when previous is 0
+          properties:
+            totalOrders:
+              type: integer
+              nullable: true
+            totalRevenue:
+              type: integer
+              nullable: true
+
+    DashboardTrendPoint:
+      type: object
+      properties:
+        bucket:
+          type: string
+          format: date
+          description: Bucket start date (Monday for week, 1st for month)
+        orders:
+          type: integer
+        revenue:
+          type: integer
+          description: Revenue of paid/completed orders in the bucket
+
+    DashboardStatusPoint:
+      type: object
+      properties:
+        status:
+          type: string
+          example: completed
+        count:
+          type: integer
+
+    DashboardPaymentPoint:
+      type: object
+      properties:
+        method:
+          type: string
+          example: qris
+        status:
+          type: string
+          example: success
+        count:
+          type: integer
+        amount:
+          type: integer
+
+    DashboardTopProduct:
+      type: object
+      properties:
+        productId:
+          type: integer
+          nullable: true
+        name:
+          type: string
+          nullable: true
+          description: Null for deleted products
+        quantity:
+          type: integer
+        revenue:
+          type: integer
+
     # ── Enums ────────────────────────────────────────────────
     OrderStatus:
       type: string
@@ -1964,6 +2198,7 @@ components:
         imagePath:
           type: string
           nullable: true
+          description: Profile object key under profiles/.
         phone:
           type: string
           nullable: true
@@ -1972,6 +2207,7 @@ components:
           nullable: true
         imageUrl:
           type: string
+          description: Temporary signed GET URL. Refetch the user after expiry.
         createdAt:
           type: string
           format: date-time
@@ -2102,8 +2338,10 @@ components:
         imagePath:
           type: string
           nullable: true
+          description: Product object key under products/, or a third-party image URL.
         imageUrl:
           type: string
+          description: Temporary signed GET URL for managed files, or the third-party URL.
         isActive:
           type: boolean
         stock:
@@ -2122,6 +2360,35 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ProductCategory'
+        discount:
+          type: object
+          nullable: true
+          description: Diskon aktif terbaru (maks. 1); hanya dikirim saat `with[]=discount-cycles`.
+          properties:
+            id:
+              type: integer
+            productId:
+              type: integer
+            amount:
+              type: number
+            quota:
+              type: integer
+              nullable: true
+            usedQty:
+              type: integer
+            remainingQuota:
+              type: integer
+              nullable: true
+              description: Sisa unit berdiskon; null = unlimited, 0 = kuota habis.
+            finalPrice:
+              type: number
+              description: Harga akhir (price - potongan); sama dengan price bila kuota habis.
+            startDate:
+              type: string
+              format: date-time
+            endDate:
+              type: string
+              format: date-time
 
     # ── Order ───────────────────────────────────────────────
     OrderItem:

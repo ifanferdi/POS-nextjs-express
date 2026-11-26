@@ -1,5 +1,5 @@
 const isProduction =
-  process.env.APP_ENV.toLowerCase() === 'production' &&
+  (process.env.APP_ENV || '').toLowerCase() === 'production' &&
   process.env.MIDTRANS_IS_PRODUCTION?.toLowerCase() === 'true';
 
 export default {

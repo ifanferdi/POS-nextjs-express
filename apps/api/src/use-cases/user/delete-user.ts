@@ -1,32 +1,36 @@
 import { UserRelation } from '@/domain/entities/enums/user.enum';
 import { IUserProfile } from '@/domain/entities/models/user';
+import { ErrorBadRequest } from '@/helpers/error.helper';
+import { assertManagedFileKey } from '@/helpers/managed-file-key';
 import BaseUseCase from '@/use-cases/_base-use-case';
 import ResetCachePermission from '@/use-cases/permission/reset-cache-permission';
 import { BaseFindById } from '@/validations/base-validation';
 
 export default class DeleteUser extends BaseUseCase {
-  async execute({ id }: BaseFindById, options?: { isPermanently: boolean }) {
-    const result = options?.isPermanently
-      ? await this.handleDeletePermanently({ id })
-      : await this.repositories.userRepository.destroy(id);
+  async execute({ id }: BaseFindById, options: { isPermanently?: boolean; requestedBy: number }) {
+    if (id === options.requestedBy) throw new ErrorBadRequest('Cannot delete yourself.');
 
-    await new ResetCachePermission(this.redisClient).execute({ userId: id });
-
-    return result;
-  }
-
-  private async handleDeletePermanently({ id }: BaseFindById) {
     const user = await this.repositories.userRepository.findOne<IUserProfile>({
       id,
-      with: [UserRelation.SOFT_DELETE, UserRelation.PROFILE],
+      with: options?.isPermanently
+        ? [UserRelation.SOFT_DELETE, UserRelation.PROFILE]
+        : [UserRelation.PROFILE],
     });
-    if (!user) return;
+    const imagePath = user?.profile?.imagePath;
+    if (imagePath !== undefined && imagePath !== null)
+      assertManagedFileKey(imagePath, 'profiles');
 
-    const deletePermanently = await this.repositories.userRepository.deletePermanently(id);
+    const result = options?.isPermanently
+      ? user
+        ? await this.repositories.userRepository.deletePermanently(id)
+        : undefined
+      : await this.repositories.userRepository.destroy(id);
 
-    if (user.profile.imagePath)
-      await this.repositories.storageRepository?.delete(user.profile.imagePath);
+    if (options?.isPermanently && imagePath !== undefined && imagePath !== null)
+      await this.repositories.storageRepository.delete(imagePath);
 
-    return deletePermanently;
+    await new ResetCachePermission(this.repositories).execute({ userId: id });
+
+    return result;
   }
 }

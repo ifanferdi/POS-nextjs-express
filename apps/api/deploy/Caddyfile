@@ -1,0 +1,5 @@
+{$SITE_ADDRESS} {
+	reverse_proxy pos-api:3000 {
+		flush_interval -1
+	}
+}

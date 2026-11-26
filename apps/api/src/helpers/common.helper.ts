@@ -70,9 +70,6 @@ export function createMidtransSignatureKey(string: string) {
   return crypto.createHash('sha512').update(string).digest('hex');
 }
 
-export function createS3SignatureKey(path: string, expires: number) {
-  return crypto
-    .createHmac('sha256', config.storage.storageSecret)
-    .update(`${path}:${expires}`)
-    .digest('hex');
-}
+export const getRedisKeyPermissions = (userId: number) => `permissions:user-${userId}`;
+export const getRedisKeyMe = (userId: number) => `me:user-${userId}`;
+export const getRedisKeyRole = (userId: number) => `role:user-${userId}`;

@@ -11,20 +11,21 @@ import {
   DateSchema,
   NumberSchema,
   StringSchema,
+  Trimmed,
 } from '@/validations/base-validation';
 import { z } from 'zod';
 
-const Relations = z.array(z.nativeEnum(PaymentRelation).optional()).optional();
+const Relations = z.array(Trimmed(z.nativeEnum(PaymentRelation)).optional()).optional();
 
 export const FindByIdPaymentSchema = BaseFindById.extend({
-  columns: z.array(z.nativeEnum(PAYMENT_FIELD)).optional(),
+  columns: z.array(Trimmed(z.nativeEnum(PAYMENT_FIELD))).optional(),
   with: Relations,
 });
 export const FindOnePaymentSchema = z
   .object({
     id: NumberSchema.optional(),
     orderId: NumberSchema.optional(),
-    columns: z.array(z.nativeEnum(PAYMENT_FIELD)).optional(),
+    columns: z.array(Trimmed(z.nativeEnum(PAYMENT_FIELD))).optional(),
     with: Relations,
   })
   .refine((data) => !data.id && !data.orderId, {
@@ -32,8 +33,18 @@ export const FindOnePaymentSchema = z
   });
 export const FindAllPaymentSchema = BasePagination(PAYMENT_FIELD).extend({
   orderId: z.union([NumberSchema, z.array(NumberSchema)]).optional(),
-  method: z.union([z.nativeEnum(PaymentMethod), z.array(z.nativeEnum(PaymentMethod))]).optional(),
-  status: z.union([z.nativeEnum(PaymentStatus), z.array(z.nativeEnum(PaymentStatus))]).optional(),
+  method: z
+    .union([
+      Trimmed(z.nativeEnum(PaymentMethod)),
+      z.array(Trimmed(z.nativeEnum(PaymentMethod))),
+    ])
+    .optional(),
+  status: z
+    .union([
+      Trimmed(z.nativeEnum(PaymentStatus)),
+      z.array(Trimmed(z.nativeEnum(PaymentStatus))),
+    ])
+    .optional(),
   with: Relations,
 });
 const midtransDetail = z
@@ -56,8 +67,8 @@ export const CreatePaymentSchema = z.object({
   rounding: NumberSchema.optional(),
   total: NumberSchema,
   change: NumberSchema.optional(),
-  method: z.nativeEnum(PaymentMethod),
-  status: z.nativeEnum(PaymentStatus).optional(),
+  method: Trimmed(z.nativeEnum(PaymentMethod)),
+  status: Trimmed(z.nativeEnum(PaymentStatus)).optional(),
   paidAt: DateSchema.optional(),
   expiredAt: DateSchema.optional(),
   midtransDetail,
@@ -67,10 +78,10 @@ export const UpdatePaymentSchema = CreatePaymentSchema.extend({
   amount: NumberSchema.optional(),
   subtotal: NumberSchema.optional(),
   total: NumberSchema.optional(),
-  method: z.nativeEnum(PaymentMethod).optional(),
+  method: Trimmed(z.nativeEnum(PaymentMethod)).optional(),
   rounding: NumberSchema.optional(),
   change: NumberSchema.optional(),
-  status: z.nativeEnum(PaymentStatus).optional(),
+  status: Trimmed(z.nativeEnum(PaymentStatus)).optional(),
   paidAt: DateSchema.optional(),
   expiredAt: DateSchema.optional(),
   midtransDetail,

@@ -3,7 +3,7 @@ import { PaymentMethod, PaymentStatus } from '@/domain/entities/enums/payment.en
 import { MidtransPaymentUpdate } from '@/domain/entities/models/midtrans-payment-detail';
 import { StoreOrderDto, StoreOrderResponse } from '@/domain/entities/models/order';
 import { Repository } from '@/domain/repositories/database.interface';
-import AppError from '@/helpers/error.helper';
+import { ErrorBadRequest } from '@/helpers/error.helper';
 import { generateOrderNumber } from '@/helpers/generate-string';
 import { Order, Prisma } from '@/infrastructure/database/prisma/generated/client';
 import DatabaseBaseRepository from '@/repositories/database/_database-base-repository';
@@ -14,6 +14,8 @@ import {
   FindOneOrderDto,
   UpdateOrderStatusDto,
 } from '@/validations/order-validation';
+
+const ORDER_ALREADY_TERMINAL = Symbol('order-already-terminal');
 
 export default class OrderRepository
   extends DatabaseBaseRepository
@@ -69,8 +71,14 @@ export default class OrderRepository
           ...orderData,
           subtotal,
           total,
+          meta: meta as Prisma.InputJsonValue,
           orderNumber: await generateOrderNumber(),
-          orderItems: { create: items.map((item) => ({ ...item })) },
+          orderItems: {
+            create: items.map(({ discountId, discountQty, ...item }) => ({
+              ...item,
+              meta: item.meta as Prisma.InputJsonValue,
+            })),
+          },
           status:
             payment.method === PaymentMethod.CASH ? OrderStatus.COMPLETED : OrderStatus.PENDING,
         },
@@ -81,12 +89,26 @@ export default class OrderRepository
         data: {
           ...payment,
           orderId: order.id,
-          subtotal,
+          // total order setelah diskon, sebelum rounding (bukan subtotal gross)
+          subtotal: total,
           method: payment.method,
           status:
             payment.method === PaymentMethod.CASH ? PaymentStatus.SUCCESS : PaymentStatus.PENDING,
         },
       });
+
+      // Sisa kuota = quota - usedQty. Increment di transaksi yang sama dengan order,
+      // supaya order gagal/rollback tidak memotong kuota.
+      const usedQty = new Map<number, number>();
+      items.forEach((item) => {
+        if (item.discountId && item.discountQty)
+          usedQty.set(item.discountId, (usedQty.get(item.discountId) ?? 0) + item.discountQty);
+      });
+      for (const [discountId, qty] of usedQty)
+        await tx.productDiscountCycle.updateMany({
+          where: { id: discountId },
+          data: { usedQty: { increment: qty } },
+        });
 
       // Merge duplicate lines + sort by productId so every transaction takes row locks in the same
       // order (deterministic lock order → no ABBA deadlock), and fewer round-trips.
@@ -107,9 +129,8 @@ export default class OrderRepository
           data: { stock: { decrement: quantity } },
         });
 
-        // 0 row ter-update → stok tidak cukup → throw → transaction rollback
         if (result.count === 0) {
-          throw new AppError(`Stok produk ID ${productId} tidak mencukupi.`);
+          throw new ErrorBadRequest(`Stok produk ID ${productId} tidak mencukupi.`);
         }
       }
       return order;
@@ -129,40 +150,75 @@ export default class OrderRepository
 
   update<T = Order>(data: UpdateOrderStatusDto) {
     const { id, ...updateData } = data;
-    return this.prisma.order.update({ where: { id }, data: updateData }).finally() as Promise<T>;
-  }
-
-  cancelOrder(id: number) {
     return this.prisma.$transaction(async (tx) => {
-      const order = await tx.order.findFirst({
-        where: { id, status: { not: OrderStatus.CANCELLED } },
-        include: { orderItems: true, payment: true },
+      const result = await tx.order.updateMany({
+        where: { id, status: { notIn: [OrderStatus.CANCELLED, OrderStatus.EXPIRED] } },
+        data: updateData,
       });
+      if (result.count === 0)
+        throw new ErrorBadRequest('Pesanan yang sudah masuk tidak dapat diubah.');
 
-      if (!order) return;
-
-      for (const item of order.orderItems) {
-        if (!item.productId) continue;
-        await tx.product.update({
-          where: { id: item.productId },
-          data: { stock: { increment: item.quantity } },
-        });
-      }
-
-      if (order.payment) {
-        await tx.payment.update({
-          where: { orderId: order.id },
-          data: { status: PaymentStatus.REFUNDED },
-        });
-      }
-
-      return tx.order.updateMany({
-        where: { id },
-        data: { status: OrderStatus.CANCELLED },
-      });
+      return (await tx.order.findUniqueOrThrow({ where: { id } })) as T;
     });
   }
 
+  cancelOrder(id: number) {
+    return this.prisma
+      .$transaction(async (tx) => {
+        const payment = await tx.payment.findUnique({ where: { orderId: id } });
+        let paymentClaimed = false;
+
+        if (payment && payment.method !== PaymentMethod.CASH) {
+          const paymentClaim = await tx.payment.updateMany({
+            where: { orderId: id, status: PaymentStatus.PENDING },
+            data: { status: PaymentStatus.CANCELLED },
+          });
+          paymentClaimed = paymentClaim.count > 0;
+
+          if (paymentClaim.count === 0) {
+            const currentPayment = await tx.payment.findUnique({ where: { orderId: id } });
+            if (currentPayment?.status === PaymentStatus.SUCCESS)
+              throw new ErrorBadRequest(
+                'Pesanan online yang sudah dibayar tidak dapat dibatalkan.',
+              );
+          }
+        }
+
+        const orderClaim = await tx.order.updateMany({
+          where: { id, status: { notIn: [OrderStatus.CANCELLED, OrderStatus.EXPIRED] } },
+          data: { status: OrderStatus.CANCELLED },
+        });
+        if (orderClaim.count === 0) {
+          if (paymentClaimed) throw ORDER_ALREADY_TERMINAL;
+          return;
+        }
+
+        const order = await tx.order.findUniqueOrThrow({
+          where: { id },
+          include: { orderItems: true },
+        });
+
+        for (const item of order.orderItems) {
+          if (!item.productId) continue;
+          await tx.product.update({
+            where: { id: item.productId },
+            data: { stock: { increment: item.quantity } },
+          });
+        }
+
+        return orderClaim;
+      })
+      .catch((error: unknown) => {
+        if (error === ORDER_ALREADY_TERMINAL) return;
+        throw error;
+      });
+  }
+
+  /**
+   * Guard + side effects in ONE transaction: the conditional `updateMany` (status must still be
+   * `pending`) is the first statement, so only the notification that wins the claim updates the
+   * order and refunds stock. Returns false when the payment was already transitioned (duplicate).
+   */
   midtransPaymentSuccess(
     order: { id: number; status: OrderStatus },
     payment: MidtransPaymentUpdate,
@@ -171,10 +227,15 @@ export default class OrderRepository
     const { midtransOrderId, ...detail } = midtransDetail;
 
     return this.prisma.$transaction(async (tx) => {
+      const claim = await tx.payment.updateMany({
+        where: { id: paymentId, status: PaymentStatus.PENDING },
+        data: { status: updatePayment.status, paidAt: updatePayment.paidAt },
+      });
+      if (claim.count === 0) return false;
+
       await tx.payment.update({
         where: { id: paymentId },
         data: {
-          ...updatePayment,
           midtransDetail: {
             upsert: {
               create: { midtransOrderId, ...detail },
@@ -200,6 +261,8 @@ export default class OrderRepository
               data: { stock: { increment: item.quantity } },
             });
       }
+
+      return true;
     });
   }
 }

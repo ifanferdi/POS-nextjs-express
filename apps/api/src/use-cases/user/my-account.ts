@@ -1,6 +1,7 @@
 import config from '@/config/config';
 import { UserRelation } from '@/domain/entities/enums/user.enum';
 import { IUserProfile } from '@/domain/entities/models/user';
+import { getRedisKeyMe } from '@/helpers/common.helper';
 import { handleProfileImageUrl } from '@/helpers/data-extractor';
 import { Role } from '@/infrastructure/database/prisma/generated/client';
 import BaseUseCase from '@/use-cases/_base-use-case';
@@ -9,12 +10,10 @@ import FindByIdUser from '@/use-cases/user/find-by-id-user';
 const ME_CACHE_TTL = config.redis.meCacheTtl;
 
 export default class MyAccount extends BaseUseCase {
-  private findByIdUser = new FindByIdUser(this.redisClient);
-
-  getRedisKey = (userId: number) => `me:user-${userId}`;
+  private findByIdUser = new FindByIdUser(this.repositories);
 
   async execute({ id }: { id: number }) {
-    const key = this.getRedisKey(id);
+    const key = getRedisKeyMe(id);
 
     const cached = await this.repositories.redisRepository.findOne(key);
     if (cached) {
@@ -29,6 +28,7 @@ export default class MyAccount extends BaseUseCase {
       with: [UserRelation.PROFILE, UserRelation.ROLE, UserRelation.PERMISSIONS],
     });
 
+    const imageUrl = user.profile.imageUrl;
     user.profile.imageUrl = undefined;
 
     await this.repositories.redisRepository.store({
@@ -37,6 +37,8 @@ export default class MyAccount extends BaseUseCase {
       expired: Number(ME_CACHE_TTL),
       logging: false,
     });
+
+    user.profile.imageUrl = imageUrl;
 
     return user;
   }

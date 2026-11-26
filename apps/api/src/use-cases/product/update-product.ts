@@ -1,14 +1,21 @@
 import { ErrorBadRequest } from '@/helpers/error.helper';
+import { assertProductImagePath } from '@/helpers/product-image-path';
 import { publishSSEEvent } from '@/infrastructure/event-stream/sse-redis-bridge';
 import BaseUseCase from '@/use-cases/_base-use-case';
 import { UpdateProductDto } from '@/validations/product-validation';
 
 export default class UpdateProduct extends BaseUseCase {
   async execute(payload: UpdateProductDto) {
+    const { imagePath: submittedImagePath, ...productData } = payload;
+    const imagePath = submittedImagePath === '' ? null : submittedImagePath;
+    if (imagePath !== undefined && imagePath !== null) assertProductImagePath(imagePath);
+
     if (payload.sku) await this.checkUniqueSku(payload.sku, payload.id);
     if (payload.barcode) await this.checkUniqueBarcode(payload.barcode, payload.id);
 
-    const product = await this.repositories.productRepository.update(payload);
+    const product = await this.repositories.productRepository.update(
+      imagePath === undefined ? productData : { ...productData, imagePath },
+    );
 
     await publishSSEEvent({
       scope: 'product',
