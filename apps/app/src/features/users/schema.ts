@@ -12,7 +12,7 @@ import {
 import { calculateAge } from '@/lib/helper';
 import { z } from 'zod';
 
-const Relation = z.array(z.enum(UserRelation)).optional();
+const Relation = z.array(z.string().trim().pipe(z.enum(UserRelation))).optional();
 
 export const GetAllUserSchema = BasePagination.extend({
   isActive: booleanSchema.optional(),
@@ -28,7 +28,7 @@ const ProfileSchema = z
     fullName: requiredStringSchema('Full Name'),
     placeOfBirth: requiredStringSchema('Place Of Birth'),
     dateOfBirth: requiredStringSchema('Date Of Birth'),
-    gender: z.enum(Gender),
+    gender: z.string().trim().pipe(z.enum(Gender)),
   })
   .transform((profile) => ({
     ...profile,
@@ -37,7 +37,7 @@ const ProfileSchema = z
 
 const BaseUserSchema = z.object({
   username: usernameSchema,
-  confirmPassword: optionalStringSchema,
+  confirmPassword: z.string().optional(),
   isActive: booleanSchema,
   roleId: idSchema,
   profile: ProfileSchema,

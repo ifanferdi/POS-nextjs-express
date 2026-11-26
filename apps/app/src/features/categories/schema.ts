@@ -8,12 +8,12 @@ import {
 } from '@/lib/base.schema';
 import { z } from 'zod';
 
-const Relation = z.array(z.enum(CategoryRelation)).optional();
+const Relation = z.array(z.string().trim().pipe(z.enum(CategoryRelation))).optional();
 
 export const GetAllCategorySchema = BasePagination.extend({
   CategoryId: z.union([numberSchema, z.array(optionalNumberSchema)]).optional(),
   with: Relation,
-  columns: z.array(z.string()).optional(),
+  columns: z.array(stringSchema).optional(),
 });
 
 const BaseCategorySchema = z.object({

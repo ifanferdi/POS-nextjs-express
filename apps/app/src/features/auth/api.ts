@@ -1,5 +1,6 @@
 import { api as configApi } from '@/config/config';
 import { LoginResultDto, MeResponseDto, RefreshTokenResponseDto } from '@/features/auth/dto';
+import { LoginSchema } from '@/features/auth/schema';
 import axios from 'axios';
 
 /**
@@ -8,10 +9,11 @@ import axios from 'axios';
  */
 
 export async function loginRequest(username: string, password: string) {
-  const response = await axios.post<LoginResultDto>(`${configApi.baseUrl}/v1/auth/sign-in`, {
-    username,
-    password,
-  });
+  const validatedInput = LoginSchema.parse({ username, password });
+  const response = await axios.post<LoginResultDto>(
+    `${configApi.baseUrl}/v1/auth/sign-in`,
+    validatedInput,
+  );
   return response.data; // { accessToken, refreshToken, exp, ... }
 }
 

@@ -1,22 +1,22 @@
 import { ProductDiscountCycleRelation } from '@/domain';
-import { BasePagination, idSchema, numberSchema } from '@/lib/base.schema';
+import { BasePagination, idSchema, numberSchema, stringSchema } from '@/lib/base.schema';
 import { z } from 'zod';
 
-const Relation = z.array(z.enum(ProductDiscountCycleRelation)).optional();
+const Relation = z.array(z.string().trim().pipe(z.enum(ProductDiscountCycleRelation))).optional();
 
 export const GetAllProductDiscountCycleSchema = BasePagination.extend({
   productId: numberSchema.optional(),
   /** ISO-8601; filter overlap: cycle.endDate >= from */
-  from: z.string().optional(),
+  from: stringSchema.optional(),
   /** ISO-8601; filter overlap: cycle.startDate <= to */
-  to: z.string().optional(),
+  to: stringSchema.optional(),
   with: Relation,
 });
 
 const DateRangeSchema = z
   .object({
-    startDate: z.string().min(1, 'Start date is required'),
-    endDate: z.string().min(1, 'End date is required'),
+    startDate: z.string().trim().min(1, 'Start date is required'),
+    endDate: z.string().trim().min(1, 'End date is required'),
   })
   .refine((v) => new Date(v.endDate).getTime() > new Date(v.startDate).getTime(), {
     message: 'End date must be after start date.',

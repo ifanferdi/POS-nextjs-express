@@ -39,7 +39,7 @@ export async function createServerApiClient() {
     baseURL: configApi.baseUrl,
     headers: {
       'Content-Type': 'application/json',
-      ...(session?.accessToken && { Authorization: `Bearer ${session.accessToken.trim()}` }),
+      ...(session?.accessToken && { Authorization: `Bearer ${session.accessToken}` }),
     },
     timeout: 30_000,
   });

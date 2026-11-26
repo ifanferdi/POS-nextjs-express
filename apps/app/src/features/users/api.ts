@@ -2,6 +2,7 @@ import { ApiResponse, PaginatedResponse, User } from '@/domain';
 import {
   CreateUserInput,
   GetAllUserParams,
+  GetAllUserSchema,
   UpdateUserInput,
   UserRelationParams,
 } from '@/features/users/schema';
@@ -16,7 +17,10 @@ interface UserApiResponse extends ApiResponse {
 export async function getAllUsers<T = User>(params: GetAllUserParams) {
   try {
     const api = await createServerApiClient();
-    const response = await api.get<PaginatedResponse<T>>('/v1/users', { params });
+    const validatedParams = GetAllUserSchema.parse(params);
+    const response = await api.get<PaginatedResponse<T>>('/v1/users', {
+      params: validatedParams,
+    });
     return response.data;
   } catch (e) {
     console.error('Error fetching users:', e);
@@ -27,8 +31,9 @@ export async function getAllUsers<T = User>(params: GetAllUserParams) {
 
 export async function getUserById<T = User>(id: number, relation?: UserRelationParams) {
   const api = await createServerApiClient();
+  const validatedRelation = GetAllUserSchema.shape.with.parse(relation);
   const response = await api.get<T>(`/v1/users/${id}`, {
-    params: { with: relation },
+    params: { with: validatedRelation },
   });
   return response.data;
 }

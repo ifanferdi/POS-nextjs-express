@@ -1,11 +1,13 @@
 import { Payment } from '@/domain';
 import { createServerApiClient } from '@/lib/api-server';
-import { GetPaymentByOrderIdInput, MockMidtransPaymentInput } from './schema';
+import {
+  GetPaymentByOrderIdInput,
+  GetPaymentByOrderIdSchema,
+  MockMidtransPaymentInput,
+} from './schema';
 
-export async function getPaymentByOrderId<T = Payment>({
-  orderId,
-  ...params
-}: GetPaymentByOrderIdInput) {
+export async function getPaymentByOrderId<T = Payment>(input: GetPaymentByOrderIdInput) {
+  const { orderId, ...params } = GetPaymentByOrderIdSchema.parse(input);
   const api = await createServerApiClient();
   const response = await api.get<T>(`/v1/payments/${orderId}/order`, {
     params,
