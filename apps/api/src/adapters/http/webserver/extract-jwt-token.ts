@@ -5,17 +5,14 @@ import asyncHandler from 'express-async-handler';
 
 const EXACT_WHITE_LIST = [
   '/api/v1/auth/sign-in',
+  '/api/v1/auth/verify-otp',
   '/api/v1/auth/refresh-token',
   '/api/v1/webhooks/midtrans',
 ];
-const PREFIX_WHITE_LIST = ['/public/files'];
 export default (useCases: UseCases) =>
   asyncHandler(
     async (req: e.Request & Record<string, any>, _res: e.Response, next: e.NextFunction) => {
-      const isWhitelisted =
-        EXACT_WHITE_LIST.includes(req.path) ||
-        PREFIX_WHITE_LIST.some((route) => req.path.startsWith(route));
-      if (isWhitelisted) return next();
+      if (EXACT_WHITE_LIST.includes(req.path)) return next();
 
       const bearerToken = req.headers.authorization;
 
@@ -29,7 +26,9 @@ export default (useCases: UseCases) =>
         if (token === '' || token === 'Bearer')
           return next(new ErrorUnauthorized('Bearer token is required.'));
 
-        const tokenData = await useCases.authUseCase.checkToken.execute({ token });
+        const tokenData = await useCases.authUseCase.checkToken.execute({
+          token,
+        });
 
         req.headers.userId = String(tokenData.id);
         req.user = tokenData;

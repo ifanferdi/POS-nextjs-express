@@ -1,4 +1,5 @@
 import { IUserWithPassword } from '@/domain/entities/models/user';
+import { assertManagedFileKey } from '@/helpers/managed-file-key';
 import { ErrorBadRequest, ErrorForbidden } from '@/helpers/error.helper';
 import * as password from '@/helpers/password.helper';
 import BaseUseCase from '@/use-cases/_base-use-case';
@@ -11,6 +12,9 @@ export default class UpdateUser extends BaseUseCase {
     payloadPassword?: ChangePasswordDto,
     actorRoleId?: number,
   ) {
+    if (payload.profile?.imagePath !== undefined)
+      assertManagedFileKey(payload.profile.imagePath, 'profiles');
+
     if (payload.roleId === 1)
       throw new ErrorForbidden('Role Developer tidak dapat dikelola lewat API.');
 

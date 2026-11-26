@@ -3,19 +3,17 @@ import { UseCases } from '@/domain/use-cases/use-case.interface';
 import { handleNumberOrArrayRequest, handleOrderByRequest } from '@/helpers/common.helper';
 import { BaseFindById } from '@/validations/base-validation';
 import {
-  CreateRoleDto,
   CreateRoleSchema,
-  FindAllRoleDto,
   FindAllRoleSchema,
   FindByIdRoleDto,
   FindByIdRoleSchema,
-  RoleAssignPermissionDto,
   RoleAssignPermissionSchema,
-  UpdateRoleDto,
   UpdateRoleSchema,
 } from '@/validations/role-validation';
 import e from 'express';
 import asyncHandler from 'express-async-handler';
+
+type RequestWithUser = e.Request & { user?: { roleId?: number } };
 
 export default class RoleController {
   constructor(private useCases: UseCases) {}
@@ -23,7 +21,7 @@ export default class RoleController {
   findAll = asyncHandler(async (req: e.Request, res: e.Response) => {
     const request = req.route.methods.get ? req.query : req.body;
 
-    const params: FindAllRoleDto = {
+    const params = FindAllRoleSchema.parse({
       page: Number(request.page) || 1,
       limit: Number(request.limit) || 10,
       orderBy: handleOrderByRequest(request),
@@ -35,10 +33,7 @@ export default class RoleController {
       userId: handleNumberOrArrayRequest(request.userId),
       permissionId: handleNumberOrArrayRequest(request.permissionId),
       with: request.with,
-    };
-
-    /** Request Validation **/
-    FindAllRoleSchema.parse(params);
+    });
 
     const result = await this.useCases.roleUseCase.findAllRole.execute(params);
 
@@ -57,20 +52,18 @@ export default class RoleController {
 
   private async handleFindOne(params: FindByIdRoleDto) {
     /** Request Validation **/
-    FindByIdRoleSchema.parse(params);
+    const parsedParams = FindByIdRoleSchema.parse(params);
 
-    return await this.useCases.roleUseCase.findByIdRole.execute(params);
+    return await this.useCases.roleUseCase.findByIdRole.execute(parsedParams);
   }
 
-  create = asyncHandler(async (req: e.Request, res: e.Response) => {
-    const params: CreateRoleDto = {
+  create = asyncHandler(async (req: RequestWithUser, res: e.Response) => {
+    const params = CreateRoleSchema.parse({
       name: req.body.name,
       permissionIds: req.body.permissionIds,
       permissions: req.body.permissions,
-    };
-
-    /** Request Validation **/
-    CreateRoleSchema.parse(params);
+      actorRoleId: Number(req.user?.roleId ?? 0),
+    });
 
     // Save to database
     const role = await this.useCases.roleUseCase.createRole.execute(params);
@@ -82,15 +75,12 @@ export default class RoleController {
     const id = Number(req.params.id);
     await this.handleFindOne({ id });
 
-    const params: UpdateRoleDto = {
+    const params = UpdateRoleSchema.parse({
       id,
       name: req.body.name,
       permissionIds: req.body.permissionIds,
       permissions: req.body.permissions,
-    };
-
-    /** Request Validation **/
-    UpdateRoleSchema.parse(params);
+    });
 
     // Update to database
     const role = await this.useCases.roleUseCase.updateRole.execute(params);
@@ -99,29 +89,24 @@ export default class RoleController {
   });
 
   destroy = asyncHandler(async (req: e.Request, res: e.Response) => {
-    const id = Number(req.params.id);
-    /** Request Validation **/
-    BaseFindById.parse({ id });
+    const params = BaseFindById.parse({ id: Number(req.params.id) });
 
-    await this.useCases.roleUseCase.deleteRole.execute({ id });
+    await this.useCases.roleUseCase.deleteRole.execute(params);
 
     res.send({ message: 'Success.' });
   });
 
-  assignPermissions = asyncHandler(async (req: e.Request & Record<string, any>, res: e.Response) => {
-    const roleId = req.body.roleId;
-    const params: RoleAssignPermissionDto = {
+  assignPermissions = asyncHandler(async (req: RequestWithUser, res: e.Response) => {
+    const params = RoleAssignPermissionSchema.parse({
       roleId: req.body.roleId,
       actorRoleId: Number(req.user?.roleId ?? 0),
       permissionIds: req.body.permissionIds,
       permissions: req.body.permissions,
       addPermissions: req.body.addPermissions,
       removePermissions: req.body.removePermissions,
-    };
+    });
 
-    RoleAssignPermissionSchema.parse(params);
-
-    const role = await this.handleFindOne({ id: roleId });
+    const role = await this.handleFindOne({ id: params.roleId });
 
     // assign permission to database
     const roleHasPermissions = await this.useCases.roleUseCase.roleAssignPermission.execute(params);

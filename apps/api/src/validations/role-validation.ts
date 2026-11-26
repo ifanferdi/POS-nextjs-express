@@ -5,12 +5,13 @@ import {
   BasePagination,
   NumberSchema,
   StringSchema,
+  Trimmed,
 } from '@/validations/base-validation';
 import _ from 'lodash';
 import { z } from 'zod';
 
-const Relations = z.array(z.nativeEnum(RoleRelation)).optional();
-const roleColumns = z.array(z.nativeEnum(ROLE_FIELD)).optional();
+const Relations = z.array(Trimmed(z.nativeEnum(RoleRelation))).optional();
+const roleColumns = z.array(Trimmed(z.nativeEnum(ROLE_FIELD))).optional();
 export const FindByIdRoleSchema = BaseFindById.extend({
   with: Relations,
   columns: roleColumns,
@@ -33,6 +34,7 @@ export const CreateRoleSchema = z.object({
   name: StringSchema.min(1, 'Name cannot be empty.').max(255),
   permissionIds: z.array(z.number()).optional(),
   permissions: z.array(StringSchema).optional(),
+  actorRoleId: z.number().optional(),
 });
 export const UpdateRoleSchema = CreateRoleSchema.extend({ id: z.number() });
 export const RoleAssignPermissionSchema = z

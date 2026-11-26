@@ -20,7 +20,7 @@ const prismaConfig: PoolConfig = connectionString
       ssl: config.database.ssl,
     };
 
-const adapter = new PrismaPg(new Pool({ max: 3, ...prismaConfig }));
+const adapter = new PrismaPg(new Pool({ max: 3, ...prismaConfig }), { disposeExternalPool: true });
 const prisma =
   globalForPrisma.prisma ??
   new PrismaClient({

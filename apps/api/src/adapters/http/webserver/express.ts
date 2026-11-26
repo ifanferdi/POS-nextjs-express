@@ -2,9 +2,7 @@ import Routes from '@/adapters/http/routes';
 import ErrorHandler from '@/adapters/http/webserver/error-handler';
 import ExtractJwtToken from '@/adapters/http/webserver/extract-jwt-token';
 import RouteNotFoundHandler from '@/adapters/http/webserver/route-not-found-handler';
-import { verifySignedUrl } from '@/adapters/http/webserver/verify-signed-url';
 import config from '@/config/config';
-import { HttpStatusCode } from '@/constants/http-status.constant';
 import { Controllers } from '@/domain/adapters/controller.interface';
 import { UseCases } from '@/domain/use-cases/use-case.interface';
 import cors from 'cors';
@@ -45,19 +43,6 @@ export default function routes(app: Express, controllers: Controllers, useCases:
 
   // CHECK & EXTRACT JWT TOKEN
   app.use(ExtractJwtToken(useCases));
-
-  // PUBLIC ROUTE STORAGE
-  if (config.filesystem.toLowerCase() === 'local') {
-    app.get('/public/files/*', verifySignedUrl, (req, res) => {
-      const filePath = req.params[0];
-
-      const fullPath = path.join(process.cwd(), 'storage/public', filePath);
-
-      res.sendFile(fullPath, (err) => {
-        if (err) res.status(HttpStatusCode.NOT_FOUND).end();
-      });
-    });
-  }
 
   Routes(app, controllers, useCases.authUseCase.authorization);
 

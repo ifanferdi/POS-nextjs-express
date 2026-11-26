@@ -21,7 +21,7 @@ import {
   redisRemainingKey,
   selectItemDiscount,
 } from '@/helpers/discount.helper';
-import { ErrorBadRequest, ErrorConflict } from '@/helpers/error.helper';
+import { ErrorBadRequest, ErrorConflict, ErrorInternalServer } from '@/helpers/error.helper';
 import { Product, ProductDiscountCycle } from '@/infrastructure/database/prisma/generated/client';
 import { publishSSEEvent } from '@/infrastructure/event-stream/sse-redis-bridge';
 import BaseUseCase from '@/use-cases/_base-use-case';
@@ -29,6 +29,8 @@ import { CreateOrderDto } from '@/validations/order-validation';
 import _ from 'lodash';
 import FindAllProduct from '../product/find-all-product';
 import FindByIdUser from '../user/find-by-id-user';
+
+import handleOrderImageUrls, { OrderWithImageRelations } from './handle-order-image-urls';
 
 const EXPIRY_IN_MINUTES = config.midtrans.expiryMinutes;
 
@@ -51,30 +53,47 @@ export default class CreateOrder extends BaseUseCase {
     const key = this.idempotencyKey(payload.userId, payload.idempotencyKey);
 
     const cached = await this.repositories.redisRepository.findOne(key);
-    if (cached && cached !== IDEMPOTENCY_IN_PROGRESS)
-      return { isIdempoten: true, data: cached as OrderResponse };
+    if (cached && cached !== IDEMPOTENCY_IN_PROGRESS) {
+      const data = cached as OrderResponse;
+      await this.handleOrderResponseImages(data);
+      return { isIdempoten: true, data };
+    }
 
     const claimed = await this.repositories.redisRepository.storeNX(
       key,
       IDEMPOTENCY_IN_PROGRESS,
       IDEMPOTENCY_TTL,
     );
-    if (!claimed) return { isIdempoten: true, data: await this.waitForIdempotency(key) };
+    if (!claimed) {
+      const data = await this.waitForIdempotency(key);
+      await this.handleOrderResponseImages(data);
+      return { isIdempoten: true, data };
+    }
 
+    let data: OrderResponse;
     try {
       const result = await this.createOrderInternal(payload);
-      const data: OrderResponse = { message: 'Success.', order: result.order };
+      data = { message: 'Success.', order: result.order };
       await this.repositories.redisRepository.store({
         key,
         value: data,
         expired: IDEMPOTENCY_TTL,
         logging: false,
       });
-      return { isIdempoten: false, data };
     } catch (error) {
       await this.repositories.redisRepository.destroy(key);
       throw error;
     }
+
+    await this.handleOrderResponseImages(data);
+    return { isIdempoten: false, data };
+  }
+
+  private async handleOrderResponseImages(data: OrderResponse) {
+    await handleOrderImageUrls(
+      this.repositories.storageRepository,
+      data.order as unknown as OrderWithImageRelations,
+    );
   }
 
   private idempotencyKey(userId: number, key: string) {
@@ -98,6 +117,7 @@ export default class CreateOrder extends BaseUseCase {
       limit: -1,
       isActive: true,
     });
+    products.forEach((product) => delete product.imageUrl);
 
     const productMap: Map<number, Product> = new Map(products.map((p: any) => [p.id, p]));
 
@@ -168,6 +188,11 @@ export default class CreateOrder extends BaseUseCase {
     const totalRounding = isOnlinePayment ? total : calculateRounding(total).total;
     const amount = isOnlinePayment ? total : (payload.amount ?? 0);
 
+    if (!isOnlinePayment && amount < totalRounding) {
+      await this.restoreClaims(claims);
+      throw new ErrorBadRequest('Jumlah pembayaran tunai tidak mencukupi.');
+    }
+
     const storeInput: StoreOrderDto = {
       userId: payload.userId,
       subtotal,
@@ -190,29 +215,45 @@ export default class CreateOrder extends BaseUseCase {
       order = await this.repositories.orderRepository.store(storeInput);
     } catch (error) {
       // Transaksi DB rollback → kembalikan claim Redis agar kuota tidak ikut terbakar.
-      await Promise.allSettled(
-        claims.map((claim) => this.repositories.redisRepository.incrBy(claim.key, claim.take)),
-      );
+      await this.restoreClaims(claims);
       throw error;
     }
 
     if (isOnlinePayment)
       return await this.handleOnlinePayment(order, total, computedItems, payload);
 
+    const eventOrder = _.cloneDeep(order);
+    await handleOrderImageUrls(
+      this.repositories.storageRepository,
+      eventOrder as unknown as OrderWithImageRelations,
+    );
+
     await publishSSEEvent({
       scope: 'order',
       entity: 'order',
       action: 'create',
-      data: [order],
+      data: [eventOrder],
     });
     await publishSSEEvent({
       scope: 'product',
       entity: 'product',
       action: 'update',
-      data: order.orderItems.map((orderItem) => orderItem.product),
+      data: eventOrder.orderItems.map((orderItem) => orderItem.product),
     });
 
     return { order };
+  }
+
+  private async restoreClaims(claims: Array<{ key: string; take: number }>) {
+    const results = await Promise.allSettled(
+      claims.map((claim) => this.repositories.redisRepository.incrBy(claim.key, claim.take)),
+    );
+    const failedCount = results.filter((result) => result.status === 'rejected').length;
+
+    if (failedCount > 0) {
+      console.error(`Failed to restore ${failedCount} discount quota claim(s).`);
+      throw new ErrorInternalServer();
+    }
   }
 
   private async claimUnits(discount: ProductDiscountCycle, quantity: number) {
@@ -334,6 +375,8 @@ export default class CreateOrder extends BaseUseCase {
         id: payload.userId,
         with: [UserRelation.PROFILE],
       })) as IUserProfile;
+
+    if (user?.profile) delete user.profile.imageUrl;
 
     const meta: MetaOrder = {};
     if (user) meta.user = user;

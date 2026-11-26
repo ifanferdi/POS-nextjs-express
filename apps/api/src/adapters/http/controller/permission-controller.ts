@@ -3,13 +3,10 @@ import { UseCases } from '@/domain/use-cases/use-case.interface';
 import { handleNumberOrArrayRequest, handleOrderByRequest } from '@/helpers/common.helper';
 import {
   CheckValidPermissionSchema,
-  CreatePermissionDto,
   CreatePermissionSchema,
-  FindAllPermissionDto,
   FindAllPermissionSchema,
   FindByIdPermissionDto,
   FindByIdPermissionSchema,
-  UpdatePermissionDto,
   UpdatePermissionSchema,
 } from '@/validations/permission-validation';
 import e from 'express';
@@ -21,7 +18,7 @@ export default class PermissionController {
   findAll = asyncHandler(async (req: e.Request, res: e.Response) => {
     const request = req.route.methods.get ? req.query : req.body;
 
-    const params: FindAllPermissionDto = {
+    const params = FindAllPermissionSchema.parse({
       page: Number(request.page) || 1,
       limit: Number(request.limit) || 10,
       orderBy: handleOrderByRequest(request),
@@ -32,10 +29,7 @@ export default class PermissionController {
       name: request.name,
       roleId: handleNumberOrArrayRequest(request.roleId),
       with: request.with,
-    };
-
-    /** Request Validation **/
-    FindAllPermissionSchema.parse(params);
+    });
 
     const result = await this.useCases.permissionUseCase.findAllPermission.execute(params);
 
@@ -54,15 +48,13 @@ export default class PermissionController {
 
   private async handleFindOne(params: FindByIdPermissionDto) {
     /** Request Validation **/
-    FindByIdPermissionSchema.parse(params);
+    const parsedParams = FindByIdPermissionSchema.parse(params);
 
-    return await this.useCases.permissionUseCase.findByIdPermission.execute(params);
+    return await this.useCases.permissionUseCase.findByIdPermission.execute(parsedParams);
   }
 
   create = asyncHandler(async (req: e.Request, res: e.Response) => {
-    const params: CreatePermissionDto = { name: req.body.name };
-    /** Request Validation **/
-    CreatePermissionSchema.parse(params);
+    const params = CreatePermissionSchema.parse({ name: req.body.name });
 
     // Save to database
     const data = await this.useCases.permissionUseCase.createPermission.execute(params);
@@ -74,10 +66,7 @@ export default class PermissionController {
     const id = Number(req.params.id);
     await this.handleFindOne({ id });
 
-    const params: UpdatePermissionDto = { id, name: req.body.name };
-
-    /** Request Validation **/
-    UpdatePermissionSchema.parse(params);
+    const params = UpdatePermissionSchema.parse({ id, name: req.body.name });
 
     // Update to database
     const data = await this.useCases.permissionUseCase.updatePermission.execute(params);
@@ -88,18 +77,18 @@ export default class PermissionController {
   destroy = asyncHandler(async (req: e.Request, res: e.Response) => {
     const id = Number(req.params.id);
     /** Request Validation **/
-    FindByIdPermissionSchema.parse({ id });
+    const params = FindByIdPermissionSchema.parse({ id });
 
-    await this.useCases.permissionUseCase.deletePermission.execute({ id } as FindByIdPermissionDto);
+    await this.useCases.permissionUseCase.deletePermission.execute(params);
 
     res.send({ message: 'Success.' });
   });
 
   checkValidPermission = asyncHandler(async (req: e.Request, res: e.Response) => {
-    const payload = { userId: Number(req.body.userId), permissions: req.body.permissions };
-
-    /** Request Validation **/
-    CheckValidPermissionSchema.parse(payload);
+    const payload = CheckValidPermissionSchema.parse({
+      userId: Number(req.body.userId),
+      permissions: req.body.permissions,
+    });
 
     res.send({
       isValid: await this.useCases.permissionUseCase.checkValidPermission.execute(payload),

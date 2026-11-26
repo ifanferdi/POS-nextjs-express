@@ -5,6 +5,7 @@ import AppError from '@/helpers/error.helper';
 import { generateOtp } from '@/helpers/generate-string';
 import * as password from '@/helpers/password.helper';
 import BaseUseCase from '@/use-cases/_base-use-case';
+import { randomUUID } from 'node:crypto';
 
 const APP_NAME = config.app.name;
 const OTP_TIMEOUT = config.auth.otpTimeout;
@@ -18,7 +19,7 @@ export default class SendOtp extends BaseUseCase {
 
   async execute(user: IUser, isResendOtp?: boolean) {
     // CHECK IS SESSION VALID IF CLIENT REQUEST TO RESEND OTP
-    if (isResendOtp) await this.handleIsResendOtpRequest(user.id);
+    const challengeId = isResendOtp ? await this.handleIsResendOtpRequest(user.id) : randomUUID();
 
     // CALLING RATE LIMITER
     await this.rateLimiter(user.id);
@@ -31,16 +32,23 @@ export default class SendOtp extends BaseUseCase {
 
     await this.repositories.redisRepository.store({
       key: this.key(user.id),
-      value: hashedOtp,
+      value: { challengeId, hashedOtp },
       expired: ttl(OTP_TIMEOUT),
       logging: false,
     });
+
+    return challengeId;
   }
 
   private async handleIsResendOtpRequest(id: number) {
-    const isSessionExist = await this.repositories.redisRepository.findOne(this.key(id));
+    const challenge = (await this.repositories.redisRepository.findOne(this.key(id))) as {
+      challengeId?: unknown;
+    } | null;
 
-    if (!isSessionExist) throw new AppError('Invalid OTP request. Session does not exist.');
+    if (!challenge || typeof challenge.challengeId !== 'string')
+      throw new AppError('Invalid OTP request. Session does not exist.');
+
+    return challenge.challengeId;
   }
 
   private async sendOtpToEmail(otp: string, email = config.auth.otpEmail) {

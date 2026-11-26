@@ -2,23 +2,25 @@ import { isString } from 'lodash';
 import { EnumLike, z } from 'zod';
 
 export const DateStringSchema = z
-  .string()
+  .string().trim()
   .regex(/^\d{4}-\d{2}-\d{2}$/, { message: 'Invalid date format (YYYY-MM-DD)' })
   .refine((val) => !isString(new Date(val).getTime()), { message: 'Invalid date value' });
 
 export const StringSchema = z.string().trim();
+export const Trimmed = <T extends z.ZodTypeAny>(schema: T) =>
+  z.preprocess((value) => (typeof value === 'string' ? value.trim() : value), schema);
 export const BooleanSchema = z.boolean();
 export const NumberSchema = z.number();
 export const DateSchema = z.union([DateStringSchema, z.date()]);
 export const BasePagination = <T extends EnumLike>(columns: T) => {
-  const SortFieldEnum = z.nativeEnum(columns);
-  const SortDirectionEnum = z.enum(['asc', 'desc']).optional();
+  const SortFieldEnum = Trimmed(z.nativeEnum(columns));
+  const SortDirectionEnum = Trimmed(z.enum(['asc', 'desc'])).optional();
 
   return z.object({
     page: NumberSchema.default(1),
     limit: z.union([z.literal(-1), NumberSchema.optional()]).default(10),
     orderBy: z.array(z.object({ field: SortFieldEnum, direction: SortDirectionEnum })).optional(),
-    columns: z.array(z.nativeEnum(columns)).optional(),
+    columns: z.array(Trimmed(z.nativeEnum(columns))).optional(),
     search: StringSchema.optional(),
     ids: z.array(NumberSchema).optional(),
     notId: z.union([NumberSchema, z.array(NumberSchema)]).optional(),

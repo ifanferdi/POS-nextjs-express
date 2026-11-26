@@ -37,11 +37,11 @@ declare namespace NodeJS {
 
     REDIS_URL: string;
 
-    FILESYSTEM: 's3' | 'local';
     S3_REGION: string;
-    S3_ACCESS: string;
-    S3_SECRET: string;
-    S3_ENDPOINT: string;
+    S3_ACCESS?: string;
+    S3_SECRET?: string;
+    S3_ENDPOINT?: string;
+    S3_PUBLIC_ENDPOINT?: string;
     S3_BUCKET: string;
 
     SMTP_USER: string;
